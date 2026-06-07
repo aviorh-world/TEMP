@@ -1,0 +1,25 @@
+{
+  "name": "temp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:36323/git/aviorh-world/TEMP"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@zapier/zapier-sdk": "^0.69.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.2",
+    "@zapier/zapier-sdk-cli": "^0.54.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
