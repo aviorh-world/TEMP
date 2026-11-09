@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>הטלוויזיה שלי 🦋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff7ec; --ink:#3b2f4a; --card:#ffffff; --shadow:0 6px 0 rgba(59,47,74,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Varela Round',system-ui,sans-serif}
+  body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+       background-image:radial-gradient(circle at 10% 8%,#ffe3f1 0 90px,transparent 91px),
+                        radial-gradient(circle at 92% 20%,#dff4ff 0 120px,transparent 121px),
+                        radial-gradient(circle at 80% 95%,#e8ffe0 0 140px,transparent 141px);
+       background-attachment:fixed;min-height:100vh;overflow-x:hidden}
+  header{display:flex;align-items:center;justify-content:center;gap:12px;padding:18px 12px 6px}
+  header h1{margin:0;font-size:clamp(24px,6vw,48px);letter-spacing:.5px}
+  header h1 span{display:inline-block;animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-6px) rotate(-6deg)}}
+  #shuffle{flex:0 0 auto;order:2;border:0;border-radius:50%;width:56px;height:56px;font-size:26px;
+           background:#fff;box-shadow:var(--shadow);cursor:pointer}
+  #shuffle:active{transform:scale(.92) rotate(-20deg)}
+
+  nav{display:flex;gap:10px;overflow-x:auto;padding:12px 14px 16px;scroll-snap-type:x mandatory;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;scroll-snap-align:start;border:0;border-radius:22px;padding:10px 14px;min-width:92px;max-width:150px;
+        display:flex;flex-direction:column;align-items:center;gap:4px;font:inherit;font-size:14px;color:var(--ink);text-align:center;
+        background:var(--card);box-shadow:var(--shadow);cursor:pointer;transition:transform .12s}
+  .chip .e{font-size:34px;line-height:1}
+  .chip.on{transform:translateY(-3px);outline:4px solid var(--c,#ffb703)}
+  .chip:active{transform:scale(.95)}
+
+  main{padding:0 14px 40px;max-width:1300px;margin:0 auto}
+  section h2{display:flex;align-items:center;gap:10px;font-size:24px;margin:22px 4px 12px}
+  section h2 .dot{width:16px;height:16px;border-radius:50%;background:var(--c)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+  @media (max-width:520px){.grid{grid-template-columns:repeat(2,1fr);gap:12px}}
+  /* horizontal row (like YouTube Kids "watch again") */
+  .row{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;scroll-snap-type:x mandatory}
+  .row::-webkit-scrollbar{display:none}
+  .row .card{flex:0 0 min(46vw,240px);scroll-snap-align:start}
+  .card{border:0;padding:0;background:var(--card);border-radius:22px;overflow:hidden;cursor:pointer;
+        box-shadow:0 6px 0 var(--c,#ffb703);text-align:right;font:inherit;color:inherit;transition:transform .12s}
+  .card:active{transform:scale(.96)}
+  .thumb{position:relative;aspect-ratio:16/9;background:#eee}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .play{position:absolute;inset:auto auto 8px 8px;width:42px;height:42px;border-radius:50%;
+               background:rgba(255,255,255,.92);display:grid;place-items:center;font-size:18px}
+  .thumb .badge{position:absolute;top:8px;inset-inline-start:8px;background:var(--c);color:#fff;border-radius:12px;padding:2px 8px;font-size:18px}
+  .thumb .seen{position:absolute;left:0;right:0;bottom:0;height:6px;background:rgba(0,0,0,.15)}
+  .thumb .seen i{display:block;height:100%;background:#fb6f92}
+  .card .t{padding:9px 12px 0;margin-bottom:12px;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .lang{font-size:12px;opacity:.6}
+  .more{display:block;margin:14px auto 0;border:0;border-radius:22px;padding:12px 22px;font:inherit;font-size:17px;
+        background:var(--c);color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.15)}
+
+  /* player */
+  #player-wrap{position:fixed;inset:0;background:#1d1630;z-index:50;display:none;flex-direction:column}
+  #player-wrap.open{display:flex}
+  .pbar{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+  .pbtn{border:0;border-radius:50%;width:64px;height:64px;font-size:30px;background:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.3)}
+  .pbtn:active{transform:scale(.93)}
+  .stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;padding:0 10px}
+  .frame{position:relative;width:100%;max-width:calc((100vh - 200px)*16/9);aspect-ratio:16/9;background:#000;border-radius:18px;overflow:hidden}
+  .frame iframe,#yt{position:absolute;inset:0;width:100%;height:100%;border:0}
+  /* shield: the child never touches YouTube's own UI (no links out, no suggestions) */
+  #shield{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #shield .big{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.95);font-size:56px;
+               display:none;place-items:center;box-shadow:0 8px 0 rgba(0,0,0,.35)}
+  #shield.paused{background:#1d1630}
+  #shield.paused .big{display:grid}
+  #shield .msg{position:absolute;bottom:18px;color:#fff;font-size:20px;text-align:center;padding:0 16px}
+  .progress{height:10px;background:rgba(255,255,255,.18);border-radius:10px;margin:14px auto calc(18px + env(safe-area-inset-bottom));width:min(92%,900px);overflow:hidden}
+  .progress div{height:100%;width:0;background:linear-gradient(90deg,#ffb703,#fb6f92);border-radius:10px;transition:width .5s linear}
+  #ptitle{color:#fff;font-size:18px;flex:1;text-align:center;padding:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* end screen */
+  #endscreen{position:absolute;inset:0;z-index:3;background:#1d1630;color:#fff;display:none;flex-direction:column;
+             align-items:center;justify-content:center;gap:20px;text-align:center;padding:20px}
+  #endscreen.show{display:flex}
+  #endscreen .e{font-size:80px}
+  #endscreen p{font-size:26px;margin:0}
+  #endscreen button{border:0;border-radius:30px;padding:16px 30px;font:inherit;font-size:22px;background:#ffb703;color:#3b2f4a;cursor:pointer;box-shadow:0 6px 0 #c98a00}
+
+  /* parents */
+  details.parents{max-width:900px;margin:40px auto 0;background:#fff;border-radius:18px;padding:12px 18px;box-shadow:var(--shadow);font-size:15px;line-height:1.6}
+  details.parents summary{cursor:pointer;font-size:17px}
+  details.parents ul{padding-inline-start:20px;margin:6px 0}
+  details.parents button{font:inherit;border:1px solid #ccc;background:#fafafa;border-radius:10px;padding:6px 12px;cursor:pointer;margin:2px}
+  .empty{opacity:.6;padding:10px 4px}
+</style>
+</head>
+<body>
+<header>
+  <button id="shuffle" aria-label="לערבב">🔀</button>
+  <h1><span>🦋</span> הטלוויזיה שלי <span>🌈</span></h1>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<details class="parents">
+  <summary>👨‍👩‍👧 להורים</summary>
+  <ul>
+    <li>יש כאן <b id="totalCount"></b> סרטונים שנבחרו מראש מערוצים רשמיים: ערוץ הופ!, ערוץ בייבי, כאן חינוכית, ניק ג׳וניור, יובל המבולבל, כוכבי ילדים, ילדות ישראלית, שלומי וסתם, רחלי הקטנה, בקטנה (פרשת השבוע), ערוץ אלף, מקהלות ילדים חסידיות, ניגוני חב״ד לתינוקות, צופי, טוטיטו, רותמאמא, מאשה והדוב, קוקומלון, Bluey, Peppa Pig ו־Super Simple Songs. כ־90% מהם בעברית.</li>
+    <li>דף הבית מסודר כמו ביוטיוב קידס: מה שנצפה לאחרונה מופיע בשורת "לראות שוב", והקטגוריות שהילדה אוהבת עולות למעלה ומקבלות יותר מקום ב"במיוחד בשבילך". סרטונים שכבר ראתה לאחרונה מופיעים פחות, כדי שיהיה גיוון. כפתור 🔀 מערבב מחדש.</li>
+    <li>היסטוריית הצפייה נשמרת רק בדפדפן הזה, במכשיר הזה. היא לא נשלחת לשום מקום.</li>
+    <li>אין חיפוש, ואין ניגון אוטומטי של סרטון הבא. בסוף כל סרטון מופיע מסך "נגמר!" שלנו, בלי ההמלצות של יוטיוב.</li>
+    <li>הנגן מכוסה בשכבת מגע, כך שהילדה לא יכולה ללחוץ על קישורים שמוציאים ליוטיוב.</li>
+    <li>סרטון שקצר מ־3 דקות (בפרשת השבוע ובערוץ אלף: מ־2 דקות), או שהיוצר שלו חסם הטמעה, יוסתר אוטומטית בפעם הראשונה שמנסים לנגן אותו.</li>
+    <li>סיננתי מראש כותרות של חג המולד, ליל כל הקדושים, מפלצות, פחדים, אתגרים ומתיחות. ובכל זאת, ערוצים כמו נופיקי ונסטיה מצולמים ולא מצוירים, אז כדאי להציץ בהם קודם.</li>
+    <li>יוטיוב עדיין עלול להציג פרסומות בתוך חלק מהסרטונים. אי אפשר לחסום את זה מהאתר, אבל אפשר עם YouTube Premium או חוסם פרסומות בדפדפן.</li>
+  </ul>
+  <p>
+    <button id="reset">להחזיר סרטונים שהוסתרו</button> <span id="hiddenCount"></span><br>
+    <button id="clearHist">לנקות היסטוריית צפייה</button> <span id="histCount"></span>
+  </p>
+</details>
+
+<div id="player-wrap" role="dialog" aria-modal="true">
+  <div class="pbar">
+    <button class="pbtn" id="close" aria-label="סגירה">✕</button>
+    <div id="ptitle"></div>
+    <button class="pbtn" id="fs" aria-label="מסך מלא">⛶</button>
+  </div>
+  <div class="stage">
+    <div class="frame" id="frame">
+      <div id="yt"></div>
+      <div id="shield" class="paused"><div class="big">▶</div><div class="msg" id="msg"></div></div>
+      <div id="endscreen"><div class="e" id="endE">🎉</div><p id="endP">נגמר! איזה כיף!</p><button id="back">לבחור עוד סרטון</button></div>
+    </div>
+  </div>
+  <div class="progress"><div id="prog"></div></div>
+</div>
+
+<script>
+/* ======================== הרשימה הסגורה ========================
+   כדי להוסיף סרטון: מעתיקים את ה-ID מהקישור (youtube.com/watch?v=XXXXXXXXXXX)
+   ומוסיפים שורה לקטגוריה המתאימה: ['ID','שם הסרטון'],
+   סרטון באנגלית: ['ID','Title','en'],                                     */
+const CATS = [
+  { id:"parpar", name:"פרפר נחמד", e:"🦋", c:"#ffb703", v:[
+    ["n0mds3jvIIM", "שבי והתותים"],
+    ["V7TA8GopMYo", "איך להיות חבר טוב"],
+    ["lSC9sPSFLcA", "בית לשיר של משי"],
+    ["nRZqhOns3XM", "משחקים במכולת"],
+    ["kX82q6CDjB0", "התחלות חדשות"],
+    ["at7cJuNqjSs", "אוזה והגשם הראשון"],
+    ["FbJsx6-vkwA", "זה קורה בירושלים (קלאסי)"],
+  ]},
+  { id:"hop", name:"ערוץ הופ! וסימון", e:"🐰", c:"#8ecae6", v:[
+    ["TyMVmwQ0kfU", "סימון – 5 פרקים ברצף"],
+    ["nSj9tPxrExg", "סימון – ספיישל סופר ארנב"],
+    ["d4bq55GiawQ", "סימון – השמיכי של אדם"],
+    ["0nb911BPlk8", "סימון – נשנוש עם סבתא זאב"],
+    ["rOtKfs9A3p0", "סימון – לא פוחדים מהחושך"],
+    ["rBSJypfv9w8", "סימון סופר ארנב"],
+    ["5B7ycpgcN-s", "סימון – משפחה שכזאת"],
+    ["ZuOJT0bCGjM", "מחרוזת שירי חנוכה - שירים של חג החנוכה לילדים"],
+    ["KzxOhiRnfvE", "הרפתקאות פיטר הארנב פרקים מלאים בעברית"],
+    ["LYhW9Vjp7u0", "מטוסי על - שיגור הבורסק"],
+    ["IwRLKt4jfPk", "הרפתקאות פיטר הארנב: הסיפור על החבר החדש של קוט"],
+    ["8qDZ4OWg0C4", "ידיים מחבקות - הופ! שירים"],
+    ["iiY_LWEKHnI", "פטטה מכוכב בטטה - פורים: תחפושות"],
+    ["0D5nS9tvtfs", "פטטה מכוכב בטטה - פורים: משלוח מנות"],
+    ["uhGkPL37vlo", "הרפתקאות פיטר הארנב: הסיפור על המפה של בנג'מין"],
+    ["_NIrtFknQI4", "הופ! לומדים מדע ומספרים"],
+    ["JSjhdIXBXk0", "ספיישל מולי וצומי - 4 פרקים מלאים ברצף"],
+    ["B8jTI6-Uj-4", "מולי וצומי- חופשה בטוקטוק: פרקים ברצף"],
+    ["sKJoDMPSiew", "רינת גבאי: מי אוהב את השבת"],
+    ["JHpMIJzFI-w", "טובי דובי: שמות - הופ! קלאסי"],
+    ["x43ZHlmEVwo", "טימותי הולך לבית ספר - פרק 3: שינוי קטן"],
+    ["j9hNaQCYQA4", "ספיישל מולי וצומי - 4 פרקים מלאים ברצף"],
+    ["Y_71s4sdxfA", "ספיישל מולי וצומי 2: 4 פרקים מלאים ברצף"],
+    ["JFKz87aQRvo", "מחרוזת שירי חג הסוכות ברצף לילדים"],
+    ["yplhgxwAras", "שירון הקסמים: איך יודעים שבא אביב"],
+    ["gjhUe2_uCZs", "מולי וצומי (עונה 2): כדורסל"],
+    ["w4pSyff0U8k", "פטטה מכוכב בטטה : קישוטים לסוכה - בסוכה של ערוץ הופ!"],
+    ["MhXR14XVXnY", "מולי וצומי- חופשה בטוקטוק: מערוך טוקטוקי"],
+    ["7Yg7pPrO-uc", "מולי וצומי: פשטידה"],
+    ["VD20AW2G7x4", "האולימפיאדה של הופ! - החברים של הופ! מתאמנים"],
+    ["-yXaxDVZsys", "לילה הופ! - בו ושופי מציגים תכניות לפני שינה"],
+    ["MoxfSHDHOZg", "ספיישל פורים לילדים - פורים שמח"],
+    ["egalZl8OKBQ", "טו בשבט שמח - שירים ותכניות ברצף"],
+    ["2XM6soJn0VU", "מולי וצומי חוגגים את החגים - פורים - משתיק רעשנים בין כוכבי"],
+    ["y11DoMHLeVc", "הרפתקאות פיטר הארנב: החיפושית שהלכה לאיבוד"],
+    ["plHoJZqLL30", "הקרקס של רינת: צבי הצב"],
+    ["LWmK42Gx1t8", "ספיישל העולם המטורף של דוד חיים"],
+    ["x-H7P225ED4", "פטטה מכוכב בטטה - פורים: הקשר בין שמחה לחג הפורים"],
+    ["6glJwX106TM", "ספיישל פטטה מכוכב בטטה לפורים - 30 דקות - פורים בהופ!"],
+    ["gKRQA7-n5pE", "מולי וצומי חוגגים את החגים - ספיישל לחנוכה"],
+    ["ki2RmwqCEqg", "הופ! לומדים מספרים"],
+    ["jYq2UECECSU", "הרפתקאות פיטר הארנב: הסיפור על קורא-לי"],
+    ["0Kc3es1dd0g", "מולי וצומי: ציור"],
+    ["y-zXAZkOO_k", "הקרקס של רינת: אריק האריה"],
+    ["nOvykjgtAYM", "מולי וצומי (עונה 2): סיר של תירס"],
+    ["axErYuCW-OU", "הכי איתן💪🏻| אוהבת לא אוהבת | פרקים מלאים"],
+    ["7Ikx-0horYY", "הכי איתן💪🏻| לא אומרים נו לביצה קשה🥚| פרקים מלאים"],
+    ["kdvHIwtuIrs", "הכי איתן💪🏻| צוציק | פרקים מלאים"],
+    ["b5fst1APmPg", "הכי איתן💪🏻| ריב אחים | פרקים מלאים"],
+    ["l4o7Uzd5oNE", "הכי איתן💪🏻 | הבית של תוני | פרקים מלאים"],
+    ["J7OsfJnwpNU", "הכי איתן💪🏻| לילה ראשון בלי תוני | פרקים מלאים"],
+    ["-EfsLW0lKJI", "הכי איתן💪🏻| שיקוי לסידור חדרים🪄| פרקים מלאים"],
+    ["a8LVjnWyrZw", "הכי איתן💪🏻 - נפרדים מגלגלי העזר🚲 - פרקים מלאים - סדרות לילדים"],
+    ["WXrGPmdZf0Y", "משפחת מקלחת🛀🏻🧼 - 3 פרקים ברצף - קומדיה מוזיקלית לכל המשפחה"],
+    ["ZUSR9UBzvxA", "משפחת מקלחת - הפתעה - סדרה חדשה לכל המשפחה - פרקים מלאים"],
+  ]},
+  { id:"baby", name:"בילי ובם בם וערוץ בייבי", e:"🧸", c:"#fb6f92", v:[
+    ["lrXy-pD94jA", "בילי ובם בם – פרקים חדשים"],
+    ["Aj5yiu0BUA4", "בילי ובם בם ברצף"],
+    ["wMx8VzerqvI", "מקבץ אביבי של ערוץ בייבי"],
+    ["uim07hvsHXE", "שירים שמחים לילדים"],
+    ["YYUX7ic8UiM", "גלגלי האוטובוס ושירים נוספים לילדים"],
+    ["ouEKFBr69Xc", "קולות וצלילים של כלי נגינה לילדים ופעוטות - אוצר מילים עם נוני"],
+    ["jMIELC0KFs4", "שירים לילדים בנושא חיות - שירים לילדים ופעוטות"],
+    ["9LgE0oSt7GA", "תראו מה מצאתי! - 5 פרקים ברצף"],
+    ["I97Qr7V_gaA", "קטני - 5 פרקים ברצף!"],
+    ["6Lck3lLgVts", "פים ופימבה - חמישה פרקים ברצף!"],
+    ["kjAluFdU3uQ", "מחרוזת שירי ילדים מובילים"],
+    ["qbYfR3HEXI0", "בילי בם בם - 5 פרקים ברצף!"],
+    ["i-XmQJvz154", "אנריקה הולך לאכול- 5 פרקים ברצף!"],
+    ["BKYQjw8xuO0", "שירי ילדים ופעוטות ברצף - ספיישל חדש!"],
+    ["TOj5NDeHKy0", "שירי ילדים ופעוטות ברצף - 30 דקות!"],
+    ["6zkSAM27Rbg", "קני וגורית - משחקי ניחוש ערוץ בייבי"],
+    ["mQ267fcta6c", "ברכבת הדואר ניסע ונגיע למקומות קסומים, בהם נכיר חברים מיוחדים ומרתקים!"],
+    ["UftKh1FeHSs", "אוליבר - חמישה פרקים ברצף!"],
+    ["QcANPfq5V7g", "בעלי חיים לילדים ופעוטות - אוצר מילים עם נוני"],
+    ["uolao26g6Vo", "מונה וטוש - 5 פרקים ברצף!"],
+    ["fI8KG8_Mb2w", "אוליבר - יום הולדת"],
+    ["OMZ0YFijnms", "לולה הקטנה - העשרה לפעוטות - חיות חווה"],
+    ["07LzmtOmDtU", "ילדים ופעוטות - ספיישל מושגים ראשונים"],
+    ["x-seHdGNf_4", "פייר הצייר - 5 פרקים ברצף! 27 דקות."],
+    ["ZUZm39DKbPo", "כלי תחבורה לילדים ופעוטות - אוצר מילים עם נוני"],
+    ["JLe-MW0biWI", "דרקו - חמישה פרקים ברצף!"],
+    ["BxHO5Qvcg1g", "קטני - ערוץ בייבי - יורד גשם"],
+    ["2ObXXfqSI20", "פופיז - חברויות ראשונות ערוץ בייבי"],
+    ["Oh1xNFsrMoA", "חגי ישראל עם רינת ומימי - חנוכה - סביבון סוב סוב סוב"],
+    ["oZ52M2zym0A", "ספיישל גילי מגלה עולם - מושגים ראשונים"],
+    ["8HGuL75SYhw", "שירי בייבי ברצף"],
+    ["fpM_XwajXwA", "קטני פרקים חדשים עכשיו ברצף!"],
+    ["Pa-AuSf2HGc", "ביצה נוצה - הדבורה"],
+    ["v3HqjW5YAGU", "שיר ילדים - בוקר טוב! - מסביב לשעון"],
+    ["ze6Oyq14HL0", "סבא ג'ו - חמישה פרקים חדשים!"],
+    ["hso8KWFuESM", "פרקים ברצף צ'ארלי והמספרים - חדש!"],
+    ["Q941bOiRfAk", "פאזלונים - בריכה"],
+    ["OJ_qFn9FWuo", "שירי ערש לילדים, שירים ותוכניות לילה טוב, שינה - ארבעים דקות ברצף"],
+    ["4idXvMtmDv0", "ספיישל חוקרים עם אוליבר - מושגים ראשונים"],
+    ["j99bU7X67mI", "פסח - מחרוזת שירי פסח ברצף עם רינת גבאי ומימי"],
+    ["MZw_2F95Yo4", "תולי האהוב מערוץ בייבי - חמישה פרקים ברצף!"],
+    ["ubKWfU74Af8", "פים ופימבה - יצירתיות ודמיון ערוץ בייבי"],
+    ["63zsmLZX4E8", "כיף בחווה - ספיישל חוקרים את הסביבה עם בייבי"],
+    ["9E0MqNHUcwk", "תוכנית מוסיקלית לפעוטות!"],
+    ["t2b57bZcekU", "שירי חנוכה עם רינת גבאי - 25 דקות ברצף"],
+    ["-h7cR5_weHI", "עיניים, רגליים וגוף האדם לילדים - אוצר מילים עם נוני"],
+  ]},
+  { id:"yuval", name:"יובל המבולבל", e:"🍅", c:"#f3722c", v:[
+    ["RT8UOZ-1sBE", "יובל המבולבל – מחרוזת"],
+    ["9YAhxfgnj-w", "לא לשכוח לשמוח"],
+    ["oZ7i0wEtg6E", "טוב לצחוק"],
+    ["zSDyJg0K0wE", "פנטומימה - עם יובל המבולבל"],
+    ["H10Z6lijoFk", "טוב לצחוק הסרט (40 דקות) - יובל המבולבל"],
+    ["p4_L1_XaidQ", "יובל המבולבל - מסיבת ריקודים | שיר קצבי לילדים"],
+    ["Dpvv9BNSg5c", "המסע אל הכוכב המלא - יובל המבולבל"],
+    ["C2Rm4IuVWNQ", "כוכב המשאלות ההצגה - יובל המבולבל"],
+    ["MARLv9pwL18", "I am The Chicken - Yuval hamevulbal | אני התרנגולת - יובל המבולבל"],
+    ["lLUCCQ6iIhU", "הדרקון המתוק שלי - עם יובל המבולבל ורינת גבאי - הקליפ"],
+    ["cOLmgieT6XE", "הנסיכה והצפרדע - הקליפ הרשמי לשיר הנושא מתוך הפקת הקיץ 2019"],
+    ["iNh8B1p5yg4", "יובל המבולבל עם מקס"],
+    ["vQLbnvy3rVI", "איזה כייף להיות מבולבל מתוך המסע אל הכוכב-יובל המולבל"],
+    ["teFzOEmpxWo", "מר עגבנייה - ההצגה המלאה (80 דקות)"],
+    ["AbEUuVrU2B8", "אופס הילדים התכווצו - חנוכה 2016"],
+    ["PrSGFLOmwmE", "סיפורים ושירים עם יובל המבולבל"],
+    ["DTTBivC1pI0", "לגדול עם יובל המבולבל - עכשיו גם באנדרואיד"],
+    ["mkLSbPWcJlA", "עולמו של יובל המבולבל - הסרט"],
+    ["MZvUV2KPet8", "יובל המבולבל ותלתלית וזוקו | המדריך המלא לחופש הגדול"],
+    ["H9rwsZ1roRQ", "\"מסביב לזמן\" ההצגה המלאה (60 דקות) – יובל המבולבל"],
+    ["uLw-b65VxEo", "כוכבים מהספרים - המופע המלא (60 דקות)"],
+    ["IgsCbowvNBo", "פסטיפאן - הפתעה בחופשה"],
+    ["4ZwQHMYNxzQ", "יובל המבולבל - כל השירים ברצף"],
+    ["YBrdQ2yofVg", "קסם של משחק ההצגה המלאה (63 דקות)- יובל המבולבל"],
+    ["x4S6qNdqlAA", "הרפתקה בלונה פארק עם יובל המבולבל - הצגה מלאה"],
+    ["t7eqkxiQ2LU", "בלון גדול בלון קטן מתוך יובל המבולבל"],
+    ["X5sFXEgjm44", "יציאת מצרים - ההצגה המלאה | יובל המבולבל וכוכבי הישרדות"],
+    ["e70Kick5bVo", "\"יום גדול\" המופע המלא (70 דקות) - יובל המבולבל וטל מוסרי"],
+    ["DJMJUZtXU-o", "יובל המבולבל ה- DVD הראשון"],
+    ["g3gRY2OJBLU", "חפש את המטמון - ההצגה המלאה"],
+    ["oWkPrAnumGI", "כוכבי האור חוזרים לעתיד - הסרט המלא | בהשתתפות יובל המבולבל , קוגומלו …"],
+    ["34cfuh5e0kI", "הדרקון המתוק שלי - עם יובל המבולבל ורינת גבאי"],
+    ["2GbB2aZJe20", "יובל המבולבל - גיבור על"],
+    ["HIFmEPI2Veg", "יובל המבולבל מר עגבניה פרקים מלאים - יוצא למשימה 2"],
+    ["npMHWfe4Dg4", "יובל המבולבל (פרקים מלאים - עונה 1): ארוחה מיוחדת"],
+    ["cm52HMtGUwc", "יובל המבולבל (פרקים מלאים - עונה 2): טיול"],
+    ["a6qkJhOBo6c", "יובל המבולבל-מר עגבניה: הרובוטרון"],
+    ["sUuvKUvvxeU", "יובל המבולבל: בים לא מתבלבלים - רחצה בטוחה בהופ!"],
+    ["dDNrzP5hNc0", "יובל המבולבל - האולימפיאדה של הופ! - מתאמנים בכיף עם יובל המבולבל"],
+    ["6GmG53Ysez0", "יובל המבולבל (פרקים מלאים - עונה 2): צבעים"],
+    ["Ntr3HNO9dFU", "יובל המבולבל - מר עגבניה יוצא למשימה (45 דקות)"],
+  ]},
+  { id:"stars", name:"כוכבי ילדים", e:"⭐", c:"#f9c74f", v:[
+    ["jFZMevoPav8", "רינת גבאי בגן הצוציקים"],
+    ["LTN0RuG4mv8", "גינת הפלאים של רינת"],
+    ["EezViI14Kh4", "הקרקס של רינת"],
+    ["JS5vho7MfAM", "נופיקי והשכנות מכינות פיצת נופיקי בצורת מתנה 🎁 יוטיוב לילדים 🎁 תוכניות…"],
+    ["CNrVVwu_TrU", "פופיט פיצה 🍕 נופיקי מכינה פיצת פופיט בצורת מתנה + פספוסים 🍕🎁 נופיקי 🎁 …"],
+    ["0eFL_yYpcM8", "נופיקי בעמק הקסום 2 ☁🌳🍌הצגות ילדים מלאות | יוטיוב לילדים | סרטים לילדי…"],
+    ["epm8h0sEL44", "תעלומה קסומה בבריכה – תיבת אוצר נוצצת 💰💎 נופיקי 💎 תוכניות לילדים 💎 יוט…"],
+    ["MTZhROaTgA8", "הברד וכוסות הפלא של נופיקי 🥤 🌟 יוטיוב לילדים | יוטיוברית לילדים | תוכנ…"],
+    ["HQFuAyIv7j0", "היכן נופיקי מסתתרת? 😂🧐😇 | סרטונים לילדים | Where is Nofiki hiding?"],
+    ["U7OQXWgti1M", "החלום על בית הבלונים של נופיקי הופך לאמיתי 🏡🎈יוטיוב לילדים |סרטונים לי…"],
+    ["hao6WAeKO-8", "מתכון להכנת גלידת קינדר קלה עם טעם מושלם 🍨🍧🧁 נופיקי | יוטיוב לילדים | …"],
+    ["0kARhIb7c00", "מסיבת יום הולדת לנופיקי 🍰🍭-נופיקי והחברים מכינים עוגת שוקולד טעימה🍭 יו…"],
+    ["H3svaP-Rr8s", "נופיקי וקערת השוקולד | Nofiki and the chocolate bowl | סרטונים לילדים …"],
+    ["4cHMz9tgLfE", "מסיבת יום הולדת מצחיקה 🍡🍧🌈 לנופיקי🍠🥔🥕 יוטיוברית לילדים birthday party …"],
+    ["UWaYQXWURpA", "לימוד צבעים לילדים 💜💛💚💙 עם נופיקי כוכבת הילדים | סרטונים לילדים | colo…"],
+    ["o2gtbpdrA60", "נופיקי והחברות מכינות כדורי שוקולד עם סוכריות קונפטי 🍬🍪🍫 יוטיוברית ליל…"],
+    ["muqdwy1BY4o", "קאפקייק דבש נופיקי לכבוד ראש השנה | יוטיוב לילדים | סרטונים לילדים | ת…"],
+    ["Bq8Tywial0U", "לימוד צבעים לילדים | סרטונים לפעוטות | צבעים לילדים עם נופיקי כוכבת הי…"],
+    ["MCiL-tDDmT0", "עשו חרם על נופיקי 😢💔 סרטון חינוכי על חרם לילדים"],
+    ["BWaCHvevCio", "משלוח אשפה- מה שנופיקי שלחה בטעות לסבתא 🤦‍♀👀💩🤠| יוטיוברית לילדים קטנים…"],
+    ["6rsyrq0DhFc", "מה קורה כשבאים לבקר את נופיקי ואין לה מיץ ענבים 🍇 | grape juice | כוכב…"],
+    ["40lIVNnmZ3E", "לגלידת מנגו של נופיקי יש טעם של עגבניה🍦🍅 יוטיוב לילדים 🍅סרטונים לילדים…"],
+    ["dGE6BNlWglA", "דוני השדוני צחק עלי כי נפלתי מהקורקינט 😲 סרטון עם מסר חשוב על התמדה וב…"],
+    ["dB1U5KDgH3Q", "למה חברה של נופיקי צוחקת עליה מול כולם? 😮⚠️ סרטון חשוב לילדים על חברות…"],
+    ["yTmpdXCwZIc", "פורים שמח ומצחיק - נופיקי מתחפשת ועושה מתיחה לאמא שלה 😅"],
+    ["LNeblkXtJPw", "שירי יום הולדת עם רעותי כוכבת הילדים"],
+    ["Dnc_VV3k6-M", "שירי חג פורים עם רעותי כוכבת הילדים- 25 דקות לשמיעה ברצף"],
+    ["dT060rUSwC8", "מחרוזת שירי חנוכה לילדים- 14 דקות ברצף"],
+    ["JmTfLelPUGE", ",שירי יום הולדת עם רעותי כוכבת הילדים- 20 דקות לשמיעה ברצף- Birthday s…"],
+    ["soYezO9G0ZY", "שירי פסח לשמיעה ברצף עם רעותי כוכבת הילדים- 24 דקות"],
+    ["nQLrM7suJY8", "סביבון סוב סוב- שירי חנוכה עם רעותי כוכבת הילדים"],
+    ["TikPOeC9wyo", "שירי פסח ואביב"],
+    ["ysa_-sUBg3Q", "מחרוזת שירי ארץ ישראל"],
+    ["Uqq1eGT8B-I", "שירי שבת עם רעותי כוכבת הילדים"],
+    ["XozQOyvhPRo", "שירים לפסח -שמחה רבה אביב הגיע פסח בא"],
+    ["6Q0VR4O1d0I", "שירי חג סוכות- עם רעותי כוכבת הילדים"],
+    ["75CPvg2mkR4", "שירי ראש השנה לשמיעה ברצף- 39 דקות עם רעותי כוכבת הילדים."],
+    ["BcbTkS1koZw", "שירי טו בשבט- עם רעותי כוכבת הילדים"],
+    ["7ABU3kp1egQ", "שירי סוכות לשמיעה ברצף- 30 דקות עם רעותי כוכבת הילדים."],
+    ["3Ujf4YYeBsY", "שירי ראש השנה לשמיעה ברצף- 18 דקות עם רעותי כוכבת הילדים"],
+    ["t3rJYhqltdk", "שירי טו בשבט ברצף- רעותי כוכבת הילדים"],
+    ["IEeuv8mtRLI", "מיכל הקטנה בממלכת האהבה - ההצגה המלאה (70 דקות)"],
+    ["NZD4zfuqDQw", "מיכל הקטנה - אני מיכל הקטנה"],
+    ["KqepYfP_nO0", "מיכל הקטנה - הסרט המלא (40 דקות)"],
+    ["QeykpddJAds", "מחרוזת שירי מיכל הקטנה ויובל המבולבל I אופס הילדים התכווצו חנוכה 2016"],
+    ["Mkkq0aUnRvc", "מיכל הקטנה - הלב שלי"],
+    ["Fm9ppKIa7QY", "מיכל הקטנה השיר שבלב - המופע המלא (60 דקות)"],
+    ["LNk-Ubr8wEw", "אופס הילדים התכווצו - חנוכה 2016"],
+    ["s--3uGpukTU", "מיכל הקטנה בהיכל התרבות תל אביב"],
+    ["TUO5Dcj8_xI", "מיכל הקטנה - היפה והחיה - המופע המלא"],
+    ["zFAbUkOXd9Q", "מחרוזת שירי ציפי שביט I אופס הילדים התכווצו I חנוכה 2016"],
+    ["TGnaHRM-62o", "מיכל הקטנה - גשם של סופגניות"],
+    ["Q9dbrzONF4M", "מיכל קטנה - חגיגה של חוויות - ספיישל 30 דקות"],
+    ["v4yMTQfF19o", "מיכל הקטנה רוי בוי ודוד חיים - שיר המחזור | גשם של סופגניות"],
+    ["EOs5-qskf08", "יולי הבת של מיכל הקטנה - חוגגת יום הולדת 8 מהאגדות"],
+    ["k_P3sByYLro", "PURIM | פורים מגילת אסתר – הסרט"],
+    ["sB14ITak3iM", "שלמה המלך ומלכת שבא - הסרט (30 דקות) - רינת גבאי"],
+    ["piK9QGEvuWE", "רינת גבאי - ילדיסקו"],
+    ["zJDJ1gtPDxI", "רינת גבאי | קבלת שבת | תבלין של שבת"],
+    ["1q7ncwJ6jPI", "רינת גבאי | קבלת שבת | יוס'לה קמצן קדוש"],
+    ["wWGkGjxGugE", "רינת גבאי מי המנטה מי המסטיק מי השוקולד Rinat Gabay"],
+    ["NIyYrnxWdjs", "רינת גבאי - ברוגז ברוגז לעולם"],
+    ["Svm2Fws5EeI", "לילה טוב עם רינת"],
+    ["QcrPkn2clCo", "\"כוכבי האור\"- חנוכה 2023"],
+    ["RJ8ey4-oASY", "רינת גבאי | קליפ מתוך המחזמר תיבת נח | חנוכה 2022"],
+    ["PWBvuCqtqM4", "לילה טוב עם רינת"],
+    ["GiMoH7bg7xY", "רינת גבאי - הלילות הקסומים"],
+  ]},
+  { id:"songs", name:"שירי ילדות ישראלית", e:"🎵", c:"#90be6d", v:[
+    ["0zMskHa5SC0", "שירי קטנטנים – 33 דקות"],
+    ["DpinVPmK8XI", "שירי ילדות ישראלית 1"],
+    ["Qa2lSW4qMXg", "שירי ילדות ישראלית 2"],
+    ["wSdODgJBd6Y", "שירי ילדות ישראלית 4"],
+    ["xfL4VnNGfHc", "שירי חנוכה"],
+    ["FJfrN6I-mUo", "דנה ודרור שירים ישראלים - מחרוזת שירי ילדים עם דרור קרן ודנה עדיני - ש…"],
+    ["Y1DUYLhl0H0", "שירי ילדים אריק איינשטיין ברצף - שירי ילדות אהובים - ילדות ישראלית"],
+    ["2eo10-W0z1M", "שירי חנוכה לילדים ולגננות - שירי ילדים אהובים - ילדות ישראלית"],
+    ["Ow_FW3az1g8", "שירי חנן הגנן - איילת מטיילת - ילדות ישראלית"],
+    ["QQ0wbmHAhYM", "מחרוזת שירי יום הולדת ברצף - שירים לילדים ב ילדות ישראלית"],
+    ["EEb8d96WP5s", "שירי ילדים שמחים - מחרוזת שירים שמחים ברצף - ילדות ישראלית"],
+    ["qpoGzMdDUFA", "שירי חנן הגנן - חנן הגנן - ילדות ישראלית"],
+    ["YMLsE_DMPGQ", "מחרוזת שירי עוזי חיטמן - שירים לילדים ופעוטות בילדות ישראלית"],
+    ["0BdV9Kwc0FQ", "מחרוזת שירי חנוכה לילדים ברצף - שירים ילדות ישראלית"],
+    ["UYj_7fYOXPc", "שירי חנן הגנן - הסינור של רוני-סינורוני - ילדות ישראלית"],
+    ["FDWbCs8EfqY", "שירי דתיה בן דור - שירים ברצף לילדים ולפעוטות- ילדות ישראלית"],
+    ["534t0Ny5iIA", "אלוהים שלי - שיר ילדים - שירי ילדות ישראלית"],
+    ["alHX1fJ9I-w", "מחרוזת שירי ט\"ו בשבט ברצף - שירים לילדים - שירים ברצף - ילדות ישראלית"],
+    ["slG8G3JUZNE", "מחרוזת שירי חגי תשרי - שירים לראש השנה, יום כיפור וסוכות-שירים לילדים …"],
+    ["nbaKdUPpMV0", "מחרוזת שירי שבת לילדים - שבת שלום בילדות -שירי ילדות ישראלים- רצועת שי…"],
+    ["xXFY-SQphIc", "עודני ילד - שיר ילדים - שירי ילדות ישראלית"],
+    ["cJtzNaS2tX4", "מחרוזת שירי פורים לילדים - שירי ילדות אהובים - ילדות ישראלית"],
+    ["l3URIUQOOc0", "ילדות ישראלית - שירים שקטנטנים אוהבים - שירי ילדים ברצף"],
+    ["5mdt1REXMvg", "מחרוזת שירי משפחה - שירים ליום המשפחה בילדות ישראלית"],
+    ["C_Ooz62DkpU", "חיוכים - שיר ילדים - שירי ילדות ישראלית"],
+    ["elIFHyTaghg", "שירי ילדים חנן הגנן וחברים - חנן הגנן, איילת מטיילת, מישו ועוד - ספייש…"],
+    ["dFWDZLnHv-U", "ילדות ישראלית - ספיישל שירי יום הולדת"],
+    ["7Sre9_jmAP4", "שירי חנן הגנן - החתולה של איילת - ילדות ישראלית"],
+    ["mMlVZeJAkk0", "שירי חיים נחמן ביאליק - שירים ברצף לילדים ולפעוטות -שירים ילדות ישראלי…"],
+    ["FRR0AIyyzFA", "נח - שיר ילדים - שירי ילדות ישראלית"],
+    ["pJuah4mgiwg", "ספיישל שירי חורף - שירי ילדים ברצף - ילדות ישראלית"],
+    ["0qVN9tvVNUk", "נולדתי לשלום (רינת גבאי) - יום העצמאות ב ילדות ישראלית"],
+    ["9ujZ_SeN8Uk", "השירים שהכי כיף לרקוד איתם -שירי ילדות ישראלית- ילדות ישראלית"],
+    ["JRvMaS1zvO8", "מחרוזת שירים ליום העצמאות - שירי ילדות אהובים - ילדות ישראלית"],
+    ["lYsP5RH_m3g", "ילדות ישראלית - ספיישל של כיף"],
+    ["-E2Vz1b1iNk", "מחרוזת שירים ליום העצמאות - שירי ילדות ישראליים - ילדות ישראלית"],
+    ["fgpGeo-e7jE", "מחרוזת שיר נעמי שמר - שירים ברצף לילדים ולפעוטות"],
+    ["sF3pmyiTCfU", "ספיישל שירים ודקלומים לקטנטנים לפני השינה - ילדות ישראלית"],
+    ["6UlW2EcuYx8", "שירי חנן הגנן - מישו - ילדות ישראלית"],
+    ["C6RSFKD_mCI", "מחרוזת שירי יום הולדת - היום יום הולדת, רק פעם בשנה, איפה העוגה ועוד -…"],
+    ["O_dNE0gP3ck", "שירים שילדים אוהבים (דפנה דקל ואורי בנאי)- שירים ברצף לילדים ולפעוטות …"],
+    ["LFrvM2vvoDI", "ילדות ישראלית - ספיישל פורים שמח - שירי ילדים ברצף - שירי פורים לילדים"],
+    ["8UREOHQ3_co", "שירי ענן על מקל ברצף - 21 דק' - ילדות ישראלית"],
+    ["U3IVBcC4zHw", "שירי ל\"ג בעומר ברצף -שירי ילדות אהובים- ילדות ישראלית"],
+    ["dzokCUKkFt8", "מחרוזת שירי מרים ילן שטקליס - שירים לילדים ברצף - ילדות ישראלית"],
+    ["T2295TLAAu4", "שיר ברצף - אצא לי השוקה - ילדות ישראלית"],
+  ]},
+  { id:"jewish", name:"שירים חסידיים ויהודיים", e:"🕯️", c:"#9b5de5", v:[
+    ["x-xW_jFZz-o", "קבלת שבת לילדים בגן 🕯️ היום אני אבא ואמא של שבת עם שלום עליכם"],
+    ["RK-lXrn4dNQ", "שירי ט\"ו בשבט לילדים בגן 🌳 | השקדיה פורחת, ארץ ישראל שלי יפה, כך הולכי…"],
+    ["dT1HR6Dugh0", "שיר תודה והכרת תודה לילדים 🙏🌈 | זמן לומר תודה"],
+    ["6xwbYg5Gkao", "שיר ילדות מקורי לילדים בגן 😜 | הכי כיף בעולם להיות ילד"],
+    ["Mpp6PiVE880", "🎓 שיר מסיבת סיום גן מרגש | איזה כיף היה לנו בגן 😍"],
+    ["k0zfaasBJY0", "ברוכים הבאים לעולם של דויד 💙 | שיר ילדים מקורי בעברית"],
+    ["B74xfFVYoh4", "מסיבת הריקודים של החיות! 🦁🐒 | שיר חיות מקפיץ לילדים ולפעוטות"],
+    ["LFnnEEhXVLA", "אוסף שירי פסח לילדים בהנחיית דויד 🍷 | מה נשתנה, דיינו ועוד"],
+    ["DC00JMiBoFM", "אוסף השירים האהובים של דויד 🎶 | 5 שירים ברצף!"],
+    ["UDSy5qn6RuI", "אוסף שירי יום העצמאות לילדים בגן | גאה להיות ישראלי, הבה נגילה, התקווה"],
+    ["dybOnpO5CB8", "שיר העצמה ומוטיבציה לילדים בגן 🚀 | אני יודע שאני יכול"],
+    ["q4rmjRanwXQ", "מחרוזת שירי פורים לילדים בגן 🎭 | ליצן קטן שלי, ליהודים הייתה, שושנת יע…"],
+    ["47BHpbg_Ogs", "מחרוזת שירי חנוכה לילדים 🕎 | Hanukkah Songs for Kids | הנרות הללו, מעו…"],
+    ["m7oQcRQ00dM", "שיר לראש השנה לילדים ולגן 🍎 | שנה טובה ומתוקה"],
+    ["-9Of1JfMlw0", "שיר לחג השבועות לילדים בגן 🌾 | חג השבועות חג הביכורים"],
+    ["ST_hT1S0tVI", "שיר לסוכות ושמחת תורה לילדים 🍬 | תקופת החגים"],
+    ["O8fBK12kDm8", "מהבוקר עד הלילה - 5 שירי יומיום לילדים 💙 | הרגעים הקטנים של דויד"],
+    ["qWbH3XhCQN4", "התקווה – ההמנון הלאומי של ישראל | קליפ אנימציה מרגש לילדים ולכל המשפחה"],
+    ["dUpvr6ACz-Y", "פצפונים של קדושה אברי גוף"],
+    ["6Mlyt9aEe2A", "קרליבך בייבי 1 - Carlebach Baby"],
+    ["cJvO0MQlUlo", "ניגוני חב''ד לתינוקות Chabad melodies for baby"],
+    ["YhS2YRfsIN0", "Soothing Chabad Jewish Music (50 minutes) מוסיקה לאווירה יהודית רגועה"],
+    ["D5A0QEqGO6g", "Happy Hanukkah Music - מחרוזת שירי חנוכה מקפיצה - שעה שלמה ברצף"],
+    ["Wj-gamyGxOw", "ניגוני חב\"ד רגועים לתינוקות ברצף - Chabad melodies for babies"],
+    ["5EvirMhEHKs", "Purim Medley מחרוזת שירי פורים וניגוני חבד"],
+    ["Rk-VMsitKC4", "מחרוזת שירי ט\"ו בשבט ברצף - שירים שמחים לכל גיל - Tu Bishvat Medley"],
+    ["VgEahNibtr4", "ניגון שמחה חב\"ד! Chabad Nigun Simcha"],
+    ["K03GEGvTNL8", "חבד מוסיקה רגועה להרפייה - 1 Hour of Meditative Chabad Music"],
+    ["BU0z8KH0QUY", "מיקס שירי פורים - סט דאנס מקפיץ!!! New Purim Dance Music"],
+    ["Mx33D4OpbGI", "מעוז צור ישועתי - שיר לחנוכה - Ma'oz Tzur hanukkah song"],
+    ["Y5iRA78mIEs", "Baby Chabad Full Album - ניגוני חב\"ד לתינוקות"],
+    ["IvWatzTJRdA", "Hanukkah Songs for Kids - 30 Minutes Nonstop - שירי חנוכה ברצף"],
+    ["cdCf1S9ULQI", "מה נשתנה - Ma Nishtana 🎤 / מקהלת אהלי מנחם"],
+    ["E18nA10kKm4", "רצף ניגוני חב''ד / ילדי מקהלת אהלי מנחם 🎤"],
+    ["cLMBqzQQfxM", "ניגון ראש חודש כסלו - Nigun Rosh Chodesh Kislev 🎤 / ילדי מקהלת אהלי מנ…"],
+    ["Iv9TOuGinWQ", "הנרות הללו - Haneiros Halolu (חבד) 🎤 / מקהלת אהלי מנחם"],
+    ["qdB09VKtKTU", "ניגון והיא שעמדה - Vehi Sheamda (חבד) 🎤 / מקהלת אהלי מנחם"],
+    ["TUQFcgy8Jls", "מחרוזת שירי פסח 2024 - Passover Songs🎤 / ילדי מקהלת אהלי מנחם"],
+    ["U51tQcnUuXc", "מחרוזת שירי ל׳׳ג בעומר - Lag Baomer Songs 🎤 / מקהלת אהלי מנחם"],
+    ["0PZ_5xU-kC8", "רחמנא דעני - Rachamana Deonei 🎤 / מקהלת אהלי מנחם"],
+    ["p7brm6jJZ4M", "מחרוזת שירי חנוכה - Chanuka Songs 2023 🎤 / מקהלת אהלי מנחם"],
+    ["Urz32KCD2ys", "אנעים זמירות - ניגון חב׳׳ד בביצוע מרגש 🎤/ מקהלת אהלי מנחם"],
+    ["Z0b_FVIkV0E", "ניגון צמאה לך נפשי - Tzomo Lecho Nafshi 🎤 / מקהלת אהלי מנחם"],
+    ["IAV0YzXX0_4", "האדרת והאמונה - ניגון חבד שמח לערב שבת 🎤 / מקהלת אהלי מנחם"],
+    ["gEuvF5K41So", "ניגון חב׳׳ד לשבת / אסדר לסעודתא 🎤 / Asader LeSeudasa / מקהלת אהלי מנחם"],
+    ["ttrMHb_DALE", "אבינו מלכנו (חבד) - Avinu Malkeinu 🎤 / מקהלת אהלי מנחם"],
+    ["qkiiHNFRMAI", "קול ברמה נשמע - ביצוע נדיר בן 14 שנים | רחל אמנו 🎤 / מקהלת אהלי מנחם"],
+    ["9JmMEKgcnr0", "אני מאמין - Ani Maamin 🎤 (מרגש) / מקהלת אהלי מנחם"],
+    ["_stS2OuIM0M", "פורים חגיגה I קינדרלעך עוזיה צדוק ומקהלת שירה Purim Hagiga I Kinderlac…"],
+    ["9i5gHVLInuI", "מחרוזת פורים I קינדרלעך Purim Medley I Kinderlach 2014"],
+    ["aqt-WpIao3g", "המן הרשע"],
+    ["zwsdgVsfgfY", "אין עוד מלבדו I קינדרלעך Ein od milvado I Kinderlach"],
+    ["xVMpJnzsqiE", "מחרוזת חנוכה I קינדרלעך I ערוץ 20 I חנוכה 2014"],
+    ["8Idc7fwJuw8", "מייק איט הפ'ן I קינדרלעך וליפא שמעלצער Make It Happen I Kinderlach & L…"],
+    ["wsaglC-Alns", "עולה עולה I קינדרלעך Ole Ole I Kinderlach"],
+    ["FJSaofh9yZY", "מתי תגדל I קינדרלעך Matai Tigdal I Kinderlach"],
+    ["JA6_fIW-VCw", "שמע ה' I קינדרלעך ויונתן שיינפלד Sema Hashem I Kinderlach & Yonatan sh…"],
+    ["Otijl6M6Pf4", "אני מאמין - קינדרלעך ani mahmin kinderlach"],
+    ["s057E0WO4Y0", "מחרוזת שירי שבת I קינדרלעך 2016 Shabbat Songs Medley I Kinderlach"],
+    ["FzPcYcWv3lk", "סבבה I קינדרלעך I הקליפ הרשמי Sababa I Kinderlach I Official Video I"],
+    ["eC4Toux8kmQ", "כף על כף I קינדרלעך וליפא I הקליפ הרשמי Caf al Caf I Lipa & Kinderlach…"],
+    ["gnrwM-1Vxhc", "מודה אני I קינדרלעך וישי לפידות Mode Ani I Kinderlach & Ishay Lapidot"],
+    ["0rGZ55KcIMo", "בת מלך I קינדרלעך ובן סנוף Bat Melech I Kinderlach & Ben Snuf"],
+    ["674NgfBBWfg", "עדיף לשתוק I קינדרלעך ואיתן איים Adif Lishtok I Kinderlach & Eitan Aye…"],
+    ["KkC-aLx7cAw", "לילה טוב ילד I להקת קינדרלעך I (קליפ רשמי) Layla Tov Yeled I Kinderlac…"],
+    ["qOEjvLI8At4", "עכשיו הזמן I קינדרלעך The Time Is Now I Kinderlach I"],
+    ["ix7hMGN1SL0", "מחרוזת פרחי I קינדרלעך ואוהד מושקוביץ Pirchei Medley I Kinderlach & Oh…"],
+    ["8_JiFk4P2Bk", "מייק איט האפ'ן I קינדרלעך וליפא שמעלצער Make It Happen I Kinderlach & …"],
+    ["t8JO_JuNykQ", "רוצים לשמוח I קינדרלעך Rotzim Lismoach I Kinderlach I"],
+    ["6Az_N2jtTPQ", "hamalach hagoel I Kinderlach & Yossi Green קינדרלעך ויוסי גרין I המלאך…"],
+    ["kzF2pvTT1Yc", "לכה דודי - מלכות, זאנוויל וינברגר, נפתלי קמפה, לוי פולקוביץ, דובי מיזע…"],
+    ["n2h0VaWz3hA", "קידוש - עקיבא גרומן, מקהלת מלכות, מאיר אדלר, אהרלה סאמט, מענדי ווייס, …"],
+    ["IFvn8df6TCg", "ויהיו זרעי - זאנוויל וינברגר, ילד הפלא בנצי קלצקין, מקהלת מלכות, חסידי…"],
+    ["_HRt_HnGsto", "מחרוזת חנוכה - מקהלת מלכות, הרשי סגל וגדולי הזמר | Malchus Choir"],
+    ["ig0oIwwj9Jk", "עננו רחום וחנון - מוטי ויזל, פנחס ביכלר, מקהלת מלכות, ילד הפלא בנצי קל…"],
+    ["4Kd6qpxade0", "זכנו - זאנוויל וינברגר, ילד הפלא בנצי קלצקין, מקהלת מלכות, קול הנערים,…"],
+    ["9FN1TjcOhmk", "פסח - מקהלת מלכות, שלוימי גרטנר, דודי קאליש, אהרלה סאמט, מקהלת חסידימל…"],
+    ["2yewsN1cuEs", "חנוכה-שוכי גולדשטין, הרשי רוטנברג, אהרלה סמט, פנחס ביכלר, הרשי סגל, מק…"],
+    ["I7VmGGGHuDg", "פרחי ירושלים - בני ברק סיטי (מתוך שנות ה-90)"],
+    ["OI4BMEHQFDQ", "חנן אביטל & פרחי ירושלים - Jerusalem boy’s choir - YMCA"],
+    ["I9sDAqCN-qc", "פרחי ירושלים - מחרוזת סליחות | Jerusalem boy’s choir"],
+    ["QXhELjYUOMw", "Hurricane cover | פרחי ירושלים-הוריקן"],
+    ["yWP36P5u-Kk", "להקת הילדים פרחי ירושלים - אנחנו נשארים בארץ | Jerusalem boy’s choir"],
+    ["yToeoU8skqU", "להקת הילדים פרחי ירושלים - לצאת מדיכאון | Jerusalem boy’s choir"],
+    ["_i4llvb1qIE", "פרחי ירושלים - חתוה מתונה | Jerusalem boy’s choir - Moderate wedding"],
+    ["lSgrmEX_hDk", "להקת הילדים פרחי ירושלים - הלב שלי (ישי ריבו) Jerusalem boy’s choir"],
+  ]},
+  { id:"mitzvot", name:"מצוות ומידות טובות", e:"💛", c:"#ff9f1c", v:[
+    ["zh8BjW-IcHw", "רחלי הקטנה | ??מפעל של שוקולדים"],
+    ["obfEUFUBk8Q", "רחלי הקטנה | איך נהיים חכמים | The Racheli way | Be bright-not right!"],
+    ["XUyN_GYdaTo", "רחלי הקטנה | החסדים שלנו את העולם בונים"],
+    ["qwOYMMCf6FQ", "רחלי הקטנה | מגן החיות לגן נחמי 🦚"],
+    ["DeZQKKQj2TI", "רחלי הקטנה | בתערוכה של דוד המלך"],
+    ["oSKkgal7QvU", "רחלי הקטנה חדש! | 🪁 יותר כייף מסולמות וחבלים"],
+    ["YhlkyDu-Q-Q", "רחלי הקטנה | תפילה היא נתינה גדולה"],
+    ["jdrvFm7VooM", "רחלי הקטנה | פרח פרח | הקליפ הרשמי"],
+    ["_B1wLEz6R1w", "רחלי הקטנה | נדנדה (שיר) קליפ מילים"],
+    ["kQ5IrwBYAmY", "שלומי וסתם ירושלים הסרט המלא"],
+    ["jrRV5zzOVro", "שלומי וסתם - מעשים טובים"],
+    ["cLnkjrBHQ5I", "שלומי וסתם בבית המקדש א'"],
+    ["kB3oMRl5kmo", "שבת מתוקה עם שלומי וסתם"],
+    ["I8yNH5mwi4s", "שלומי וסתם \"הרמבם\""],
+    ["de7Iha73SyQ", "דוד חיים - שלומי וסתם"],
+    ["NNUID81Iq2Q", "שלומי וסתם לג בעומר הסרט המלא"],
+    ["aM7IDVtL6UA", "שלומי וסתם - יום הולדת amazing birthday party"],
+    ["ecjgFyUpwdU", "שלומי וסתם שעון הפסח"],
+    ["78LB198UxNQ", "שלומי וסתם - פיקו"],
+    ["aoQ1wJF1w-w", "שלומי וסתם בית חבד"],
+    ["dT2ytPai8FU", "שלומי וסתם נתי הגעתי הופעתי"],
+    ["9v7TXS-k0sw", "שלומי וסתם- ואהבת לרעך כמוך"],
+    ["qWlsfwzuu-Q", "שלומי וסתם חגיגת חנוכה..."],
+    ["a_fSdmUZ5hU", "שלומי וסתם הפרס הגדוווול"],
+    ["FUts8Uutrv4", "שלומי וסתם ל\"ג בעומר"],
+    ["3sVeaB_tCuc", "שלומי וסתם שחקן בהפתעה"],
+    ["hDHjK4qdboE", "שלומי וסתם ילדה גדולה"],
+    ["Cq4iKrSKeRM", "שלומי וסתם מי בא ?"],
+    ["GRoK3EBXE9s", "שלומי וסתם - שבוע הספר"],
+    ["TSTdUwBtzDI", "שלומי וסתם- שמרית הצבעונית וצחית הציירת"],
+    ["OHzNoqlf_Xw", "\"שלומי וסתם\" - פסטיבל כוכבי הילדים"],
+    ["Ysr4qOTKl1Q", "שלומי וסתם פוגשים את"],
+    ["nA-5kZuBOas", "שלומי וסתם - מגלים את חגי תשרי"],
+    ["aoxRb5Mz134", "שלומי וסתם עושים ספורט"],
+    ["YciExYfYP1Y", "הרמבם - שלומי וסתם"],
+    ["Fk0j8jvfXPo", "שלומי וסתם ביער הקסום The Enchanted Forest"],
+    ["tdbfXzZaguY", "שלומי וסתם מבצע חנוכה"],
+    ["gfA5lD_4NyQ", "שלומי וסתם - מפתח הקסמים"],
+    ["pt49SuCAgNo", "שלומי וסתם השפה העיברית"],
+    ["nMZc7aPXjDE", "שלומי וסתם - מיקי השכן המצחיק"],
+    ["oiZ5h8RfLCw", "יציאת מצרים פסח הסרט המלא קריעת ים סוף | פסח לילדים | משה בתיבה"],
+    ["1CuQaHQlAmc", "סיפור לילדים - מצוות השבת אבידה -פרק 1 אלי מצא ארנקי מאת חנה הס"],
+    ["UEUoQTwKCJg", "יוסף מוקיר שבת | סיפור ושיר לילדים לכבוד שבת קודש | מאת חנה הס"],
+    ["sUcX8R6uyi4", "מחרוזת שירי שבועות Shavuot song"],
+    ["5HI9cQNkoXY", "הר סיני - למה נבחר דווקא הר סיני? | סיפור שבועות לילדים - עריכת סרטון …"],
+    ["DMnZleAUaao", "סיפור לילדים -ואהבת לרעך כמוך- פרק 4 שרה לא שותקת -מאת חנה הס"],
+    ["gFZgmUABBR0", "מגילת אסתר"],
+    ["iKMqSwa7mI4", "ראש השנה- יום כיפור- סוכות חגי תשרי - מסע בזמן מאת חנה הס"],
+    ["o4-KD-i49IE", "סיפור לילדים לכבוד שבת- הפרה שומרת שבת- עריכת סרטון ושיר מאת חנה הס"],
+    ["6ibbe15w2OE", "מצוות ביקור חולים- \"לאה לא מוותרת \"- פרק 2 חיים של מצווה סיפור לילדים …"],
+    ["aIsaeP3azgE", "ל\"ג בעומר לילדים: \"רבי שמעון בר יוחאי\"🎵קרדיט למוזיקה לדוד נחשון - עריכ…"],
+    ["io1Up3C_s_U", "ל״ג בעומר עם 3 סיפורים, רבי שמעון בר יוחאי סיפורים לילדים – בעומר"],
+    ["hWRKQeylrn8", "מצוות לילדים- בני לא קם! פרק 5-\"מפני שיבה תקום והדרת פני זקן\" מאת חנה …"],
+    ["1H6wJWMDjVU", "הכוח של התפילה- פרק 7 של הסדרה חיים של מצווה מאצ חנה הס"],
+    ["T_A9NVGzJg8", "מצוות לילדים-פרק 3- לֹא_תִּגְנֹבוּ -מי לקח את הכדור של יוסי?- סדרה ליל…"],
+    ["F1-P68OJIb0", "לשון הרע – פרק 8 | סיפור לילדים מהסדרה \"חיים של מצווה\" מאת חנה הס לילד…"],
+    ["bhV0xKA70bA", "כיבוד הורים - אבי והטיול לצפת - פרק 6 חיים של מצווה של חנה הס"],
+    ["3xqwdvBEGYc", "ושמחת בחגך רבי אלתר-שיר לסוכות לילדים Vesamachta Bechagecha Sukkot Son…"],
+    ["sHQ3XzPTni0", "אלול המלך בשדה - סיפור +שיר המלך בשדה - יגאל שטטנר ויאיר כהן"],
+    ["RoGMK9lMVXE", "לכבוד שבת קודש‏ - סיפורים לילדים לכבוד שבת קודש Children’s Stories in …"],
+    ["EePvOXDS1X4", "מודה אני - רבי אלתר ז''ל- עריכת סרטון חנה הס"],
+    ["5BloCTpEaJs", "עשרה בטבת: הסיפור המלא על המצור, נבוכדנצר והחורבן | למה צמים?"],
+    ["pplFTqixjrM", "מגילת אסתר"],
+    ["ZE6PFvGW6wA", "סיפור לילדים לכבוד שבת - התבלין של שבת - שיר ועריכת סרטון חנה הס"],
+    ["DziyrN2aDbQ", "סימני ראש השנה לילדים – סרטון מתוק ומיוחד עם כל הברכות ✨ ראש השנה"],
+    ["bGgG-N5_d3A", "חוני המעגל – גשם של ברכה | לשמיני עצרת ולסוכות סיפורים לילדים"],
+    ["DGi8l7-JSw0", "סיפור לילידם- רבי עקיבא - כל מה שה' עושה הכל לטובה - חנה הס"],
+    ["55G3MdzLpEA", "חודש אלול- מסע בזמן מיוחד לילדים מאת חנה הס"],
+    ["LZqFShiTc5k", "האוצר המסתורי שיונתן מצא?! 🕵️‍♂️🎬 | סיפורים לילדים | יונתן ושירה"],
+    ["L24QVR02koI", "מבצע הצלה בפיג'מה! 🦸‍♂️🎬 | סיפורים לילדים | יונתן ושירה"],
+    ["KB_ViNTzu2A", "תעלומת הקוד הסודי! 🕵️‍♂️🔐 | סיפורים לילדים | יונתן ושירה"],
+    ["8miLYnZrkio", "הוא הגיע אחרון - וקיבל את הפרס?! 🏆🎬 | סיפורים לילדים | יונתן ושירה"],
+    ["EguotnrnpH0", "פורים הגיע לגבעת אורן! 🎭🎬 (Pilot) | סיפורים לילדים | יונתן ושירה"],
+    ["N7PgAvOr6bU", "יונתן אבא של שבת - ההכנות וההתרגשות בבית משפחת דגן."],
+    ["45JFjz1rs78", "מתן צור שחקן אנדרדוס ופולע קורקוס בסדרת קומדיה - הירקנייה של עמרם פרק …"],
+  ]},
+  { id:"baktana", name:"פרשת השבוע – בקטנה", e:"📜", c:"#bc6c25", min:120, v:[
+    ["CW_56BRT7fc", "פרשת בראשית"],
+    ["vz2TjZGhi0c", "פרשת נח"],
+    ["kluuy0jR8Sc", "פרשת לך לך"],
+    ["l0Bv8tppPMw", "פרשת וירא"],
+    ["eWQu24p56HQ", "פרשת חיי שרה"],
+    ["1Cqs4fp0IGk", "פרשת תולדות"],
+    ["1qM2uFZKcQ4", "פרשת ויצא"],
+    ["sBpH1kvAq8U", "פרשת וישלח"],
+    ["YACOBFVEsUE", "פרשת וישב"],
+    ["xdUaxP_sWYs", "פרשת מקץ"],
+    ["olIFn5pIJIE", "פרשת ויגש"],
+    ["wBM4qmjtU_g", "פרשת ויחי"],
+    ["moV5VhLh33w", "פרשת שמות"],
+    ["VqWc2LZxHZY", "פרשת וארא"],
+    ["FQInodls8iI", "פרשת בא"],
+    ["wwtCoZ5sRjQ", "פרשת בשלח"],
+    ["DgLyrWbO__Y", "פרשת יתרו"],
+    ["KhQ_3IRMGrI", "פרשת משפטים"],
+    ["eEpwBbSSy6U", "פרשת תרומה"],
+    ["ifPdhQ-8N0Q", "פרשת תצוה"],
+    ["l0skUdZ2nqs", "פרשת כי תשא"],
+    ["Z6HGAFeVrhc", "פרשת ויקהל פקודי"],
+    ["NzZodnesHOk", "פרשת ויקהל"],
+    ["hjPJnv9xEQM", "פרשת פקודי"],
+    ["-nu3i4-6who", "פרשת ויקרא"],
+    ["BJNYdlcy0M0", "פרשת צו"],
+    ["aBXiTvcDnIA", "פרשת שמיני"],
+    ["hwQE2hjSO48", "פרשת תזריע מצורע"],
+    ["aRgR8E8DtZ4", "פרשת תזריע"],
+    ["Ra7eKu2d5po", "פרשת אחרי"],
+    ["jMI2APs7oGM", "פרשת אחרי קדושים"],
+    ["NRrNm32UZYY", "פרשת קדושים"],
+    ["nITKCEL5WtQ", "פרשת אמור"],
+    ["Hj7F9NiUin4", "פרשת בהר בחוקותי"],
+    ["eD7nL318ndw", "פרשת בהר"],
+    ["AIsCbb6mfMU", "פרשת במדבר"],
+    ["aY_WImHBAfg", "פרשת נשא"],
+    ["FkFpVdXniQE", "פרשת בהעלותך"],
+    ["z9nT3imQxu0", "פרשת שלח"],
+    ["6Flx28yGjYU", "פרשת קרח"],
+    ["vHsIII1hY2o", "פרשת חוקת"],
+    ["PvNQXz6ViBU", "פרשת בלק"],
+    ["geeucfuunYo", "פרשת פנחס"],
+    ["NOIrA4G26MY", "פרשת מטות מסעי"],
+    ["b9KL8ArneGs", "פרשת מטות"],
+    ["e0wpyWUaRZg", "פרשת מסעי"],
+    ["9OJ-ldTYNRg", "פרשת דברים"],
+    ["m7qkfgpSadU", "פרשת ואתחנן"],
+    ["BgeVX0mEwcY", "פרשת עקב"],
+    ["gJ_MCZdsnQY", "פרשת ראה"],
+    ["SYbiVLBZuiw", "פרשת שופטים"],
+    ["-tleAyB5QYg", "פרשת כי תצא"],
+    ["o8oh4tBpyFg", "פרשת כי תבוא"],
+    ["fMGnNkBYUBw", "פרשת נצבים וילך"],
+    ["kiJDy-d5ZnM", "פרשת נצבים"],
+    ["6-A_O6w7WAI", "פרשת וילך"],
+    ["Gz88o8wDOwk", "פרשת האזינו"],
+    ["tH8s6vIagjU", "פרשת וזאת הברכה"],
+  ]},
+  { id:"aleph", name:"ערוץ אלף לקטנטנים", e:"🎈", c:"#e5383b", min:120, v:[
+    ["EYcbBODgvIE", "שמוליק ודיני – פינת הבובות, פרק 1"],
+    ["eG4S9fDXXBI", "שמוליק ודיני – שבת, פרק 22"],
+    ["tJPWGOFiUEg", "רלי ג׳וניור – רלי פוגש את סבתא מתוקה"],
+    ["JH-C9yBAoWk", "רלי במאפיית מצות"],
+    ["fL4jdk2uXc4", "המלך בשדה – משל לחודש אלול"],
+    ["PGABTTpBwoY", "סיפור חסידי לילדים קטנים – הרבי הריי״צ"],
+    ["TFHiJ5Lk8b4", "סיפורי צדיקים – ראלי לקטנטנים"],
+    ["k3ghhvnNXKU", "סיפור חסידי עם ניגוני חב״ד – אדמו״ר הזקן"],
+    ["NIBtu6qqSc0", "בגן של פולע – רבי חנינא"],
+    ["z-gQU_EcPeU", "בגן של פולע – פולע מרגיע את הילדים"],
+    ["kFu3PEIDC0I", "12 הפסוקים – שיר"],
+    ["LSIP-SOtZmU", "שיר התעמלות – ריקוד חסידי"],
+  ]},
+  { id:"learn", name:"אלף־בית, צבעים ומספרים", e:"🔤", c:"#4cc9f0", v:[
+    ["A5A76OjQgkY", "ילדים ופעוטות | ספיישל צבעים | צוות צבע - ארבעה פרקים ברצף"],
+    ["TdhZGDjmEVI", "ללמוד צבעים לילדים - 45 דקות ברצף | צוות צבע - תוכניות לילדים ופעוטות …"],
+    ["HCkQ1tOvl9o", "טלוויזיה חינוכית לפעוטות | ספיישל 60 דקות ברצף | צוות צבע | ערוץ צופי"],
+    ["sQi-olljR8s", "ספיישל שעה ברצף בערוץ צופי | טלוויזיה חינוכית לפעוטות חינם | לומדים שי…"],
+    ["xLV5tAG-vgY", "צופי וחברים | משחקים לילדים | עולמו של אוקי | משחקים לתינוקות"],
+    ["-iXEdNpuQG0", "משחקים במבוך עם חיות לילדים | טלוויזיה חינוכית בעברית לגיל הרך חינם | …"],
+    ["7ivzAKj77LI", "ספיישל שעה ברצף בערוץ צופי | טלוויזיה חינוכית לפעוטות חינם | שירים, חי…"],
+    ["90VEtZ0_i-E", "צופי וחברים | צבעים וצלילים 🎨🎸🎷 | עולם בצבעים | שעה וחצי ברצף"],
+    ["43QijPfUUzw", "ספיישל שעה ברצף בערוץ צופי | טלוויזיה חינוכית לפעוטות חינם | שירים, חי…"],
+    ["3HkPPzBfan0", "חיות ומשחקים לילדים | טלוויזיה חינוכית בעברית לגיל הרך | בית ספר לפעוט…"],
+    ["N_Kcw8gyvpU", "טלוויזיה חינוכית לפעוטות | צופי בכייף 1 | ספיישל 60 דקות ברצף | שירים …"],
+    ["7m03EiFpspU", "תוכניות לילדים - חצי שעה ברצף | סרטים מצויירים לילדים ופעוטות | תוכן ח…"],
+    ["uS_QnWZKDwQ", "ללמוד מספרים וחיות לילדים | טלוויזיה חינוכית בעברית לגיל הרך חינם | תכ…"],
+    ["3-34uMbuv54", "ספיישל שעה ברצף בערוץ צופי | טלוויזיה חינוכית לפעוטות חינם | לומדים שי…"],
+    ["ZzRgEAvsFKY", "צופי וחברים | הצלילונים | ספיישל מוסיקה וכלי נגינה 🎸🎷🎻 | 45 דקות ברצף"],
+    ["LiJdKYQ7jJA", "צופי ולישון | לילה טוב, חצי שעה של שירים ותכניות לקראת השינה | ילדים ו…"],
+    ["qG_uSWtCQlw", "צופי וחברים | משחקים לילדים | שמח במבוך | משחקים לתינוקות בחינם | ערוץ…"],
+    ["1fbKtrHSUsE", "צופי וחברים | הצעצועים האהובים ביותר | צבעים לתינוקות | שעה שלמה של הנ…"],
+    ["IqaZIernk5E", "צופי וחברים | הארי הארנב ופיקאבו | משחקים לתינוקות | שעה ברצף!"],
+    ["-dO_RknS3HU", "ללמוד ולאהוב חיות לילדים | טלוויזיה חינוכית בעברית חינם | סרטונים לתינ…"],
+    ["IfO1JL-f_Bo", "צופי וחברים | לומדים לספור! | ספיישל מספרים 1⃣2⃣3⃣"],
+    ["HVYAYjU79Tk", "תוכניות לילדים - חצי שעה ברצף | סרטים מצויירים לילדים ופעוטות | תוכן ח…"],
+    ["9aGsSs-IGd0", "צופי חיות | צופי וחברים | אוצר מילים לתינוקות | צלילים וקולות לפעוטות"],
+    ["Tcle9nNHBmE", "תוכניות חינוכיות עם שירים לילדים | לומדים צבעים, חיות ומוזיקה לתינוקות…"],
+    ["JdXxzwWjlF8", "לימוד צבעים וחיות לילדים | טלוויזיה חינוכית בעברית בחינם לתינוקות ופעו…"],
+    ["6lyeujfXpdI", "טלוויזיה חינוכית לפעוטות | ספיישל 60 דקות ברצף | מספרים מלים ראשונות, …"],
+    ["J8XkbaflAKQ", "טוטיטו - עוגת יום הולדת"],
+    ["vWF9ORM1Hn0", "טוטיטו שוקולד"],
+    ["hj3CgzR_ewc", "טוטיטו בעברית | הצעצועים האהובים ביותר | שעה שלמה של הנאה לילדים"],
+    ["ziVYfVa7Rko", "טוטיטו בעברית ברצף | בריכת כדורים | צעצועים לפעוטות | שעה של הנאה לילד…"],
+    ["iUArxuY_wkw", "טוטיטו בעברית ברצף | עוגת יומולדת | וצעצועים נוספים | שעה שלמה של הנאה…"],
+    ["E9JzoAPNAjA", "טוטיטו גלידה"],
+    ["uixvhNy0J1c", "טוטיטו - מכוניות עץ"],
+    ["6o4Vo95xIrE", "טוטיטו - מגרש משחקים"],
+    ["LA-ixFjjjAU", "טוטיטו בעברית ברצף | צעצועים על גלגלים | 50 דקות של הנאה לילדים | מכונ…"],
+    ["nCqh3fpVIOE", "טוטיטו - קוביות עץ"],
+    ["99Z9fMdQPo8", "טוטיטו בעברית ברצף | צעצועים על גלגלים | 50 דקות של הנאה לילדים | מכונ…"],
+    ["GbhkIpuIsII", "טוטיטו בעברית ברצף | מכונת גלידה | וצעצועים נוספים לילדים | שעה שלמה ש…"],
+    ["cFRUS7lHXyg", "טוטיטו בעברית ברצף | משאית זבל | ועוד צעצועים על גלגלים | 50 דקות"],
+    ["8yyylW0B688", "טוטיטו בפרקים חדשים - צעצועי אמבטיה"],
+    ["2d9DvhlS1IE", "טוטיטו - משאית זבל"],
+    ["u860DO30A1g", "טוטיטו בעברית ברצף | מכונת שוקולד | ועוד צעצועים לפעוטות | שעה שלמה של…"],
+    ["yA62esm9FHk", "טוטיטו - סוכריות על מקל"],
+    ["sO_avUWjvNE", "לימוד צבעים לילדים באנגלית | מכונת בלונים | לימודי העשרה עם טוטיטו"],
+    ["1sdF1poRIPw", "טוטיטו בעברית ברצף | צעצועים לילדים למשחק ביתי"],
+    ["9W-lnMpE9dQ", "טוטיטו - טלפון"],
+    ["S5ydawySHNk", "לימוד ABC לילדים באנגלית | מגרש משחקים | לימודי העשרה עם טוטיטו"],
+    ["1MaAagaLO50", "טוטיטו בעברית ברצף | צעצועי למידה | שעה שלמה של הנאה לילדים"],
+    ["3MfFFyeTlPs", "טוטיטו בעברית ברצף | משאית זבל | וצעצועים נוספים | שעה שלמה של הנאה לי…"],
+    ["-mFY_71k1VQ", "טוטיטו - מסלול כדורים"],
+    ["zd8B-5QPnts", "רותמאמא - חיות הספארי | תכנים לילדים | חיות לילדים"],
+    ["wSuyulzFJws", "רותמאמא - חיות החווה | תכנים לילדים | חיות לילדים"],
+    ["hv2cymnmKIs", "מילים ותנועות ראשונות לילדים ותינוקות 🎵🐝 לומדים ונהנים יחד עם רותמאמא …"],
+    ["h_Zl8AVpmqQ", "שירי ילדים מקוריים + שירי ילדות ישראלית 🎶 | 40 דקות של שירים חינוכיים …"],
+    ["l6YkxhJsM2w", "לומדים צבעים ויוצרים קשת בענן 🌈 סרטון צבעוני לילדים ופעוטות"],
+    ["N5-PHKsSIss", "🌈 צבעים, פירות וירקות עם רותמאמא! לומדים, שרים ונהנים! 🍓🥕🍌🍇| צבעים ליל…"],
+    ["lSd1iNOsoRE", "יש לי גלידה הכי טובה, גלגלי האוטובוס ועוד | מחרוזת השירים הכי אהובים |…"],
+    ["_LbuNOuuawM", "מילים ותנועות ראשונות לילדים ותינוקות עם רותמאמא - 20 דקות | ילדות ישר…"],
+    ["gM9mfa9T9zU", "חיות הג'ונגל לקטנטנים 🌴🐒🐅 - למידה מהנה ומלאת הרפתקאות | תכנים לילדים |…"],
+    ["zWcEEwaG2JM", "מסע ברכבת + היכרות עם צורות בסיסיות | לומדים עם רותמאמא | תוכן חינוכי …"],
+    ["pXuIHyJyWJM", "לומדים הפכים עם רותמאמא 🐘🐭 | סרטון מלא שירים, תנועה והפתעות לקטנטנים! …"],
+    ["VBIRYVebhaI", "בואו נלמד על חלקי הפנים 🎵 לפעוטות וקטנטנים עם רותמאמא | מילים ותנועות …"],
+    ["tMwqFqyNYPA", "ממריאים לשמיים עם רותמאמא! לומדים על כלי טיס, צבעים, צורות ואותיות ✈️🚁…"],
+    ["JR2PDLAATqQ", "הרפתקה כיפית בים עם כלי שיט וחיות הים - כולל מספרים, צבעים ואותיות | ת…"],
+    ["wQXEekjoLdo", "🎵 שירים ודקלומים לקטנטנים - הנאה, לימוד וקצב עם רותמאמא | שירי ילדים"],
+    ["cddDCh2ONic", "שירי ילדות ישראלית עם רותמאמא 🎶 | 20 דקות של שירים אהובים לפעוטות וליל…"],
+    ["r8WKmg8O594", "קולות החיות לפעוטות - הפרק המלא | לומדים עם רותמאמא 🐶🐱 | חיות לילדים"],
+    ["2NQh1PK5Q2U", "מה יש בקופסה? 🎁 הפתעות לקטנטנים עם רותמאמא | טוק טוק טוק סה סה סה! חיו…"],
+    ["2fVyoz2j9hc", "איך שרים \"עכביש קטן\"? 🕷️ שיר עם תנועות ויצירה לילדים ופעוטות עם רותמאמ…"],
+    ["6sgfHEd2MA4", "בואו לשיר ולדקלם עם רותמאמא 🎵 | תכנים לקטנטנים | שירי ילדים"],
+    ["smv5OqzrQ8w", "פירות וירקות בצבעי הקשת 🌈 הרפתקה צבעונית וטעימה עם רותמאמא - גירסה מקו…"],
+    ["zSNV2N6PEjs", "✨ ראש השנה לקטנטנים - תפוחים, דבש ושופר עם רותמאמא ✨ ראש השנה לילדים"],
+  ]},
+  { id:"masha", name:"מאשה והדוב", e:"🐻", c:"#e76f51", v:[
+    ["2BAXPSTIJQc", "3 פרקים בעברית"],
+    ["KRoKms-OGrE", "הפרקים הכי נצפים"],
+    ["z-j0Y0ixJM0", "תמצא את הדבר!"],
+    ["VMHFOoqQWCg", "פרקים בשבילך"],
+    ["_KQFa7qhDzc", "שתיים יותר מדי"],
+    ["lNkagseQbtQ", "מאשה והדוב 🥟 בתאבון (פרק 24)"],
+    ["0ax7ECyIIj0", "מאשה והדוב 🎩✨ מי אני 👱‍♀️🐻 אוסף של סרטים 📺 סרטים לילדים"],
+    ["_EZbYkmkSoY", "מאשה והדוב 🧙‍♀️ הוקוס פוקוס! (פרק 25)"],
+    ["yb8P-mJWlhc", "מאשה והדוב 🚿 יום הכביסה (פרק 18)"],
+    ["NK0q3vpMoMY", "מאשה והדוב 👱‍♀️🥀 בתיאבון 🐛🐻 (פרק 99) ⭐️ סרטים לילדים"],
+    ["0ZvJuMq9zYo", "מאשה והדוב 🍓🍒👱‍♀️ יום הריבה 👱‍♀️🍒 (פרק 6)"],
+    ["LOHxTdIli6M", "מאשה והדוב 👱‍♀️⏳ הקדמונים 👨‍🔬🐻 פרק 48 ⭐️ סרטים לילדים"],
+    ["Cm528bkg6jw", "מאשה והדוב 🍦 החיים המתוקים 🍩 (פרק 33)"],
+    ["Q0nHsTpDlvs", "מאשה והדוב 🍡🍭מתוקים ושמחות🍭🍡(4 סרטונים באחד)"],
+    ["T8LdANnqGDs", "מאשה והדוב 👱‍♀️🏊‍♀️ חוף בלתי נסבל 🎣🐻 (פרק 104) ⭐️ סרטים לילדים"],
+    ["GVHJGyn4HKU", "מאשה והדוב 👱‍♀️😛 פנייה לא צפויה 🚦🐻 (פרק 103) ⭐️ סרטים לילדים"],
+    ["p5rgGog6PjA", "מאשה והדוב 🎒 בת-דודה קטנה 👱‍♀️🐼(פרק 15)"],
+    ["1_VapR3p41k", "מאשה והדוב 🐻👱‍♀️ משהו טעים 🥩🧄 (פרק 79) ⭐️ סרטים לילדים"],
+    ["evOAUaqPNN4", "מאשה והדוב 👱‍♀️🪛 מה יש בפנים 🐻🐧 (פרק 81) ⭐️ סרטים לילדים"],
+    ["HKCDsJDv9Qg", "מאשה והדוב 🥣🍜 במטבח עם מאשה 🍜🥣 (5 סרטונים באחד)"],
+    ["pIQhW5o7eB8", "מאשה והדוב 👍🐰 אתה יכול להשתפר 👱‍♀️🐻 אוסף של סרטים 📺 סרטים לילדים"],
+    ["itudqwyaisU", "מאשה והדוב - 🐧 הכל נשאר במשפחה 🛷(פרק 32)"],
+    ["jRcRzvKj92I", "מאשה והדוב 🔧👷‍♀️🔨 שיפוצים (פרק 26)"],
+    ["ONA-hj_xZq8", "מאשה והדוב 🙊 עצרו את הנשימה (פרק 22)"],
+    ["9hDIV3_KyA4", "מאשה והדוב 👱‍♀️🐻 מביך אך כיף 👩‍🏫🐺 אוסף של סרטים 📺 סרטים לילדים"],
+    ["GT_-S2VXxFs", "מאשה והדוב 👱‍♀️🌸 לישון עד האביב 😴🐻 (פרק 2) ⭐️ ילדים קריקטורות"],
+    ["6PHAu7MYlnQ", "מאשה והדוב - הולכים לדוג 🐟 (פרק 8)"],
+    ["Kxrzwk9AugE", "מאשה והדוב 👱‍♀️ פרק חדש 🥩🧄 משהו טעים 🤩🐻 אוסף של סרטים 📺 סרטים לילדים"],
+    ["HsUTQMTqR8I", "מאשה והדוב 🍊 חג היבול 🍊 (פרק 50)"],
+    ["YMWbFGkHe0o", "מאשה והדוב 👱‍♀️🥣 מתכון לאסון 🎣🐻 פרק 17 ⭐️ סרטים לילדים"],
+    ["ZvhU2SuAD-8", "מאשה והדוב - עקבות של חיה 🐾(פרק 4)"],
+    ["HYs4EeKL6pI", "מאשה והדוב 🐻👱‍♀️ לשמור על נימוס 🍰☺️ (פרק 88) 🐻👱‍♀️ סרטים לילדים"],
+    ["LMwcBncL6Us", "מאשה והדוב 🎹🐻 חיים הם אומנות 👱‍♀️🎸 אוסף של סרטים 📺 סרטים לילדים"],
+    ["NPbXI8QH8rA", "מאשה והדוב 🌟🚀 כוכבים מנצנצים 👱‍♀️🐻 (פרק 70) ⭐️ סרטים לילדים"],
+    ["TuJx502Bdz8", "מאשה והדוב 👱‍♀️🐻 הציור המושלם 🎨✨ (פרק 27) ⭐️ סרטים לילדים"],
+  ]},
+  { id:"coco", name:"קוקומלון", e:"🍉", c:"#43aa8b", v:[
+    ["pEmBeLjUkbA", "שיר הצחוק"],
+    ["2iGSbqKJiSM", "הצב והארנב"],
+    ["k_NSv52i0Ro", "תפוחים או בננות?"],
+    ["2y4PvBe-z7s", "רוצה להיות אמא כמוך | שירי ערש לתינוקות | רוצה להיות אמא כמוך"],
+    ["qvFoKIenGvE", "שירי ערש לתינוקות | שיר הפיצה"],
+    ["pL5HEMsAC1I", "שירי ערש לתינוקות | תפוח ובננה"],
+    ["34g67U35nSU", "שירי ערש לתינוקות | משחקים עם קודי"],
+    ["GoOdJdnPKuM", "שירי ערש לתינוקות | שיר החיה הכיתתית"],
+    ["FxxNkCD742M", "שירי ערש לתינוקות | מי שטוב לו"],
+    ["f5a93I5sMoI", "שירי ערש לתינוקות | כן כן זמן לצחצח שיניים"],
+    ["DZbZsGGvw5c", "יום ליל כל הקדושים | שירי ערש לתינוקות"],
+    ["j5XZqbGLwuw", "שירי ערש לתינוקות | שיר המכה"],
+    ["-6DbU_nuuEI", "שירי ערש לתינוקות | ארוחה בצורות"],
+    ["YyKo43KytpY", "שירי ערש לתינוקות | ג׳וני ג׳וני, כן אבא"],
+    ["wbeGhXUIdC4", "שירי ערש לתינוקות | סקידמרינק 2"],
+    ["NmT7-LcNOl4", "שירי ערש לתינוקות | שנה חדשה"],
+    ["QYnqTZ9uNwk", "יום הולדת לג׳יי ג׳יי 2 - כיסאות מוזיקליים | שירי ערש לתינוקות"],
+    ["P7xxLrMw4Rw", "שירי ערש לתינוקות | בבקשה ותודה"],
+    ["dM6p_Zjxf9M", "שירי ערש לתינוקות | מה שעושה אותי שמח"],
+    ["rEJcZqvzuIw", "שיר כן כן לשמור על כדור הארץ | שירו עם ג'יי ומשפחתו: איך לשמור על כדור…"],
+    ["r50RVHEx3i0", "גלגלי האוטובוס 4 | שירי ערש לתינוקות"],
+    ["7sLZB_EkMVg", "שירי ערש לתינוקות | יום-ים של אבא ובת"],
+    ["UVit_VNW840", "ראש וכתפיים | שירי ערש לתינוקות"],
+    ["R_xp_RTNuT4", "כן כן זמן לישון | שירי ערש לתינוקות"],
+    ["ACxBNBiYi6c", "שירי ערש לתינוקות | תחפושות ליל כל הקדושים"],
+    ["uN3Hcxf9Uuo", "שירי ערש לתינוקות | אנו עולים עולים"],
+    ["idWeKHhhzXw", "ג'יי-ג'יי רוצה מיטה חדשה | שירי ערש לתינוקות"],
+    ["vdpjdiBIt3U", "הצב והארנב | שירי ערש לתינוקות"],
+    ["dPmEQSVzV8g", "שירי ערש לתינוקות | באגם"],
+    ["6ZRl-i47CCs", "שיר צבעי המכוניות | שירי ערש לתינוקות"],
+    ["YakZUGobieE", "שיר כן כן לשמור על הבריאות | שירי ערש לתינוקות"],
+    ["LlbRYh6fPxw", "שירי ערש לתינוקות | מרדף כלבלבים"],
+    ["J3muqNRTXEs", "שירי ערש לתינוקות | יום האם"],
+  ]},
+  { id:"nick", name:"פפה, דורה ומפרץ ההרפתקאות", e:"🐾", c:"#06d6a0", v:[
+    ["q_CKFRyLyV4", "פפה הקטנה (עברית)"],
+    ["gz7MgTpGPk8", "פפה – יום ההולדת של ג׳ורג׳ (עברית)"],
+    ["Tmj6Jjzrm30", "מפרץ ההרפתקאות 🐾מנצחים את קודי"],
+    ["xCMQcSDttgs", "מפרץ ההרפתקאות 🐾: ספיישל ענקי החילוץ | 90 דקות"],
+    ["DBYK0vRXsj4", "צוות הצלה 3: פרק 2 | מסיבת הפתעה"],
+    ["8z6aYZYDfuI", "טל והחברים - הקסם הגדול: הספיישל המלא (41 דקות) ✨"],
+    ["eel_QA95olk", "מפרץ ההרפתקאות 🐾: ספיישל משאיות ענקיות | 85 דקות"],
+    ["Wh8KKiP7zRw", "מפרץ ההרפתקאות 🐾: עונה 6 פרק 2 המלא!"],
+    ["GZkjQnh8QlI", "צוות הצלה 2: פרק 3 | תעלומה במזוודה (עם שי-יה ומור)"],
+    ["IxTbhCDTdfU", "צוות הצלה 3: פרק 6 | גיבור גיבור העל"],
+    ["YUBi-5JC-lM", "מפרץ ההרפתקאות 🐾פיסול בחול"],
+    ["tlBjvXqVU-k", "צוות הצלה 3: לני חילוצים מצילה את פגע-רע"],
+    ["km74E7pGMLc", "צוות הצלה 2: פרק 4 | להציל את סוודר הארנב"],
+    ["rLbWjZLQHYI", "צוות הצלה: פרק 2 | מי לקח את בובו?"],
+    ["J1w8DB7XmJ4", "מפרץ ההרפתקאות 🐾זהירות, מרשל! (8 דקות)"],
+    ["RaBvvVfYilM", "מפרץ ההרפתקאות 🐾: ספיישל גורי הג'ונגל | 90 דקות"],
+    ["41Qj11KPfrk", "דורה וחברים: כל השירים ברצף! 29 דקות"],
+    ["rEgvjMU2rlk", "מפרץ ההרפתקאות 🐾: הגורים מצילים את ה\"על האש\" הגדול | עונה 11 פרק 18 המ…"],
+    ["pCD0DG7MNWE", "צוות הצלה 4: פרק 6 | ההופעה הגדולה (עם שי-יה ומור)"],
+    ["jfVthOwAeKo", "צוות הצלה 5: למי פוקי הכלב שייך?"],
+    ["f3SvJMh4uoI", "מפרץ ההרפתקאות עונה 7 פרק 1 המלא❗️"],
+    ["YgJwp1EwxOU", "צוות הצלה: פרק 1 | תאונת האופניים"],
+    ["NP4Pt2VPwYg", "מפרץ ההרפתקאות עונה 10 פרק 13 המלא❗️"],
+    ["Yg1y_TuJPnQ", "צוות הצלה 5: פרק 4 | מגה פגע"],
+    ["MG50gi6CkY8", "מפרץ ההרפתקאות 🐾: ספיישל גורים אדירים | 43 דקות"],
+    ["JPFNNs4pJzk", "מפרץ ההרפתקאות 🐾: ספיישל כפות על | 43 דקות"],
+    ["q9NyWQfGbZU", "צוות הצלה 4: פרק 1 | אגם הברבורים"],
+    ["NVDoe6MnAOs", "מפרץ ההרפתקאות 🐾: ספיישל מוטו גורים | 85 דקות"],
+    ["eYNmMC4ioqw", "מפרץ ההרפתקאות 🐾: הגורים מצילים את הרעים | פרקים חדשים רק בניק ג'וניור"],
+    ["22VCJcXjgQE", "צוות הצלה 7: פרק 1 | כדורגל"],
+    ["zJt4dEBKh_A", "מפרץ ההרפתקאות 🐾: ספיישל גורי העל | 60 דקות"],
+    ["UNpYZxea1Bc", "מפרץ ההרפתקאות 🐾: ספיישל גורי המים | 85 דקות"],
+  ]},
+  { id:"nastya", name:"נסטיה", e:"👧", c:"#c77dff", v:[
+    ["tqI5ZxX6XZM", "סיפורים חינוכיים – שעה", "en"],
+    ["EI71Hfw1B_c", "סיפורים עם חברים", "en"],
+    ["N6ZphL7Vweo", "סיפורים מועילים", "en"],
+    ["qIwCBekTnzY", "חברות בבית הספר", "en"],
+    ["dFm4rLXOf10", "מאיפה באות ביצים?", "en"],
+    ["urqWcUPdD80", "Nastya and dad are learning the alphabet", "en"],
+    ["PTH_cORldi4", "Nastya and Daddy got into the unusual Adventure Park", "en"],
+    ["7BoiqNwO4SA", "Nastya thinks that she is a cat", "en"],
+    ["6hMHHiQEbB4", "Nastya and dad pack a suitcase and are going on a trip", "en"],
+    ["Jh9QaAajJnA", "Nastya and dad are trying to get rid of a tooth", "en"],
+    ["yWUkN4wyB0s", "Nastya and dad staged a dance competition", "en"],
+    ["sm-o-yxpbvA", "Dad says \"YES\" for Nastya and Eva", "en"],
+    ["DoTY_4Ez03g", "Nastya and Dad and more entertaining episodes - 1 hour compilation", "en"],
+    ["B38_zixwAc0", "Nastya distracts dad with a magic wand", "en"],
+    ["E0JGWzT0IgU", "Nastya is like a bride, but dad is sad", "en"],
+    ["sS6tlWF_B_4", "Nastya does all the housework", "en"],
+    ["xiu3wg4XQRk", "Dad called a strange nanny for Nastya", "en"],
+    ["qq6zZH92O54", "A collection of videos for children about the adventures of Nastya and…", "en"],
+    ["0w5htxelGlY", "Nastya plays games for children with friends. Big collection of videos…", "en"],
+  ]},
+  { id:"english", name:"באנגלית", e:"🌍", c:"#577590", v:[
+    ["8Kf7XGPzW_w", "Peppa Pig – 9 episodes", "en"],
+    ["61fSXCbzF1M", "Bluey – 18 episodes", "en"],
+    ["0RYe146FjJ8", "Bluey – season 1", "en"],
+    ["gjpgSLXCdbc", "Super Simple Songs", "en"],
+    ["JV2CWxWReaQ", "Sharing & Friends Songs", "en"],
+    ["I1C-498pVPA", "Bluey Season 2 Full Episodes | Movies, Seesaw and more!", "en"],
+    ["kx8_wF9HOX8", "Faceytalk | Full Episode - SERIES 3", "en"],
+    ["MnFue5zu454", "Season 3 Full Episodes", "en"],
+    ["Q-K4TCO7Lp8", "Magic Asparagus | Full Episode", "en"],
+    ["xzz6dwKtbqI", "Heeler Family Time 💙 🧡 | Full Episodes | Baby Race, Asparagus, and Mor…", "en"],
+    ["zL_vNn06a5M", "Pizza Girls | Full Episode", "en"],
+    ["T4uKrmq5i1U", "Bluey Season 3 New Full Episodes 💙🧡 | Featuring Granny Mobile, Faceyta…", "en"],
+    ["YpI0jgqNJGc", "The Pool | Full Episode", "en"],
+    ["W3GpdLhgHVA", "Hotel Bluey | Full Episode!", "en"],
+    ["e8ULi9CC6os", "Dad Baby 🍼 | Full Episode", "en"],
+    ["h7sBLY6vXLU", "Pass The Parcel | Full Episode - Series 3", "en"],
+    ["bshREZx6vdY", "Season 1 Full Episodes", "en"],
+    ["ewekkT49lsM", "Seesaw | Full Episode", "en"],
+    ["FCeGAAo6WbM", "Movies | Full Episode", "en"],
+    ["-jBfb33_KHU", "Put On Your Shoes | Clothing and Routines Song for Kids", "en"],
+    ["_6HzoUcx3eo", "Old MacDonald Had A Farm | Nursery Rhymes", "en"],
+    ["2S__fbCGwOM", "The Ants Go Marching | Kids Songs", "en"],
+    ["zXEq-QO3xTg", "The Animals On The Farm | Animals and Farm Song for Kids", "en"],
+    ["HGgsklW-mtg", "Hickory Dickory Dock", "en"],
+    ["r5WLXZspD1M", "Apples & Bananas | Silly Song For Kids", "en"],
+    ["8ljHzljQrY8", "Baby Shark - featuring @Finny The Shark | + More Kids Songs", "en"],
+    ["wk4KHNJjpjQ", "Twinkle Twinkle Little Star & More | Kids Songs", "en"],
+    ["CG8F-6dZk8k", "The Bath Song + More | Songs for Kids!", "en"],
+    ["GoSq-yZcJ-4", "Walking In The Jungle | Kids Song", "en"],
+    ["57a9LwEpGko", "Fun In The Snow! ❄️", "en"],
+    ["P9cIEYXNHqA", "First Snow Day 🧤", "en"],
+    ["XuJbm49zxhM", "Hide And Seek With George 🧐", "en"],
+    ["yMdAMYsTZ-g", "Peppa Pig's House Compilation", "en"],
+    ["2QX994wcA4k", "Rescuing Tiddles The Tortoise 🐢", "en"],
+    ["W9JbqgenXUE", "Scootering To Playgroup 🛴", "en"],
+    ["V6d2rBUusCU", "Peppa Pig Tales 2026 🟡 Summer MARBLE Run! 🔵 BRAND NEW Peppa Pig Episod…", "en"],
+    ["eQVy3uW3inU", "George Becomes a SUPERHERO! 🦸‍♂️ BRAND NEW Peppa Pig Tales Episodes | …", "en"],
+  ]},
+];
+
+/* ======================== מצב ======================== */
+const MIN_SECONDS = 180;
+const DAY = 864e5;
+const store = {
+  get(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d }catch(e){ return d } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
+};
+let hidden = new Set(store.get('kidtv-hidden', []));
+let current = store.get('kidtv-cat', 'all');
+if(current!=='all' && !CATS.some(c=>c.id===current)) current='all';
+/* היסטוריה: [{id, c, t (זמן), p (כמה אחוז נצפה)}], החדש ראשון */
+let hist = store.get('kidtv-hist', []);
+
+const byId = new Map(); for(const c of CATS) for(const v of c.v) if(!byId.has(v[0])) byId.set(v[0], {v, c});
+const nav = document.getElementById('nav'), main = document.getElementById('main');
+
+/* ======================== ערבוב לפי צפיות (כמו יוטיוב קידס) ========================
+   כל צפייה מוסיפה משקל לקטגוריה שלה; צפייה חדשה שווה יותר (חצי־חיים של 4 ימים),
+   וצפייה עד הסוף שווה פי 2. סרטון שנצפה ב־3 הימים האחרונים מקבל משקל נמוך, כדי לגוון. */
+function catWeights(){
+  const w = {}; for(const c of CATS) w[c.id] = 1;
+  const now = Date.now();
+  for(const h of hist){
+    if(!(h.c in w)) continue;
+    const age = (now - h.t) / DAY;
+    w[h.c] += 4 * Math.pow(.5, age/4) * (h.p >= .6 ? 2 : 1);
+  }
+  return w;
+}
+function lastSeen(){ const m = new Map(); for(const h of hist) if(!m.has(h.id)) m.set(h.id, h); return m; }
+function vidWeight(id, cw, seen){
+  const s = seen.get(id); let f = 1;
+  if(s){ const age = (Date.now()-s.t)/DAY; f = age < 3 ? .25 : .7; }
+  return f;
+}
+/* דגימה משוקללת בלי חזרות (Efraimidis–Spirakis) */
+function weightedShuffle(items, wf){
+  return items.map(x => [Math.pow(Math.random(), 1/Math.max(wf(x),1e-6)), x]).sort((a,b)=>b[0]-a[0]).map(p=>p[1]);
+}
+let seed = 0, cache = {};
+function reshuffle(){ seed++; cache = {}; }
+function shuffledCat(c){
+  const k = 'c:'+c.id;
+  if(!cache[k]){ const seen = lastSeen(); cache[k] = weightedShuffle(c.v.filter(v=>!hidden.has(v[0])), v => vidWeight(v[0], null, seen)); }
+  return cache[k].filter(v=>!hidden.has(v[0]));
+}
+function forYou(n){
+  if(!cache.fy){
+    const cw = catWeights(), seen = lastSeen(), all = [];
+    for(const c of CATS) for(const v of c.v) if(!hidden.has(v[0])) all.push({v, c, w: cw[c.id] / Math.sqrt(c.v.length) * vidWeight(v[0], cw, seen)});
+    const out = [], used = new Set();
+    for(const x of weightedShuffle(all, x=>x.w)){ if(used.has(x.v[0])) continue; used.add(x.v[0]); out.push(x); if(out.length>=n) break; }
+    cache.fy = out;
+  }
+  return cache.fy.filter(x=>!hidden.has(x.v[0]));
+}
+
+/* ======================== תצוגה ======================== */
+function card(v, c, seenMap){
+  const [id,title,lang] = v;
+  const b = document.createElement('button');
+  b.className='card'; b.style.setProperty('--c', c.c);
+  const s = seenMap && seenMap.get(id);
+  b.innerHTML = `<div class="thumb"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg"><span class="play">▶</span>
+                   ${seenMap ? `<span class="badge">${c.e}</span>` : ''}
+                   ${s && s.p ? `<span class="seen"><i style="width:${Math.min(100,Math.round(s.p*100))}%"></i></span>` : ''}</div>
+                 <div class="t"></div>`;
+  b.querySelector('.t').textContent = title;
+  if(lang==='en') b.querySelector('.t').insertAdjacentHTML('beforeend',' <span class="lang">· English</span>');
+  b.onclick = () => openVideo(id, title, c);
+  return b;
+}
+function section(title, color, el){
+  const s = document.createElement('section');
+  s.style.setProperty('--c', color);
+  s.innerHTML = `<h2><span class="dot"></span></h2>`;
+  s.querySelector('h2').append(title);
+  s.appendChild(el); main.appendChild(s); return s;
+}
+function go(id){ current = id; store.set('kidtv-cat', current); renderNav(); renderMain(); window.scrollTo({top:0,behavior:'smooth'}); }
+function renderNav(){
+  nav.innerHTML = '';
+  const cw = catWeights();
+  const ordered = [...CATS].sort((a,b)=>cw[b.id]-cw[a.id]);
+  const all = [{id:'all',name:'בית',e:'🏠',c:'#ffb703'}, ...ordered];
+  for(const c of all){
+    const b = document.createElement('button');
+    b.className = 'chip' + (current===c.id?' on':'');
+    b.style.setProperty('--c', c.c);
+    b.innerHTML = `<span class="e">${c.e}</span>`; b.append(c.name);
+    b.onclick = () => go(c.id);
+    nav.appendChild(b);
+  }
+}
+function renderMain(){
+  main.innerHTML = '';
+  if(current==='all'){
+    const seen = lastSeen();
+    /* 1. לראות שוב */
+    const again = [...seen.values()].filter(h=>byId.has(h.id) && !hidden.has(h.id)).slice(0,12);
+    if(again.length){
+      const row = document.createElement('div'); row.className='row';
+      for(const h of again){ const {v,c} = byId.get(h.id); row.appendChild(card(v, c, seen)); }
+      section('🔁 לראות שוב', '#fb6f92', row);
+    }
+    /* 2. במיוחד בשבילך */
+    const g = document.createElement('div'); g.className='grid';
+    for(const x of forYou(again.length ? 16 : 12)) g.appendChild(card(x.v, x.c, seen));
+    section('✨ במיוחד בשבילך', '#ffb703', g);
+    /* 3. כל קטגוריה, לפי מה שהיא אוהבת */
+    const cw = catWeights();
+    for(const c of [...CATS].sort((a,b)=>cw[b.id]-cw[a.id])){
+      const vids = shuffledCat(c); if(!vids.length) continue;
+      const row = document.createElement('div'); row.className='row';
+      for(const v of vids.slice(0,10)) row.appendChild(card(v, c));
+      const s = section(`${c.e} ${c.name}`, c.c, row);
+      const m = document.createElement('button'); m.className='more'; m.textContent = `עוד ${c.name} (${vids.length}) ←`;
+      m.onclick = () => go(c.id); s.appendChild(m);
+    }
+  } else {
+    const c = CATS.find(c=>c.id===current);
+    const vids = shuffledCat(c);
+    const g = document.createElement('div'); g.className='grid';
+    if(!vids.length) g.innerHTML = '<div class="empty">אין כרגע סרטונים כאן</div>';
+    for(const v of vids) g.appendChild(card(v, c, null));
+    section(`${c.e} ${c.name}`, c.c, g);
+  }
+  const n = hidden.size, total = byId.size;
+  document.getElementById('hiddenCount').textContent = n ? `(${n} מוסתרים)` : '';
+  document.getElementById('histCount').textContent = hist.length ? `(${hist.length} צפיות)` : '';
+  document.getElementById('totalCount').textContent = total - n;
+}
+
+/* ======================== היסטוריה ======================== */
+function logView(id, catId){
+  hist = hist.filter(h=>!(h.id===id && Date.now()-h.t < 6*36e5)); // אותו סרטון שוב באותו בוקר = צפייה אחת
+  hist.unshift({id, c:catId, t:Date.now(), p:0});
+  hist = hist.slice(0, 300);
+  store.set('kidtv-hist', hist);
+}
+function logProgress(id, p){
+  const h = hist.find(h=>h.id===id); if(!h) return;
+  if(p > (h.p||0)){ h.p = Math.round(p*100)/100; store.set('kidtv-hist', hist); }
+}
+
+/* ======================== נגן ======================== */
+let player = null, apiReady = false, pending = null, checked = false, tick = null, curId = null, curCat = null, dirty = false;
+const wrap = document.getElementById('player-wrap'), shield = document.getElementById('shield'),
+      msg = document.getElementById('msg'), endscreen = document.getElementById('endscreen'),
+      prog = document.getElementById('prog');
+
+window.onYouTubeIframeAPIReady = () => { apiReady = true; if(pending){ const p=pending; pending=null; openVideo(...p); } };
+(function(){ const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
+
+function openVideo(id, title, cat){
+  wrap.classList.add('open'); document.body.style.overflow='hidden';
+  document.getElementById('ptitle').textContent = cat.e + ' ' + title;
+  endscreen.classList.remove('show'); shield.classList.add('paused'); msg.textContent=''; prog.style.width='0';
+  curId = id; curCat = cat; checked = false;
+  if(location.protocol === 'file:'){ showEnd('🏠','צריך לפתוח את האתר דרך קובץ ההפעלה (start-windows.bat או start-mac.command), ולא בלחיצה כפולה על index.html'); return; }
+  if(!apiReady){ pending=[id,title,cat]; msg.textContent='טוען…'; return; }
+  if(player){ player.loadVideoById(id); return; }
+  player = new YT.Player('yt', {
+    host: 'https://www.youtube-nocookie.com',
+    videoId: id,
+    playerVars: { autoplay:1, controls:0, disablekb:1, fs:0, rel:0, iv_load_policy:3, playsinline:1, modestbranding:1, cc_load_policy:0, hl:'iw', origin: location.origin },
+    events: {
+      onReady: e => { try{ e.target.playVideo() }catch(_){} },
+      onStateChange: onState,
+      onError: onErr
+    }
+  });
+}
+function onState(e){
+  const S = YT.PlayerState;
+  if(e.data === S.PLAYING){
+    shield.classList.remove('paused'); msg.textContent='';
+    if(!checked){
+      checked = true;
+      const d = player.getDuration();
+      if(d > 0 && d < (curCat.min || MIN_SECONDS)){ player.stopVideo(); hideVideo(curId); showEnd('⏱️','הסרטון הזה קצר מדי, בואי נבחר אחר!'); return; }
+      logView(curId, curCat.id); dirty = true;
+    }
+    clearInterval(tick);
+    tick = setInterval(()=>{ try{ const d=player.getDuration(), t=player.getCurrentTime(); if(d){ prog.style.width=(t/d*100)+'%'; logProgress(curId, t/d); } }catch(_){ } }, 500);
+  } else if(e.data === S.ENDED){
+    clearInterval(tick); prog.style.width='100%'; logProgress(curId, 1);
+    try{ player.stopVideo() }catch(_){}
+    showEnd('🎉','נגמר! איזה כיף!');
+  } else if(e.data === S.PAUSED || e.data === S.CUED || e.data === -1){
+    clearInterval(tick); shield.classList.add('paused');
+  }
+}
+function onErr(){
+  hideVideo(curId);
+  showEnd('🙈','את הסרטון הזה אי אפשר לראות כאן. בואי נבחר אחר!');
+}
+function hideVideo(id){ hidden.add(id); store.set('kidtv-hidden',[...hidden]); hist = hist.filter(h=>h.id!==id); store.set('kidtv-hist', hist); dirty = true; }
+function showEnd(e,p){ document.getElementById('endE').textContent=e; document.getElementById('endP').textContent=p; endscreen.classList.add('show'); }
+
+shield.onclick = () => {
+  if(!player || !player.getPlayerState) return;
+  const st = player.getPlayerState();
+  if(st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo();
+};
+function closePlayer(){
+  clearInterval(tick);
+  try{ player && player.stopVideo() }catch(_){}
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  wrap.classList.remove('open'); document.body.style.overflow='';
+  /* כמו ביוטיוב קידס: כשחוזרים לדף הבית, ההמלצות מתעדכנות לפי מה שנצפה עכשיו */
+  if(dirty){ dirty = false; const y = window.scrollY; reshuffle(); renderNav(); renderMain(); if(current!=='all') window.scrollTo(0,y); else window.scrollTo({top:0}); }
+}
+document.getElementById('close').onclick = closePlayer;
+document.getElementById('back').onclick = closePlayer;
+document.getElementById('fs').onclick = () => {
+  const f = document.getElementById('frame');
+  if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return; }
+  (f.requestFullscreen ? f.requestFullscreen() : Promise.reject()).catch(()=>{ (f.webkitRequestFullscreen||(()=>{})).call(f); });
+};
+document.getElementById('shuffle').onclick = () => { reshuffle(); renderMain(); window.scrollTo({top:0,behavior:'smooth'}); };
+document.getElementById('reset').onclick = () => { hidden = new Set(); store.set('kidtv-hidden',[]); reshuffle(); renderMain(); };
+document.getElementById('clearHist').onclick = () => { if(!confirm('לנקות את היסטוריית הצפייה?')) return; hist = []; store.set('kidtv-hist',[]); reshuffle(); renderNav(); renderMain(); };
+
+renderNav(); renderMain();
+</script>
+</body>
+</html>
