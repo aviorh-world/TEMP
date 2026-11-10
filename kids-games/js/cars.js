@@ -52,7 +52,8 @@ registerGame({
       W = wrap.clientWidth; H = wrap.clientHeight;
       cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       roadW = Math.min(W * .62, 480); laneW = roadW / 3; roadX = (W - roadW) / 2;
-      carY = H * .62; cw = Math.min(laneW * .56, 64); ch = cw * 1.7;
+      cw = Math.min(laneW * .56, 64, H * .13); ch = cw * 1.7;
+      carY = Math.max(H * .4, Math.min(H * .62, H - 140 - ch / 2)); // לא מתחת לכפתורים במסך נמוך
     }
     resize(); s.on(window, 'resize', resize);
     const laneX = l => roadX + laneW * (l + .5);
