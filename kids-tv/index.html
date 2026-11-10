@@ -25,6 +25,9 @@
   #shuffle{flex:0 0 auto;order:2;border:0;border-radius:50%;width:56px;height:56px;font-size:26px;
            background:#fff;box-shadow:var(--shadow);cursor:pointer}
   #shuffle:active{transform:scale(.92) rotate(-20deg)}
+  #games{flex:0 0 auto;order:-1;border-radius:50%;width:56px;height:56px;font-size:26px;display:grid;place-items:center;
+         background:#fff;box-shadow:var(--shadow);text-decoration:none}
+  #games:active{transform:scale(.92)}
 
   nav{display:flex;gap:10px;overflow-x:auto;padding:12px 14px 16px;scroll-snap-type:x mandatory;scrollbar-width:none}
   nav::-webkit-scrollbar{display:none}
@@ -150,6 +153,7 @@
 </head>
 <body>
 <header>
+  <a id="games" href="../kids-games/" aria-label="המשחקים שלי">🎮</a>
   <button id="shuffle" aria-label="לערבב">🔀</button>
   <h1><span>🦋</span> הטלוויזיה שלי <span>🌈</span></h1>
 </header>
