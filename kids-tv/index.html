@@ -79,70 +79,84 @@
   .bn.on svg{fill:#fff;stroke:#fff}
   .bn .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:radial-gradient(circle at 30% 30%,#ffe066,#ff7eb6 60%,#7b5cff)}
 
-  /* ======================== player (watch page) ======================== */
-  #player{position:fixed;inset:0;z-index:50;display:none;overflow-y:auto;overscroll-behavior:contain;
-          background:linear-gradient(180deg,#0b0c66 0%,#0d1384 40%,#1330c4 100%)}
+  /* ======================== player (watch screen, like the app) ======================== */
+  #player{position:fixed;inset:0;z-index:50;display:none;background:#000;overflow:hidden;--rowh:min(27vh,26vw)}
   #player.open{display:block}
-  #vid{position:sticky;top:0;z-index:5;width:100%;aspect-ratio:16/9;max-height:62vh;background:#000;overflow:hidden;margin-top:env(safe-area-inset-top)}
+  /* video area: full screen; shrinks to the top when the child taps and more videos appear underneath */
+  #vid{position:absolute;left:0;right:0;top:0;bottom:0;background:#000;overflow:hidden;transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
   #yt-box,#yt-box iframe,#yt{position:absolute;inset:0;width:100%;height:100%;border:0}
   #yt-box iframe{pointer-events:none}
   #cover{position:absolute;inset:0;background:#000 center/contain no-repeat;opacity:0;transition:opacity .2s;pointer-events:none}
   #player:not(.playing) #cover{opacity:1}
   #tap{position:absolute;inset:0;z-index:2;cursor:pointer}
-  #ctl{position:absolute;inset:0;z-index:3;opacity:0;transition:opacity .2s;pointer-events:none;background:rgba(0,0,0,.45)}
-  #player.ui #ctl,#player:not(.playing) #ctl{opacity:1}
-  #player.ui #ctl .c,#player:not(.playing) #ctl .c{pointer-events:auto}
-  .cbtn{border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:50%}
+
+  #ctl{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;transition:opacity .2s;background:rgba(0,0,0,.35)}
+  #player.ui #ctl{opacity:1}
+  #player.ui #ctl .c{pointer-events:auto}
+  .cbtn{border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:50%;padding:0}
   .cbtn svg{fill:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
   .cbtn:active{background:rgba(255,255,255,.15)}
-  .ctop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:8px 10px}
-  .ctop .cbtn{width:48px;height:48px}
-  .ctop .cbtn svg{width:30px;height:30px}
-  #ltitle{flex:1;font:500 17px var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0}
-  .cmid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;justify-content:center;align-items:center;gap:clamp(30px,10vw,90px);direction:ltr}
-  #pp{width:76px;height:76px;background:rgba(0,0,0,.35)}
-  #pp svg{width:52px;height:52px}
-  .skip{width:58px;height:58px}
-  .skip svg{width:40px;height:40px}
-  .cbot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:0 6px 2px 12px;direction:ltr;font:500 13px var(--font);font-variant-numeric:tabular-nums}
-  .cbot .cbtn{width:44px;height:44px}
-  .cbot .cbtn svg{width:28px;height:28px}
-  #bar{position:relative;flex:1;height:30px;cursor:pointer;touch-action:none}
-  #bar .track{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:rgba(255,255,255,.35)}
+  /* top: back arrow, category "avatar", title */
+  .ctop{position:absolute;top:0;right:0;left:0;display:flex;align-items:center;gap:12px;
+        padding:calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 0 calc(14px + env(safe-area-inset-left))}
+  #close{width:50px;height:50px;flex:0 0 auto}
+  #close svg{width:34px;height:34px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .av2{width:48px;height:48px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-size:26px;background:var(--cc,#7b5cff);box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+  .ttl{min-width:0;flex:1}
+  #ptitle{font:500 18px/1.25 var(--font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  #pcat{font:400 14px/1.3 var(--font);opacity:.75;margin-top:2px}
+  /* next video (left, middle) */
+  #next{position:absolute;left:calc(18px + env(safe-area-inset-left));top:50%;width:60px;height:60px;margin-top:-30px}
+  #next svg{width:42px;height:42px}
+  #player.norecs #next{display:none}
+  /* bottom row: full screen, play/pause, time, bar, length */
+  .cbot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:14px;direction:ltr;
+        padding:0 calc(16px + env(safe-area-inset-right)) 8px calc(14px + env(safe-area-inset-left));font:500 16px var(--font);font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .cbot .cbtn{width:48px;height:48px;flex:0 0 auto}
+  .cbot .cbtn svg{width:34px;height:34px}
+  #pp svg{width:40px;height:40px}
+  #bar{position:relative;flex:1;height:40px;cursor:pointer;touch-action:none;margin:0 6px}
+  #bar .track{position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:6px;background:#fff;overflow:hidden}
   #fill{height:100%;width:0;background:var(--red)}
-  #knob{position:absolute;top:50%;left:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--red);transition:transform .1s}
-  #bar:active #knob{transform:scale(1.5)}
+  #knob{position:absolute;top:50%;left:0;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.45);transition:transform .1s}
+  #knob::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--red)}
+  #bar:active #knob{transform:scale(1.2)}
+
   #loading{position:absolute;inset:0;z-index:4;display:none;place-items:center;pointer-events:none}
   #loading.show{display:grid}
   #loading i{width:46px;height:46px;border-radius:50%;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  #over{position:absolute;inset:0;z-index:4;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.72);text-align:center;padding:16px;font:500 18px/1.4 var(--font)}
+  #over{position:absolute;inset:0;z-index:4;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.75);text-align:center;padding:16px;font:500 18px/1.4 var(--font)}
   #over.show{display:flex}
   #over .e{font-size:44px;line-height:1}
-  #over button{border:0;border-radius:24px;padding:10px 22px;background:#f1f1f1;color:#0f0f0f;font:600 16px var(--font);cursor:pointer;display:flex;align-items:center;gap:8px}
-  #over button svg{width:22px;height:22px;fill:#0f0f0f}
-  /* recommendations row inside the video – for full screen, while paused or at the end */
-  #lrecs{position:absolute;left:0;right:0;bottom:48px;z-index:4;display:none;gap:12px;overflow-x:auto;scrollbar-width:none;padding:0 14px 6px}
-  #lrecs::-webkit-scrollbar{display:none}
-  #lrecs .card{flex:0 0 clamp(150px,22vw,210px);padding:5px 5px 7px;border-radius:12px}
-  #lrecs .thumb{border-radius:8px}
-  #lrecs .meta{padding-top:6px}
-  #lrecs .meta .t{font-size:13px;-webkit-line-clamp:1}
-  #lrecs .kebab,#lrecs .dur{display:none}
 
-  #below{padding:14px 0 30px}
-  #ptitle{font:700 20px/1.35 var(--font);margin:0 calc(18px + env(safe-area-inset-right)) 8px calc(18px + env(safe-area-inset-left))}
-  #pcat{display:inline-flex;align-items:center;gap:8px;margin:0 calc(18px + env(safe-area-inset-right)) 16px;background:var(--chip);border-radius:20px;padding:7px 14px 7px 16px;font:500 15px var(--font);border:0;cursor:pointer}
+  /* more videos: thumbnails only, like the app */
+  .tcard{position:relative;border:0;padding:0;border-radius:12px;overflow:hidden;cursor:pointer;background:#222;aspect-ratio:16/9;display:block}
+  .tcard img{width:100%;height:100%;object-fit:cover;display:block}
+  .tcard:active{transform:scale(.97)}
+  #more{position:absolute;left:0;right:0;bottom:0;z-index:1;display:none}
+  #more h4{display:none;margin:0;font:700 22px var(--font)}
+  #mlist{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:0 calc(18px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left))}
+  #mlist::-webkit-scrollbar{display:none}
+  #mlist .tcard{flex:0 0 auto;height:var(--rowh)}
 
-  /* full screen: phone sideways, or the full-screen button */
-  @media (orientation:landscape) and (max-height:600px){ #player:not(.mini) #vid{position:fixed;inset:0;max-height:none;aspect-ratio:auto;margin:0} #player:not(.mini) #below{display:none} }
-  #player.full #vid{position:fixed;inset:0;max-height:none;aspect-ratio:auto;margin:0}
-  #player.full #below{display:none}
-  @media (orientation:landscape) and (max-height:600px){ #player:not(.mini) #ltitle{opacity:1} #player:not(.mini).started:not(.playing) #lrecs{display:flex} #player:not(.mini).started:not(.playing) .cmid{top:28%} }
-  #player.full #ltitle{opacity:1}
-  #player.full.started:not(.playing) #lrecs{display:flex}
-  #player.full.started:not(.playing) .cmid{top:28%}
-  @media (max-height:430px){ #lrecs .card{flex-basis:clamp(130px,19vw,170px)} #lrecs .meta{padding-top:4px} .skip{width:50px;height:50px} .skip svg{width:34px;height:34px} #pp{width:64px;height:64px} #pp svg{width:44px;height:44px} }
+  /* landscape: tap -> video moves up, row of thumbnails underneath */
+  @media (orientation:landscape){
+    #player.ui:not(.norecs) #vid{bottom:calc(var(--rowh) + 22px + env(safe-area-inset-bottom))}
+    #player.ui:not(.norecs) #more{display:block}
+  }
+  /* portrait: controls + video on top, "more videos" list below */
+  @media (orientation:portrait){
+    #player{overflow-y:auto}
+    #vid{position:sticky;bottom:auto;height:max(56.25vw,44vh);z-index:2}
+    #player.ui #ctl{background:rgba(0,0,0,.45)}
+    #more{position:static;display:block;padding:22px 0 30px}
+    #player.norecs #more{display:none}
+    #more h4{display:block;margin:0 calc(22px + env(safe-area-inset-right)) 18px}
+    #mlist{flex-direction:column;align-items:center;overflow:visible;padding:0 0 calc(20px + env(safe-area-inset-bottom))}
+    #mlist .tcard{height:auto;width:min(68vw,520px)}
+  }
+  @media (max-height:430px){ .ctop{padding-top:6px} #close,.av2{width:42px;height:42px} .av2{font-size:22px} #ptitle{font-size:16px} .cbot .cbtn{width:42px;height:42px} .cbot{font-size:14px} }
 
   /* ======================== parents ======================== */
   #sheet{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
@@ -156,6 +170,9 @@
   #gq{font-size:24px;margin:8px 0 12px}
   #ga{font:600 22px var(--font);width:120px;padding:8px 10px;border:0;border-radius:12px;text-align:center;background:#3a3a3a;color:#fff}
   #gerr{color:#ff6b6b;min-height:1.6em}
+  .opt{display:flex;gap:12px;align-items:flex-start;background:#2c2c2c;border-radius:14px;padding:12px 14px;margin:8px 0;cursor:pointer;font-size:14px;line-height:1.5}
+  .opt b{font-size:15px}
+  .opt input{width:24px;height:24px;margin-top:2px;flex:0 0 auto;accent-color:#ff0033}
 </style>
 </head>
 <body>
@@ -196,28 +213,23 @@
     <div id="tap"></div>
     <div id="ctl">
       <div class="ctop c">
-        <button class="cbtn" id="close" aria-label="חזרה"><svg viewBox="0 0 24 24"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg></button>
-        <div id="ltitle"></div>
+        <button class="cbtn" id="close" aria-label="חזרה"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></button>
+        <div class="av2" id="pav"></div>
+        <div class="ttl"><div id="ptitle"></div><div id="pcat"></div></div>
       </div>
-      <div class="cmid c">
-        <button class="cbtn skip" id="rew" aria-label="10 שניות אחורה"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/><text x="12" y="16.3" font-size="6.5" text-anchor="middle" font-family="Roboto,Arial" font-weight="700">10</text></svg></button>
-        <button class="cbtn" id="pp" aria-label="נגן / עצור"></button>
-        <button class="cbtn skip" id="fwd" aria-label="10 שניות קדימה"><svg viewBox="0 0 24 24"><path d="M12 5V1l5 5-5 5V7a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/><text x="12" y="16.3" font-size="6.5" text-anchor="middle" font-family="Roboto,Arial" font-weight="700">10</text></svg></button>
-      </div>
+      <button class="cbtn c" id="next" aria-label="הסרטון הבא"><svg viewBox="0 0 24 24"><path d="M5 5.5v13a1 1 0 0 0 1.5.9l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 5 5.5zM17.5 5h1.5a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>
       <div class="cbot c">
-        <span id="tcur">0:00</span><div id="bar"><div class="track"><div id="fill"></div></div><div id="knob"></div></div><span id="tdur">0:00</span>
         <button class="cbtn" id="fs" aria-label="מסך מלא"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+        <button class="cbtn" id="pp" aria-label="נגן / עצור"></button>
+        <span id="tcur">0:00</span>
+        <div id="bar"><div class="track"><div id="fill"></div></div><div id="knob"></div></div>
+        <span id="tdur">0:00</span>
       </div>
-      <div id="lrecs" class="c"></div>
     </div>
     <div id="loading"><i></i></div>
-    <div id="over"><div class="e" id="overE"></div><div id="overT"></div><button id="again"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>עוד פעם</button></div>
+    <div id="over"><div class="e" id="overE"></div><div id="overT"></div></div>
   </div>
-  <div id="below">
-    <div id="ptitle"></div>
-    <button id="pcat"></button>
-    <div class="feed" id="pfeed"></div>
-  </div>
+  <div id="more"><h4>סרטונים נוספים</h4><div id="mlist"></div></div>
 </div>
 
 <div id="sheet">
@@ -1197,12 +1209,14 @@ function logProgress(id, p){
 
 /* ======================== נגן ======================== */
 const ICON = {
-  play:'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
-  pause:'<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l11.6-7.2a1 1 0 0 0 0-1.72L8.5 3.94A1 1 0 0 0 7 4.8z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg>',
   replay:'<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>'
 };
+/* הגדרות (נשמרות במכשיר): המלצות בזמן צפייה, סיבוב אוטומטי לרוחב */
+let settings = Object.assign({recs:true, rotate:true}, store.get('kidtv-settings', {}));
 let player = null, apiReady = false, pending = null, checked = false, tick = null, curId = null, curCat = null, dirty = false, ended = false;
-let uiTimer = null, dragging = false;
+let uiTimer = null, dragging = false, recs = [];
 const P = $('player'), loading = $('loading'), cover = $('cover'), over = $('over');
 const fill = $('fill'), knob = $('knob'), bar = $('bar'), tcur = $('tcur'), tdur = $('tdur'), pp = $('pp');
 
@@ -1215,26 +1229,50 @@ function drawProgress(t, d){
   tcur.textContent = fmt(t); tdur.textContent = fmt(d);
 }
 function setPP(){ pp.innerHTML = ended ? ICON.replay : (P.classList.contains('playing') ? ICON.pause : ICON.play); }
-function flashUI(){ P.classList.add('ui'); clearTimeout(uiTimer); uiTimer = setTimeout(()=>{ if(!dragging) P.classList.remove('ui'); }, 3500); }
-function setPlaying(on){ P.classList.toggle('playing', on); setPP(); if(on) flashUI(); else { clearTimeout(uiTimer); P.classList.remove('ui'); } }
-function showOver(e, t, replay){ $('overE').textContent = e; $('overT').textContent = t; $('again').hidden = !replay; over.classList.add('show'); }
+/* פקדים: מופיעים בנגיעה ונעלמים אחרי 4 שניות כשהסרטון רץ; כשהוא עצור הם נשארים */
+function showUI(){
+  P.classList.add('ui'); clearTimeout(uiTimer);
+  if(P.classList.contains('playing')) uiTimer = setTimeout(()=>{ if(!dragging && P.classList.contains('playing')) P.classList.remove('ui'); }, 4000);
+}
+function hideUI(){ clearTimeout(uiTimer); P.classList.remove('ui'); }
+function setPlaying(on){ P.classList.toggle('playing', on); setPP(); if(on){ if(P.classList.contains('ui')) showUI(); } else showUI(); }
+function showOver(e, t){ $('overE').textContent = e; $('overT').textContent = t; over.classList.add('show'); showUI(); }
+
+/* מסך מלא + סיבוב לרוחב (באנדרואיד; באייפון הדפדפן לא מאפשר לסובב לבד) */
+function enterFull(){
+  const f = document.documentElement;
+  if(document.fullscreenElement || !f.requestFullscreen) return;
+  f.requestFullscreen({navigationUI:'hide'}).then(()=>{ if(settings.rotate) try{ screen.orientation.lock('landscape').catch(()=>{}) }catch(_){} }).catch(()=>{});
+}
+function exitFull(){ try{ screen.orientation.unlock() }catch(_){} if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+
+function thumbCard(x){
+  const b = document.createElement('button'); b.className = 'tcard';
+  const s = lastSeen().get(x.v[0]), dur = DUR[x.v[0]];
+  b.innerHTML = `<img loading="lazy" alt="" src="https://i.ytimg.com/vi/${x.v[0]}/hqdefault.jpg">` +
+    (dur ? `<span class="dur">${fmt(dur)}</span>` : '') +
+    (s && s.p ? `<span class="prog"><i style="width:${Math.min(100,Math.round(s.p*100))}%"></i></span>` : '');
+  b.setAttribute('aria-label', x.v[1]);
+  b.onclick = e => { e.stopPropagation(); openVideo(x.v[0], x.v[1], x.c); };
+  return b;
+}
 
 function openVideo(id, title, cat){
-  P.classList.add('open'); P.classList.remove('playing','started','ui');
+  const first = !P.classList.contains('open');
+  P.classList.add('open'); P.classList.remove('playing','ui');
+  P.classList.toggle('norecs', !settings.recs);
   document.documentElement.style.overflow = 'hidden';
+  if(first && settings.rotate) enterFull();
   ended = false; setPP(); over.classList.remove('show'); loading.classList.add('show');
-  $('ptitle').textContent = title; $('ltitle').textContent = title;
-  $('pcat').innerHTML = `<span>${cat.e}</span><span></span>`; $('pcat').lastChild.textContent = cat.name;
-  $('pcat').onclick = () => { closePlayer(); current = cat.id; store.set('kidtv-cat', current); shown = PAGE; setView('home'); renderChips(); renderFeed(); };
+  $('ptitle').textContent = title; $('pcat').textContent = cat.name;
+  $('pav').textContent = cat.e; $('pav').style.setProperty('--cc', cat.c);
   cover.style.backgroundImage = `url(https://i.ytimg.com/vi/${id}/hqdefault.jpg)`;
   drawProgress(0, DUR[id] || 0);
   curId = id; curCat = cat; checked = false;
-  /* המלצות מתחת לסרטון (וגם בשורה בתוך הסרטון כשהוא עצור במסך מלא) */
-  const recs = recommendFor(id, cat, 24), seen = lastSeen();
-  fillFeed($('pfeed'), recs, seen);
-  const lr = $('lrecs'); lr.innerHTML = ''; recs.slice(0, 12).forEach(x => lr.appendChild(card(x, seen)));
-  P.scrollTop = 0; lr.scrollLeft = 0;
-  if(location.protocol === 'file:'){ loading.classList.remove('show'); showOver('🏠','צריך לפתוח את האתר דרך קובץ ההפעלה (start-windows.bat או start-mac.command)', false); return; }
+  recs = settings.recs ? recommendFor(id, cat, 20) : [];
+  const ml = $('mlist'); ml.innerHTML = ''; recs.forEach(x => ml.appendChild(thumbCard(x)));
+  ml.scrollLeft = 0; P.scrollTop = 0;
+  if(location.protocol === 'file:'){ loading.classList.remove('show'); showOver('🏠','צריך לפתוח את האתר דרך קובץ ההפעלה (start-windows.bat או start-mac.command)'); return; }
   if(!apiReady){ pending=[id,title,cat]; return; }
   if(player && player.loadVideoById){ player.loadVideoById(id); return; }
   player = new YT.Player('yt', {
@@ -1242,7 +1280,7 @@ function openVideo(id, title, cat){
     videoId: id,
     playerVars: { autoplay:1, controls:0, disablekb:1, fs:0, rel:0, iv_load_policy:3, playsinline:1, modestbranding:1, cc_load_policy:0, hl:'iw', origin: location.origin },
     events: {
-      onReady: e => { try{ e.target.playVideo() }catch(_){} setTimeout(()=>{ if(!P.classList.contains('playing')) loading.classList.remove('show'); }, 2500); },
+      onReady: e => { try{ e.target.playVideo() }catch(_){} setTimeout(()=>{ if(!P.classList.contains('playing')){ loading.classList.remove('show'); showUI(); } }, 2500); },
       onStateChange: onState,
       onError: onErr
     }
@@ -1251,11 +1289,11 @@ function openVideo(id, title, cat){
 function onState(e){
   const S = YT.PlayerState;
   if(e.data === S.PLAYING){
-    loading.classList.remove('show'); over.classList.remove('show'); ended = false; P.classList.add('started');
+    loading.classList.remove('show'); over.classList.remove('show'); ended = false;
     if(!checked){
       checked = true;
       const d = player.getDuration();
-      if(d > 0 && d < (curCat.min || MIN_SECONDS)){ player.stopVideo(); hideVideo(curId); showOver('⏱️','הסרטון הזה קצר מדי. בואי נבחר אחר!', false); return; }
+      if(d > 0 && d < (curCat.min || MIN_SECONDS)){ player.stopVideo(); hideVideo(curId); showOver('⏱️','הסרטון הזה קצר מדי. בואי נבחר אחר!'); return; }
       logView(curId, curCat.id); dirty = true;
     }
     setPlaying(true);
@@ -1264,14 +1302,14 @@ function onState(e){
   } else if(e.data === S.ENDED){
     clearInterval(tick); ended = true; logProgress(curId, 1);
     try{ drawProgress(player.getDuration(), player.getDuration()); }catch(_){}
-    setPlaying(false);
+    setPlaying(false);   // בלי ניגון אוטומטי: מופיעים הפקדים (וההמלצות, אם הן פעילות)
   } else if(e.data === S.BUFFERING){
     if(!P.classList.contains('playing')) loading.classList.add('show');
   } else if(e.data === S.PAUSED || e.data === S.CUED){
     clearInterval(tick); loading.classList.remove('show'); setPlaying(false);
   }
 }
-function onErr(){ loading.classList.remove('show'); hideVideo(curId); showOver('🙈','את הסרטון הזה אי אפשר לראות כאן. בואי נבחר אחר!', false); }
+function onErr(){ loading.classList.remove('show'); hideVideo(curId); showOver('🙈','את הסרטון הזה אי אפשר לראות כאן. בואי נבחר אחר!'); }
 function hideVideo(id){ hidden.add(id); store.set('kidtv-hidden',[...hidden]); hist = hist.filter(h=>h.id!==id); store.set('kidtv-hist', hist); dirty = true; }
 
 /* ---- פקדים ---- */
@@ -1280,46 +1318,41 @@ function togglePlay(){
   if(ended){ ended = false; player.seekTo(0, true); player.playVideo(); return; }
   if(player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo();
 }
-/* נגיעה בסרטון מציגה את הפקדים (כמו ביוטיוב); נגיעה נוספת מסתירה. כשהוא עצור – נגיעה ממשיכה לנגן */
+/* נגיעה במסך: מציגה פקדים (ולרוחב – מקטינה את הסרטון ומציגה עוד סרטונים); נגיעה נוספת מסתירה */
 $('tap').onclick = () => {
-  if(!player || !player.getPlayerState || over.classList.contains('show')) return;
-  if(P.classList.contains('playing')){ if(P.classList.contains('ui')){ clearTimeout(uiTimer); P.classList.remove('ui'); } else flashUI(); }
-  else togglePlay();
+  if(over.classList.contains('show')) return;
+  if(P.classList.contains('ui') && P.classList.contains('playing')) hideUI(); else showUI();
 };
 pp.onclick = e => { e.stopPropagation(); togglePlay(); };
-function skip(sec){ if(!player || !player.getCurrentTime) return; const d = player.getDuration(), t = Math.min(Math.max(0, player.getCurrentTime()+sec), Math.max(0,d-1)); ended = false; player.seekTo(t, true); drawProgress(t, d); setPP(); if(P.classList.contains('playing')) flashUI(); }
-$('rew').onclick = e => { e.stopPropagation(); skip(-10); };
-$('fwd').onclick = e => { e.stopPropagation(); skip(10); };
-$('again').onclick = e => { e.stopPropagation(); over.classList.remove('show'); if(player){ ended = false; player.seekTo(0, true); player.playVideo(); } };
+$('next').onclick = e => { e.stopPropagation(); if(recs[0]) openVideo(recs[0].v[0], recs[0].v[1], recs[0].c); };
+function skip(sec){ if(!player || !player.getCurrentTime) return; const d = player.getDuration(), t = Math.min(Math.max(0, player.getCurrentTime()+sec), Math.max(0,d-1)); ended = false; player.seekTo(t, true); drawProgress(t, d); setPP(); }
 function barFrac(ev){ const r = bar.getBoundingClientRect(); return Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)); }
 bar.addEventListener('pointerdown', ev => {
   if(!player || !player.getDuration || !player.getDuration()) return;
-  dragging = true; bar.setPointerCapture(ev.pointerId); clearTimeout(uiTimer); P.classList.add('ui');
+  dragging = true; bar.setPointerCapture(ev.pointerId); clearTimeout(uiTimer);
   const d = player.getDuration(); drawProgress(barFrac(ev)*d, d);
 });
 bar.addEventListener('pointermove', ev => { if(!dragging) return; const d = player.getDuration(); drawProgress(barFrac(ev)*d, d); });
-function endDrag(ev){ if(!dragging) return; dragging = false; const d = player.getDuration(); ended = false; player.seekTo(barFrac(ev)*d, true); setPP(); if(P.classList.contains('playing')) flashUI(); }
+function endDrag(ev){ if(!dragging) return; dragging = false; const d = player.getDuration(); ended = false; player.seekTo(barFrac(ev)*d, true); setPP(); showUI(); }
 bar.addEventListener('pointerup', endDrag); bar.addEventListener('pointercancel', endDrag);
+$('mlist').addEventListener('scroll', () => { if(P.classList.contains('ui')) showUI(); }, {passive:true});
 
 function closePlayer(){
   clearInterval(tick); clearTimeout(uiTimer);
   try{ player && player.stopVideo && player.stopVideo() }catch(_){}
   exitFull();
-  P.classList.remove('open','playing','started','ui'); loading.classList.remove('show'); document.documentElement.style.overflow = '';
+  P.classList.remove('open','playing','ui'); loading.classList.remove('show'); document.documentElement.style.overflow = '';
   /* כשחוזרים לדף הבית, ההמלצות מתעדכנות לפי מה שנצפה עכשיו */
   if(dirty){ dirty = false; refreshAll(); }
 }
 $('close').onclick = e => { e.stopPropagation(); closePlayer(); };
-/* מסך מלא: מסובב לרוחב כשאפשר (אנדרואיד); באייפון פשוט ממלא את המסך */
-function exitFull(){ P.classList.remove('full'); if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+/* כפתור מסך מלא: נכנס/יוצא ממסך מלא ומסובב לרוחב/לאורך */
 $('fs').onclick = e => {
   e.stopPropagation();
-  if(P.classList.contains('full') || document.fullscreenElement){ exitFull(); return; }
-  P.classList.add('full');
-  const f = document.documentElement;
-  if(f.requestFullscreen) f.requestFullscreen().then(()=>{ try{ screen.orientation.lock('landscape').catch(()=>{}) }catch(_){} }).catch(()=>{});
+  if(document.fullscreenElement) exitFull();
+  else { const f = document.documentElement; if(f.requestFullscreen) f.requestFullscreen({navigationUI:'hide'}).then(()=>{ try{ screen.orientation.lock('landscape').catch(()=>{}) }catch(_){} }).catch(()=>{}); }
+  showUI();
 };
-document.addEventListener('fullscreenchange', () => { if(!document.fullscreenElement) P.classList.remove('full'); });
 window.addEventListener('popstate', () => { if(P.classList.contains('open')) closePlayer(); });
 document.addEventListener('keydown', e => {
   if(!P.classList.contains('open')) return;
@@ -1347,10 +1380,13 @@ function blockSheet(x){
   $('doBlock').onclick = () => { hideVideo(x.v[0]); dirty = false; closeSheet(); refreshAll(); };
 }
 function parentsSheet(){
-  $('pbody').innerHTML = `<h3>👨‍👩‍👧 להורים</h3><ul>
+  $('pbody').innerHTML = `  <h3>⚙️ הגדרות</h3>
+  <label class="opt"><input type="checkbox" id="optRecs"> <span><b>סרטונים מומלצים בזמן צפייה</b><br>נגיעה במסך מציגה עוד סרטונים לבחירה, וכפתור "הבא". כשההגדרה כבויה, הנגיעה מציגה רק את הפקדים.</span></label>
+  <label class="opt"><input type="checkbox" id="optRot"> <span><b>מסך מלא ולרוחב אוטומטית</b><br>כשבוחרים סרטון, הוא נפתח במסך מלא ומסתובב לרוחב. באייפון הדפדפן לא מאפשר לסובב לבד, ולכן צריך לסובב את הטלפון ביד.</span></label>
+<h3 style="margin-top:18px">👨‍👩‍👧 להורים</h3><ul>
     <li>יש כאן <b>${byId.size - hidden.size}</b> סרטונים שנבחרו מראש מערוצים רשמיים: ערוץ הופ!, ערוץ בייבי, כאן חינוכית, ניק ג׳וניור, יובל המבולבל, נופיקי ועוד כוכבי ילדים, ילדות ישראלית, שלומי וסתם, רחלי הקטנה, בקטנה (פרשת השבוע), ערוץ אלף, מקהלות ילדים חסידיות, ניגוני חב״ד לתינוקות, צופי, טוטיטו, רותמאמא, מאשה והדוב, קוקומלון, Bluey, Peppa Pig ו־Super Simple Songs. כ־90% מהם בעברית.</li>
     <li>"הכול" מתחיל בסרטונים שנצפו לאחרונה, ואחריהם מגיע ערבוב לפי מה שהילדה אוהבת. הקטגוריות שהיא צופה בהן הכי הרבה עולות קדימה. החיפוש מחפש רק בתוך הרשימה הסגורה.</li>
-    <li>מתחת לסרטון, וגם כשעוצרים אותו במסך מלא, מופיעים סרטונים מומלצים, אבל רק מהרשימה הסגורה. אין ניגון אוטומטי של הסרטון הבא, והנגן מכוסה בשכבת מגע כך שאי אפשר לצאת ליוטיוב.</li>
+    <li>כמו באפליקציה: סרטון נפתח במסך מלא ולרוחב, ונגיעה במסך מציגה פקדים ועוד סרטונים לבחירה, אבל רק מהרשימה הסגורה. אפשר לכבות את ההמלצות בהגדרות למעלה. אין ניגון אוטומטי של הסרטון הבא, והנגן מכוסה בשכבת מגע כך שאי אפשר לצאת ליוטיוב.</li>
     <li>⋮ ליד סרטון ← חסימה של הסרטון (אחרי שאלת חשבון).</li>
     <li>סרטון קצר מ־3 דקות (בפרשת השבוע ובערוץ אלף: מ־2 דקות), או שהיוצר שלו חסם הטמעה, יוסתר אוטומטית בפעם הראשונה שמנסים לנגן אותו.</li>
     <li>ההיסטוריה נשמרת רק בדפדפן הזה. "הוסף למסך הבית" בדפדפן הופך את האתר לאייקון שנפתח במסך מלא.</li>
@@ -1358,6 +1394,9 @@ function parentsSheet(){
   </ul>
   <p><button id="reset">להחזיר סרטונים שהוסתרו (${hidden.size})</button><br><button id="clearHist">לנקות היסטוריית צפייה (${hist.length})</button></p>
   <button class="primary sclose">סגירה</button>`;
+  $('optRecs').checked = settings.recs; $('optRot').checked = settings.rotate;
+  $('optRecs').onchange = e => { settings.recs = e.target.checked; store.set('kidtv-settings', settings); };
+  $('optRot').onchange = e => { settings.rotate = e.target.checked; store.set('kidtv-settings', settings); };
   $('reset').onclick = () => { hidden = new Set(); store.set('kidtv-hidden',[]); closeSheet(); refreshAll(); };
   $('clearHist').onclick = () => { if(!confirm('לנקות את היסטוריית הצפייה?')) return; hist = []; store.set('kidtv-hist',[]); closeSheet(); refreshAll(); };
 }
