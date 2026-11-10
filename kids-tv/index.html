@@ -59,33 +59,86 @@
   .more{display:block;margin:14px auto 0;border:0;border-radius:22px;padding:12px 22px;font:inherit;font-size:17px;
         background:var(--c);color:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.15)}
 
-  /* player */
-  #player-wrap{position:fixed;inset:0;background:#1d1630;z-index:50;display:none;flex-direction:column}
-  #player-wrap.open{display:flex}
-  .pbar{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
-  .pbtn{border:0;border-radius:50%;width:64px;height:64px;font-size:30px;background:#fff;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.3)}
-  .pbtn:active{transform:scale(.93)}
-  .stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;padding:0 10px}
-  .frame{position:relative;width:100%;max-width:calc((100vh - 200px)*16/9);aspect-ratio:16/9;background:#000;border-radius:18px;overflow:hidden}
-  .frame iframe,#yt{position:absolute;inset:0;width:100%;height:100%;border:0}
-  /* shield: the child never touches YouTube's own UI (no links out, no suggestions) */
-  #shield{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;cursor:pointer}
-  #shield .big{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.95);font-size:56px;
-               display:none;place-items:center;box-shadow:0 8px 0 rgba(0,0,0,.35)}
-  #shield.paused{background:#1d1630}
-  #shield.paused .big{display:grid}
-  #shield .msg{position:absolute;bottom:18px;color:#fff;font-size:20px;text-align:center;padding:0 16px}
-  .progress{height:10px;background:rgba(255,255,255,.18);border-radius:10px;margin:14px auto calc(18px + env(safe-area-inset-bottom));width:min(92%,900px);overflow:hidden}
-  .progress div{height:100%;width:0;background:linear-gradient(90deg,#ffb703,#fb6f92);border-radius:10px;transition:width .5s linear}
-  #ptitle{color:#fff;font-size:18px;flex:1;text-align:center;padding:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ======================== player (YouTube Kids style) ======================== */
+  #player-wrap{position:fixed;inset:0;background:#000;z-index:50;display:none;overflow:hidden;user-select:none;-webkit-user-select:none}
+  #player-wrap.open{display:block}
+  #yt-box{position:absolute;inset:0}
+  #yt-box iframe,#yt{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
+  /* tap layer: the child never touches YouTube's own UI (no links out, no YouTube suggestions) */
+  #tap{position:absolute;inset:0;z-index:2;cursor:pointer}
+  /* frozen frame while paused/loading – also hides YouTube's own pause overlay */
+  #cover{position:absolute;inset:0;z-index:1;background:#000 center/contain no-repeat;opacity:0;transition:opacity .2s;pointer-events:none}
+  #player-wrap:not(.playing) #cover{opacity:1}
+
+  #ui{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .25s}
+  #player-wrap.ui-on #ui,#player-wrap:not(.playing) #ui{opacity:1}
+  #player-wrap.ui-on #ui > *,#player-wrap:not(.playing) #ui > *{pointer-events:auto}
+  #ui::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(rgba(0,0,0,.55),transparent 22%,transparent 55%,rgba(0,0,0,.75))}
+
+  .ptop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:12px;
+        padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 12px calc(14px + env(safe-area-inset-left))}
+  #ptitle{color:#fff;font-size:clamp(16px,2.6vw,22px);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .round{border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;font:inherit;color:#3b2f4a;
+         background:#fff;box-shadow:0 5px 0 rgba(0,0,0,.35);transition:transform .1s}
+  .round:active{transform:scale(.9)}
+  .ptop .round{width:60px;height:60px;font-size:28px;flex:0 0 auto}
+
+  .pmid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;justify-content:center;align-items:center;gap:clamp(24px,7vw,70px);direction:ltr}
+  #pp{width:clamp(96px,16vw,128px);height:clamp(96px,16vw,128px);font-size:clamp(44px,7vw,60px);background:#ffb703;box-shadow:0 7px 0 #c98a00}
+  #pp .ic{display:block;line-height:1;transform:translateX(3px)}
+  #player-wrap.playing #pp .ic{transform:none}
+  .skip{width:clamp(64px,10vw,82px);height:clamp(64px,10vw,82px);font-size:15px;line-height:1.05;background:rgba(255,255,255,.92)}
+  .skip b{display:block;font-size:clamp(24px,4vw,30px)}
+
+  .pbot{position:absolute;left:0;right:0;bottom:0;padding:0 calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+  .seek{display:flex;align-items:center;gap:12px;direction:ltr;color:#fff;font-size:15px;font-variant-numeric:tabular-nums;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  #bar{position:relative;flex:1;height:34px;cursor:pointer;touch-action:none}
+  #bar .track{position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:10px;background:rgba(255,255,255,.3);overflow:hidden}
+  #fill{height:100%;width:0;background:linear-gradient(90deg,#ffb703,#fb6f92);border-radius:10px}
+  #knob{position:absolute;top:50%;left:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.5);border:4px solid #fb6f92}
+
+  /* recommendations row – shown while paused, like YouTube Kids */
+  #recs-wrap{margin-top:10px;max-height:0;overflow:hidden;transition:max-height .3s ease}
+  #player-wrap:not(.playing).started #recs-wrap{max-height:260px}
+  .recs-title{color:#fff;font-size:18px;margin:4px 2px 8px}
+  .recrow{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none;scroll-snap-type:x mandatory}
+  .recrow::-webkit-scrollbar{display:none}
+  .rec{flex:0 0 clamp(150px,24vw,220px);scroll-snap-align:start;border:0;padding:0;border-radius:16px;overflow:hidden;cursor:pointer;
+       background:#fff;color:#3b2f4a;font:inherit;text-align:right;box-shadow:0 5px 0 var(--c,#ffb703);transition:transform .1s}
+  .rec:active{transform:scale(.95)}
+  .rec .im{position:relative;aspect-ratio:16/9;background:#ddd center/cover no-repeat}
+  .rec .im span{position:absolute;top:6px;inset-inline-start:6px;background:var(--c);border-radius:10px;padding:1px 6px;font-size:16px}
+  .rec .tt{padding:6px 9px 0;margin-bottom:8px;font-size:13px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  #loading{position:absolute;inset:0;z-index:4;display:none;place-items:center;color:#fff;font-size:26px;pointer-events:none}
+  #loading.show{display:grid}
+  #loading div{animation:bob 1.6s ease-in-out infinite}
 
   /* end screen */
-  #endscreen{position:absolute;inset:0;z-index:3;background:#1d1630;color:#fff;display:none;flex-direction:column;
-             align-items:center;justify-content:center;gap:20px;text-align:center;padding:20px}
+  #endscreen{position:absolute;inset:0;z-index:5;background:#1d1630;color:#fff;display:none;flex-direction:column;
+             align-items:center;justify-content:center;gap:16px;text-align:center;
+             padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));overflow-y:auto}
   #endscreen.show{display:flex}
-  #endscreen .e{font-size:80px}
-  #endscreen p{font-size:26px;margin:0}
-  #endscreen button{border:0;border-radius:30px;padding:16px 30px;font:inherit;font-size:22px;background:#ffb703;color:#3b2f4a;cursor:pointer;box-shadow:0 6px 0 #c98a00}
+  #endscreen .e{font-size:clamp(56px,10vw,80px);line-height:1}
+  #endscreen p{font-size:clamp(20px,4vw,28px);margin:0}
+  .endbtns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .endbtns button{border:0;border-radius:30px;padding:14px 26px;font:inherit;font-size:20px;cursor:pointer;color:#3b2f4a;background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.35)}
+  .endbtns button.main{background:#ffb703;box-shadow:0 6px 0 #c98a00}
+  .endbtns button:active{transform:scale(.95)}
+  #endrecs-t{font-size:18px;opacity:.9;margin-top:6px}
+  #endrecs{width:min(100%,1000px);display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+  #endrecs .rec{flex:none}
+  .pmid{transition:top .3s ease}
+  @media (max-height:500px){
+    .pmid{gap:40px}
+    #player-wrap:not(.playing).started #recs-wrap{max-height:150px}
+    .rec{flex-basis:130px} .recs-title{display:none}
+    #player-wrap:not(.playing).started .pmid{top:122px}
+    #player-wrap:not(.playing).started #pp{width:76px;height:76px;font-size:36px}
+    #player-wrap:not(.playing).started .skip{width:56px;height:56px;font-size:12px}
+    #player-wrap:not(.playing).started .skip b{font-size:20px}
+  }
 
   /* parents */
   details.parents{max-width:900px;margin:40px auto 0;background:#fff;border-radius:18px;padding:12px 18px;box-shadow:var(--shadow);font-size:15px;line-height:1.6}
@@ -109,7 +162,7 @@
     <li>יש כאן <b id="totalCount"></b> סרטונים שנבחרו מראש מערוצים רשמיים: ערוץ הופ!, ערוץ בייבי, כאן חינוכית, ניק ג׳וניור, יובל המבולבל, כוכבי ילדים, ילדות ישראלית, שלומי וסתם, רחלי הקטנה, בקטנה (פרשת השבוע), ערוץ אלף, מקהלות ילדים חסידיות, ניגוני חב״ד לתינוקות, צופי, טוטיטו, רותמאמא, מאשה והדוב, קוקומלון, Bluey, Peppa Pig ו־Super Simple Songs. כ־90% מהם בעברית.</li>
     <li>דף הבית מסודר כמו ביוטיוב קידס: מה שנצפה לאחרונה מופיע בשורת "לראות שוב", והקטגוריות שהילדה אוהבת עולות למעלה ומקבלות יותר מקום ב"במיוחד בשבילך". סרטונים שכבר ראתה לאחרונה מופיעים פחות, כדי שיהיה גיוון. כפתור 🔀 מערבב מחדש.</li>
     <li>היסטוריית הצפייה נשמרת רק בדפדפן הזה, במכשיר הזה. היא לא נשלחת לשום מקום.</li>
-    <li>אין חיפוש, ואין ניגון אוטומטי של סרטון הבא. בסוף כל סרטון מופיע מסך "נגמר!" שלנו, בלי ההמלצות של יוטיוב.</li>
+    <li>אין חיפוש, ואין ניגון אוטומטי של סרטון הבא. כמו ביוטיוב קידס, כשעוצרים סרטון או כשהוא נגמר מופיעים סרטונים מומלצים לבחירה, אבל רק מתוך הרשימה הסגורה שלנו ולא ההמלצות של יוטיוב.</li>
     <li>הנגן מכוסה בשכבת מגע, כך שהילדה לא יכולה ללחוץ על קישורים שמוציאים ליוטיוב.</li>
     <li>סרטון שקצר מ־3 דקות (בפרשת השבוע ובערוץ אלף: מ־2 דקות), או שהיוצר שלו חסם הטמעה, יוסתר אוטומטית בפעם הראשונה שמנסים לנגן אותו.</li>
     <li>סיננתי מראש כותרות של חג המולד, ליל כל הקדושים, מפלצות, פחדים, אתגרים ומתיחות. ובכל זאת, ערוצים כמו נופיקי ונסטיה מצולמים ולא מצוירים, אז כדאי להציץ בהם קודם.</li>
@@ -122,19 +175,32 @@
 </details>
 
 <div id="player-wrap" role="dialog" aria-modal="true">
-  <div class="pbar">
-    <button class="pbtn" id="close" aria-label="סגירה">✕</button>
-    <div id="ptitle"></div>
-    <button class="pbtn" id="fs" aria-label="מסך מלא">⛶</button>
-  </div>
-  <div class="stage">
-    <div class="frame" id="frame">
-      <div id="yt"></div>
-      <div id="shield" class="paused"><div class="big">▶</div><div class="msg" id="msg"></div></div>
-      <div id="endscreen"><div class="e" id="endE">🎉</div><p id="endP">נגמר! איזה כיף!</p><button id="back">לבחור עוד סרטון</button></div>
+  <div id="yt-box"><div id="yt"></div></div>
+  <div id="cover"></div>
+  <div id="tap"></div>
+  <div id="ui">
+    <div class="ptop">
+      <button class="round" id="close" aria-label="חזרה">✕</button>
+      <div id="ptitle"></div>
+      <button class="round" id="fs" aria-label="מסך מלא">⛶</button>
+    </div>
+    <div class="pmid">
+      <button class="round skip" id="rew" aria-label="10 שניות אחורה"><b>↺</b>10</button>
+      <button class="round" id="pp" aria-label="נגן / עצור"><span class="ic">▶</span></button>
+      <button class="round skip" id="fwd" aria-label="10 שניות קדימה"><b>↻</b>10</button>
+    </div>
+    <div class="pbot">
+      <div class="seek"><span id="tcur">0:00</span><div id="bar"><div class="track"><div id="fill"></div></div><div id="knob"></div></div><span id="tdur">0:00</span></div>
+      <div id="recs-wrap"><div class="recs-title">✨ עוד סרטונים בשבילך</div><div id="recs" class="recrow"></div></div>
     </div>
   </div>
-  <div class="progress"><div id="prog"></div></div>
+  <div id="loading"><div>🦋 טוען…</div></div>
+  <div id="endscreen">
+    <div class="e" id="endE">🎉</div><p id="endP">נגמר! איזה כיף!</p>
+    <div class="endbtns"><button id="again">🔁 עוד פעם</button><button id="back" class="main">🏠 הביתה</button></div>
+    <div id="endrecs-t">או לבחור סרטון חדש:</div>
+    <div id="endrecs"></div>
+  </div>
 </div>
 
 <script>
@@ -1043,29 +1109,77 @@ function logProgress(id, p){
   if(p > (h.p||0)){ h.p = Math.round(p*100)/100; store.set('kidtv-hist', hist); }
 }
 
-/* ======================== נגן ======================== */
-let player = null, apiReady = false, pending = null, checked = false, tick = null, curId = null, curCat = null, dirty = false;
-const wrap = document.getElementById('player-wrap'), shield = document.getElementById('shield'),
-      msg = document.getElementById('msg'), endscreen = document.getElementById('endscreen'),
-      prog = document.getElementById('prog');
+/* ======================== נגן (בסגנון יוטיוב קידס) ======================== */
+let player = null, apiReady = false, pending = null, checked = false, tick = null, curId = null, curCat = null, curTitle = '', dirty = false;
+let uiTimer = null, dragging = false;
+const $ = id => document.getElementById(id);
+const wrap = $('player-wrap'), endscreen = $('endscreen'), loading = $('loading'), cover = $('cover');
+const fill = $('fill'), knob = $('knob'), bar = $('bar'), tcur = $('tcur'), tdur = $('tdur'), ppIc = document.querySelector('#pp .ic');
 
 window.onYouTubeIframeAPIReady = () => { apiReady = true; if(pending){ const p=pending; pending=null; openVideo(...p); } };
 (function(){ const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
 
+/* ---- המלצות: חצי מאותה סדרה, השאר לפי מה שהיא אוהבת; בלי מה שראתה הרגע ---- */
+function recommendFor(id, cat, n){
+  const cw = catWeights(), seen = lastSeen(), all = [];
+  for(const c of CATS){
+    const same = c.id === cat.id;
+    const cwt = same ? Math.max(cw[c.id], 3) * 3 : cw[c.id];
+    for(const v of c.v){
+      if(v[0]===id || hidden.has(v[0])) continue;
+      all.push({v, c, w: cwt / Math.sqrt(c.v.length) * vidWeight(v[0], cw, seen)});
+    }
+  }
+  const out = [], used = new Set();
+  for(const x of weightedShuffle(all, x=>x.w)){ if(used.has(x.v[0])) continue; used.add(x.v[0]); out.push(x); if(out.length>=n) break; }
+  return out;
+}
+function recCard(x){
+  const b = document.createElement('button');
+  b.className = 'rec'; b.style.setProperty('--c', x.c.c);
+  b.innerHTML = `<div class="im" style="background-image:url(https://i.ytimg.com/vi/${x.v[0]}/mqdefault.jpg)"><span>${x.c.e}</span></div><div class="tt"></div>`;
+  b.querySelector('.tt').textContent = x.v[1];
+  b.onclick = e => { e.stopPropagation(); openVideo(x.v[0], x.v[1], x.c); };
+  return b;
+}
+function fillRecs(){
+  const r = recommendFor(curId, curCat, 14);
+  const row = $('recs'); row.innerHTML = ''; r.forEach(x => row.appendChild(recCard(x))); row.scrollLeft = 0;
+  const end = $('endrecs'); end.innerHTML = ''; r.slice(0, 8).forEach(x => end.appendChild(recCard(x)));
+}
+
+/* ---- מצבים ---- */
+function setPlaying(on){
+  wrap.classList.toggle('playing', on);
+  ppIc.textContent = on ? '❚❚' : '▶';
+  if(on) flashUI(); else { clearTimeout(uiTimer); wrap.classList.remove('ui-on'); }
+}
+function flashUI(){ wrap.classList.add('ui-on'); clearTimeout(uiTimer); uiTimer = setTimeout(()=>{ if(!dragging) wrap.classList.remove('ui-on'); }, 3500); }
+const fmt = s => { s = Math.max(0, Math.floor(s||0)); const h = Math.floor(s/3600), m = Math.floor(s/60)%60, ss = String(s%60).padStart(2,'0'); return h ? `${h}:${String(m).padStart(2,'0')}:${ss}` : `${m}:${ss}`; };
+function drawProgress(t, d){
+  const f = d ? Math.min(1, Math.max(0, t/d)) : 0;
+  fill.style.width = (f*100)+'%'; knob.style.left = (f*100)+'%';
+  tcur.textContent = fmt(t); tdur.textContent = fmt(d);
+}
+
 function openVideo(id, title, cat){
-  wrap.classList.add('open'); document.body.style.overflow='hidden';
-  document.getElementById('ptitle').textContent = cat.e + ' ' + title;
-  endscreen.classList.remove('show'); shield.classList.add('paused'); msg.textContent=''; prog.style.width='0';
-  curId = id; curCat = cat; checked = false;
-  if(location.protocol === 'file:'){ showEnd('🏠','צריך לפתוח את האתר דרך קובץ ההפעלה (start-windows.bat או start-mac.command), ולא בלחיצה כפולה על index.html'); return; }
-  if(!apiReady){ pending=[id,title,cat]; msg.textContent='טוען…'; return; }
-  if(player){ player.loadVideoById(id); return; }
+  wrap.classList.add('open'); wrap.classList.remove('started','ui-on'); document.body.style.overflow='hidden';
+  setPlaying(false);
+  $('ptitle').textContent = cat.e + ' ' + title;
+  endscreen.classList.remove('show'); loading.classList.add('show');
+  cover.style.backgroundImage = `url(https://i.ytimg.com/vi/${id}/hqdefault.jpg)`;
+  drawProgress(0, 0);
+  curId = id; curCat = cat; curTitle = title; checked = false;
+  fillRecs();
+  if(location.protocol === 'file:'){ showEnd('🏠','צריך לפתוח את האתר דרך קובץ ההפעלה (start-windows.bat או start-mac.command), ולא בלחיצה כפולה על index.html', false); return; }
+  if(!apiReady){ pending=[id,title,cat]; return; }
+  if(player && player.loadVideoById){ player.loadVideoById(id); return; }
   player = new YT.Player('yt', {
     host: 'https://www.youtube-nocookie.com',
     videoId: id,
     playerVars: { autoplay:1, controls:0, disablekb:1, fs:0, rel:0, iv_load_policy:3, playsinline:1, modestbranding:1, cc_load_policy:0, hl:'iw', origin: location.origin },
     events: {
-      onReady: e => { try{ e.target.playVideo() }catch(_){} },
+      onReady: e => { try{ e.target.playVideo() }catch(_){} setTimeout(()=>{ if(!wrap.classList.contains('playing')) loading.classList.remove('show'); }, 1500); },
       onStateChange: onState,
       onError: onErr
     }
@@ -1074,53 +1188,94 @@ function openVideo(id, title, cat){
 function onState(e){
   const S = YT.PlayerState;
   if(e.data === S.PLAYING){
-    shield.classList.remove('paused'); msg.textContent='';
+    loading.classList.remove('show'); wrap.classList.add('started');
     if(!checked){
       checked = true;
       const d = player.getDuration();
-      if(d > 0 && d < (curCat.min || MIN_SECONDS)){ player.stopVideo(); hideVideo(curId); showEnd('⏱️','הסרטון הזה קצר מדי, בואי נבחר אחר!'); return; }
+      if(d > 0 && d < (curCat.min || MIN_SECONDS)){ player.stopVideo(); hideVideo(curId); showEnd('⏱️','הסרטון הזה קצר מדי, בואי נבחר אחר!', false); return; }
       logView(curId, curCat.id); dirty = true;
     }
+    setPlaying(true);
     clearInterval(tick);
-    tick = setInterval(()=>{ try{ const d=player.getDuration(), t=player.getCurrentTime(); if(d){ prog.style.width=(t/d*100)+'%'; logProgress(curId, t/d); } }catch(_){ } }, 500);
+    tick = setInterval(()=>{ if(dragging) return; try{ const d=player.getDuration(), t=player.getCurrentTime(); drawProgress(t, d); if(d) logProgress(curId, t/d); }catch(_){ } }, 250);
   } else if(e.data === S.ENDED){
-    clearInterval(tick); prog.style.width='100%'; logProgress(curId, 1);
-    try{ player.stopVideo() }catch(_){}
-    showEnd('🎉','נגמר! איזה כיף!');
-  } else if(e.data === S.PAUSED || e.data === S.CUED || e.data === -1){
-    clearInterval(tick); shield.classList.add('paused');
+    clearInterval(tick); setPlaying(false); logProgress(curId, 1);
+    try{ drawProgress(player.getDuration(), player.getDuration()); }catch(_){}
+    showEnd('🎉','נגמר! איזה כיף!', true);
+  } else if(e.data === S.BUFFERING){
+    if(!wrap.classList.contains('started')) loading.classList.add('show');
+  } else if(e.data === S.PAUSED || e.data === S.CUED){
+    clearInterval(tick); setPlaying(false); loading.classList.remove('show');
+    if(e.data === S.CUED) wrap.classList.remove('started');
   }
 }
 function onErr(){
+  loading.classList.remove('show');
   hideVideo(curId);
-  showEnd('🙈','את הסרטון הזה אי אפשר לראות כאן. בואי נבחר אחר!');
+  showEnd('🙈','את הסרטון הזה אי אפשר לראות כאן. בואי נבחר אחר!', false);
 }
 function hideVideo(id){ hidden.add(id); store.set('kidtv-hidden',[...hidden]); hist = hist.filter(h=>h.id!==id); store.set('kidtv-hist', hist); dirty = true; }
-function showEnd(e,p){ document.getElementById('endE').textContent=e; document.getElementById('endP').textContent=p; endscreen.classList.add('show'); }
+function showEnd(e, p, canReplay){
+  $('endE').textContent=e; $('endP').textContent=p;
+  $('again').style.display = canReplay ? '' : 'none';
+  endscreen.classList.add('show'); endscreen.scrollTop = 0;
+}
 
-shield.onclick = () => {
+/* ---- פקדים ---- */
+function togglePlay(){
   if(!player || !player.getPlayerState) return;
   const st = player.getPlayerState();
   if(st === YT.PlayerState.PLAYING) player.pauseVideo(); else player.playVideo();
+}
+$('tap').onclick = () => {
+  if(!player || !player.getPlayerState) return;
+  if(wrap.classList.contains('playing')){
+    /* כמו ביוטיוב קידס: נגיעה במסך מציגה את הפקדים, נגיעה נוספת מסתירה */
+    if(wrap.classList.contains('ui-on')){ clearTimeout(uiTimer); wrap.classList.remove('ui-on'); } else flashUI();
+  } else player.playVideo();
 };
+$('pp').onclick = e => { e.stopPropagation(); togglePlay(); };
+function skip(sec){ if(!player || !player.getCurrentTime) return; const d = player.getDuration(), t = Math.min(Math.max(0, player.getCurrentTime()+sec), Math.max(0,d-1)); player.seekTo(t, true); drawProgress(t, d); if(wrap.classList.contains('playing')) flashUI(); }
+$('rew').onclick = e => { e.stopPropagation(); skip(-10); };
+$('fwd').onclick = e => { e.stopPropagation(); skip(10); };
+/* גרירה על פס ההתקדמות */
+function barFrac(ev){ const r = bar.getBoundingClientRect(); return Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)); }
+bar.addEventListener('pointerdown', ev => {
+  if(!player || !player.getDuration || !player.getDuration()) return;
+  dragging = true; bar.setPointerCapture(ev.pointerId);
+  const d = player.getDuration(); drawProgress(barFrac(ev)*d, d); wrap.classList.add('ui-on'); clearTimeout(uiTimer);
+});
+bar.addEventListener('pointermove', ev => { if(!dragging) return; const d = player.getDuration(); drawProgress(barFrac(ev)*d, d); });
+function endDrag(ev){ if(!dragging) return; dragging = false; const d = player.getDuration(); player.seekTo(barFrac(ev)*d, true); if(wrap.classList.contains('playing')) flashUI(); }
+bar.addEventListener('pointerup', endDrag); bar.addEventListener('pointercancel', endDrag);
+
 function closePlayer(){
-  clearInterval(tick);
-  try{ player && player.stopVideo() }catch(_){}
+  clearInterval(tick); clearTimeout(uiTimer);
+  try{ player && player.stopVideo && player.stopVideo() }catch(_){}
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
-  wrap.classList.remove('open'); document.body.style.overflow='';
+  wrap.classList.remove('open','playing','started','ui-on'); loading.classList.remove('show'); document.body.style.overflow='';
   /* כמו ביוטיוב קידס: כשחוזרים לדף הבית, ההמלצות מתעדכנות לפי מה שנצפה עכשיו */
   if(dirty){ dirty = false; const y = window.scrollY; reshuffle(); renderNav(); renderMain(); if(current!=='all') window.scrollTo(0,y); else window.scrollTo({top:0}); }
 }
-document.getElementById('close').onclick = closePlayer;
-document.getElementById('back').onclick = closePlayer;
-document.getElementById('fs').onclick = () => {
-  const f = document.getElementById('frame');
-  if(document.fullscreenElement){ document.exitFullscreen().catch(()=>{}); return; }
+$('close').onclick = e => { e.stopPropagation(); closePlayer(); };
+$('back').onclick = closePlayer;
+$('again').onclick = () => { endscreen.classList.remove('show'); if(player){ player.seekTo(0, true); player.playVideo(); } };
+$('fs').onclick = e => {
+  e.stopPropagation();
+  if(document.fullscreenElement || document.webkitFullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return; }
+  const f = wrap;
   (f.requestFullscreen ? f.requestFullscreen() : Promise.reject()).catch(()=>{ (f.webkitRequestFullscreen||(()=>{})).call(f); });
 };
-document.getElementById('shuffle').onclick = () => { reshuffle(); renderMain(); window.scrollTo({top:0,behavior:'smooth'}); };
-document.getElementById('reset').onclick = () => { hidden = new Set(); store.set('kidtv-hidden',[]); reshuffle(); renderMain(); };
-document.getElementById('clearHist').onclick = () => { if(!confirm('לנקות את היסטוריית הצפייה?')) return; hist = []; store.set('kidtv-hist',[]); reshuffle(); renderNav(); renderMain(); };
+document.addEventListener('keydown', e => {
+  if(!wrap.classList.contains('open')) return;
+  if(e.key === 'Escape') closePlayer();
+  else if(e.key === ' '){ e.preventDefault(); togglePlay(); }
+  else if(e.key === 'ArrowLeft') skip(-10);
+  else if(e.key === 'ArrowRight') skip(10);
+});
+$('shuffle').onclick = () => { reshuffle(); renderMain(); window.scrollTo({top:0,behavior:'smooth'}); };
+$('reset').onclick = () => { hidden = new Set(); store.set('kidtv-hidden',[]); reshuffle(); renderMain(); };
+$('clearHist').onclick = () => { if(!confirm('לנקות את היסטוריית הצפייה?')) return; hist = []; store.set('kidtv-hist',[]); reshuffle(); renderNav(); renderMain(); };
 
 renderNav(); renderMain();
 </script>
