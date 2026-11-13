@@ -1,6 +1,10 @@
 'use strict';
 /* 🍔 המסעדה – חיה מזמינה, מרכיבים את המנה בדיוק כמו בבועה */
+const REST_ORDER = ['שלום! אני רעב. אפשר בבקשה את מה שבבועה?', 'היי! הנה ההזמנה שלי', 'אפשר בבקשה המבורגר? תסתכלי בבועה', 'אני כל כך רעב! מה יש לאכול?'];
+const REST_WRONG = ['לא הזמנתי את זה', 'אופס, תסתכלי בבועה'];
+const REST_THANKS = ['יאמי! תודה!', 'טעים מאוד! תודה רבה!', 'וואו, איזה טעים!', 'תודה! את השפית הכי טובה!'];
 registerGame({
+  lines: [...REST_ORDER, ...REST_WRONG, ...REST_THANKS, 'כל הכבוד, שפית!'],
   id: 'restaurant', name: 'המסעדה', emoji: '🍔', color: '#ff8a5b', say: 'המסעדה! בואי נכין לחיות אוכל',
   mount(root, s) {
     const ANIMALS = ['🐻', '🐰', '🐼', '🦊', '🐸', '🐷', '🐨', '🐯', '🐵', '🐮', '🦁', '🐱', '🐹', '🐧'];
@@ -59,14 +63,7 @@ registerGame({
       if (drop && drop !== 'burger') { const last = plate.lastElementChild; if (last) last.classList.add('bounce'); }
     }
 
-    function sayOrder() {
-      const ex = order.mid.filter(k => k !== 'patty').map(k => NAMES[k]);
-      let t = pick(['שלום! אפשר ', 'אני רעב! אפשר ', 'היי! אני רוצה ']) + 'המבורגר';
-      if (ex.length) t += ' עם ' + (ex.length > 1 ? ex.slice(0, -1).join(', ') + ' ו' + ex[ex.length - 1] : ex[0]);
-      if (order.fries) t += ', צ׳יפס';
-      if (order.drink) t += ' ו' + DRINKS[order.drink][1];
-      Voice.say(t);
-    }
+    function sayOrder() { Voice.say(pick(REST_ORDER)); }
 
     function nextCustomer() {
       order = newOrder(); built = new Set(); busy = true;
@@ -92,7 +89,7 @@ registerGame({
         btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
         bubble.classList.remove('shake'); void bubble.offsetWidth; bubble.classList.add('shake');
         Sound.wrong();
-        if (Math.random() < .5) Voice.say(pick(['לא הזמנתי את זה', 'אופס, תסתכלי בבועה']));
+        if (Math.random() < .5) Voice.say(pick(REST_WRONG));
         return;
       }
       built.add(k); lastAdded = k;
@@ -114,7 +111,7 @@ registerGame({
       s.later(() => { Sound.whoosh(); plate.classList.add('serve'); }, 800);
       s.later(() => {
         bubble.innerHTML = `<span class="happy">😋💖</span>`;
-        Voice.say(pick(['יאמי! תודה!', 'טעים מאוד! תודה רבה!', 'וואו, איזה טעים!', 'תודה! את השפית הכי טובה!']));
+        Voice.say(pick(REST_THANKS));
         const c = center(animal); FX.burst(c.x, c.y, ['💖', '🪙', '⭐'], 12, 38);
         Stars.add(c.x, c.y, 1);
         served++;

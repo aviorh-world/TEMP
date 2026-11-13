@@ -425,3 +425,46 @@ svg{display:block}
 .lt-pass i.cur{opacity:1;filter:none;animation:wob 1s ease-in-out infinite}
 .lt-pass i.on{opacity:1;filter:none}
 .lt.wordmode .lt-name{display:none}
+.lt-pic{display:none;position:absolute;top:2%;inset-inline-start:3%;font-size:clamp(54px,12vmin,110px);line-height:1;pointer-events:none;filter:drop-shadow(0 6px 0 rgba(0,0,0,.08));animation:wob 2.4s ease-in-out infinite}
+.lt.picmode .lt-pic{display:block}
+.lt-words{justify-content:flex-start;overflow-y:auto;padding-top:3vh}
+.lt-wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(110px,20vmin,160px),1fr));gap:clamp(10px,2vmin,18px);width:100%;max-width:980px}
+.lt-wc{position:relative;aspect-ratio:1;border-radius:26px;background:#fff;box-shadow:0 7px 0 #b9eccf,0 10px 18px rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  animation:popIn .45s cubic-bezier(.3,1.7,.5,1) both;animation-delay:calc(var(--i)*.05s)}
+.lt-wc .we{font-size:clamp(46px,10vmin,76px);line-height:1}
+.lt-wc .ww{font-size:clamp(22px,4.4vmin,34px)}
+.lt-wc i{position:absolute;top:6px;inset-inline-end:8px;font-style:normal;font-size:24px}
+.lt-wc.mine{box-shadow:0 7px 0 #ffc2dd,0 10px 18px rgba(0,0,0,.06)}
+.lt-wc:active{transform:translateY(5px)}
+
+/* ================= COLORING + PAINT ================= */
+.cp .r{stroke:#3b2f4a;stroke-width:5;stroke-linejoin:round;transition:fill .25s;cursor:pointer}
+.cp .ln,.cp .ln path{fill:none;stroke:#3b2f4a;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.cp .fix{fill:#3b2f4a;pointer-events:none}
+.cp .r.popf{animation:popf .45s ease-out}
+@keyframes popf{0%{filter:brightness(1.5) saturate(1.4)}100%{filter:none}}
+.cp.thumb{width:78%;height:auto;pointer-events:none}
+.cp.thumb .r,.cp.thumb .ln{stroke-width:7}
+.cp-grid .lt-wc{box-shadow:0 7px 0 #ffd29c,0 10px 18px rgba(0,0,0,.06)}
+.cpg,.pt{position:absolute;inset:0;display:flex;flex-direction:column;background:linear-gradient(#fff8ee,#ffeef6)}
+.cp-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:10px}
+.cp-stage svg{height:100%;max-width:100%;background:#fff;border-radius:28px;box-shadow:0 8px 0 rgba(255,159,28,.25),0 12px 30px rgba(0,0,0,.06);touch-action:none}
+.pt-stage{position:relative;flex:1;min-height:0;margin:10px;border-radius:28px;overflow:hidden;box-shadow:0 8px 0 rgba(46,196,182,.3),0 12px 30px rgba(0,0,0,.06)}
+.pt-stage canvas{position:absolute;inset:0;touch-action:none;cursor:crosshair}
+.cp-bar{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding:8px max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom));background:rgba(255,255,255,.85);border-radius:28px 28px 0 0}
+.cp-pal,.cp-tools,.pt-stk{display:flex;gap:clamp(6px,1.4vmin,12px);justify-content:safe center;overflow-x:auto;scrollbar-width:none;padding:4px 2px 6px}
+.cp-pal::-webkit-scrollbar,.cp-tools::-webkit-scrollbar,.pt-stk::-webkit-scrollbar{display:none}
+.sw{flex:0 0 auto;width:clamp(40px,7.5vmin,58px);height:clamp(40px,7.5vmin,58px);border-radius:50%;background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.55) 0 16%,transparent 17%),var(--c);
+  box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .15s}
+.sw.on{transform:translateY(-6px) scale(1.12);box-shadow:0 0 0 4px #fff,0 0 0 7px var(--c,#ff70a6),0 6px 0 rgba(0,0,0,.15)}
+.sw.rbw{background:conic-gradient(#ff4d4d,#ffd60a,#2ec27e,#3a86ff,#9b5de5,#ff70a6,#ff4d4d)}
+.sw.rbw.on{box-shadow:0 0 0 4px #fff,0 0 0 7px #9b5de5}
+.tool{flex:0 0 auto;width:clamp(48px,9vmin,64px);height:clamp(48px,9vmin,64px);border-radius:18px;background:#fff;box-shadow:0 4px 0 rgba(0,0,0,.12);font-size:clamp(24px,4.5vmin,32px);display:grid;place-items:center}
+.tool.on{background:#ffe7f1;box-shadow:inset 0 0 0 3px #ff70a6,0 4px 0 rgba(0,0,0,.12)}
+.tool:active{transform:translateY(3px)}
+.tool.size i{display:block;border-radius:50%;background:#3b2f4a}
+.pt-stk{display:none}
+.pt.stickers .pt-stk{display:flex}
+.stk{flex:0 0 auto;width:clamp(46px,8vmin,60px);height:clamp(46px,8vmin,60px);border-radius:16px;background:#fff;font-size:clamp(26px,5vmin,36px);box-shadow:0 4px 0 rgba(0,0,0,.1)}
+.stk.on{box-shadow:inset 0 0 0 3px #2ec4b6,0 4px 0 rgba(0,0,0,.1)}
+@media (max-width:700px){.cp-pal,.cp-tools{flex-wrap:wrap;justify-content:center;overflow:visible}}

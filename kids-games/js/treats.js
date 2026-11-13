@@ -32,7 +32,10 @@ function animalSVG(type) {
   </svg>`;
 }
 
+const TREAT_HUNGRY = ['יאמי! אני כל כך רעב!', 'וואו, זה נראה טעים!', 'תני לי ביס!'];
 registerGame({
+  lines: [...TREAT_HUNGRY, 'תות', 'שוקולד', 'וניל', 'מנטה', 'אוכמניות', 'מנגו', 'בננה', 'מסטיק', 'זיתים', 'פטריות', 'סלמי', 'תירס', 'פלפל', 'עגבניות', 'אננס', 'בזיליקום',
+    'וואו, זה מספיק גבוה!', 'קודם כדור גלידה!', 'רוטב עגבניות', 'גבינה!', 'אופים בתנור!', 'דינג! הפיצה מוכנה!', 'מי יאכל?', 'אממממ...', 'אופס! סליחה! היה טעים מאוד!', 'היה טעים!'],
   id: 'treats', name: 'גלידה ופיצה', emoji: '🍦', color: '#ff9ec4', say: 'מה נכין היום? גלידה או פיצה?',
   mount(root, s) {
     const hash = i => { const x = Math.sin(i * 91.7 + 13.3) * 43758.5453; return x - Math.floor(x); };
@@ -153,7 +156,7 @@ registerGame({
         food.style.transition = 'transform .3s';
         const sty = el('style'); sty.textContent = '.feed .food .ic{font-size:clamp(5px,.8vh,8px)}.feed .food .pz{width:min(30vmin,22vh)}';
         f.appendChild(sty);
-        Voice.say(pick(['יאמי! אני כל כך רעב!', 'וואו, זה נראה טעים!', 'תני לי ביס!']));
+        Voice.say(pick(TREAT_HUNGRY));
         let bites = 0, busy = false;
         plate.onclick = () => {
           if (busy || bites >= 4) return;
@@ -176,7 +179,7 @@ registerGame({
             const bp = el('div', 'burp', 'בּוּרְרְרְפּ!'); f.appendChild(bp);
             const c = center(an); FX.burst(c.x, c.y - 40, ['💨', '🫧', '💖'], 10, 40);
           }, 1700);
-          s.later(() => { an.classList.remove('open'); Voice.say('אוּפְּס! סליחה! היה טעים מאוד!'); FX.burst(center(an).x, center(an).y, ['💖', '😋', '⭐'], 12, 36); }, 2800);
+          s.later(() => { an.classList.remove('open'); Voice.say('אופס! סליחה! היה טעים מאוד!'); FX.burst(center(an).x, center(an).y, ['💖', '😋', '⭐'], 12, 36); }, 2800);
           s.later(() => celebrate({ emoji: '😋', title: 'היה טעים!', stars: 2, again: chooser }), 4800);
         }
       }

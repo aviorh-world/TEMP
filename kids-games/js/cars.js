@@ -30,6 +30,7 @@ function drawCar(ctx, x, y, w, h, color, face = true) {
 }
 
 registerGame({
+  lines: ['לחצי על הכפתור הירוק כדי לנסוע!', 'כל הכבוד! עצרת ברמזור האדום', 'רמזור! צריך לעצור', 'ירוק! סעים!', 'עשרה יהלומים!', 'עשרים יהלומים!', 'אספת את כל היהלומים! סעי לקו הסיום', 'הגעת לקו הסיום!', 'ביפ ביפ! יש מכונית מלפנים', 'באדום עוצרים ומחכים', 'מחכים לירוק'],
   id: 'cars', name: 'המכונית שלי', emoji: '🚗', color: '#2ec27e', say: 'המכונית שלי! בחרי מכונית',
   mount(root, s) {
     const CAR_COLORS = ['#ff4d6d', '#3a86ff', '#ffc300', '#9b5de5', '#ff8c1a', '#2ec27e'];
@@ -120,7 +121,7 @@ registerGame({
       if (stopped) { stopped = false; Sound.vroom(); }
       turbo = true;
       const L = activeLight();
-      if (L && L.state === 'red') msg('מחכים לירוק 🙂');
+      if (L && L.state === 'red') { msg('מחכים לירוק 🙂'); Voice.say('מחכים לירוק'); }
     }
     function brake() {
       if (!running) return;
@@ -185,7 +186,7 @@ registerGame({
             if (stopped) { msg('🟢 ירוק! סעים!', 2000); Voice.say('ירוק! סעים!'); goBtn.classList.add('hint'); }
             else msg('🟢 ירוק!', 1500);
           }
-          if (speed < 4 && !L.rewarded && !L.told && ahead < ch) { L.told = true; msg('🔴 באדום עוצרים ומחכים'); }
+          if (speed < 4 && !L.rewarded && !L.told && ahead < ch) { L.told = true; msg('🔴 באדום עוצרים ומחכים'); Voice.say('באדום עוצרים ומחכים'); }
         }
       });
       const AL = lights.find(L => L.triggered && L.d - dist > -ch * .5 && L.d - dist < H * 1.2);
@@ -204,7 +205,7 @@ registerGame({
         const gap = (c.d - ch / 2) - front - ch * .25;
         if (gap > -ch) {
           cap = Math.min(cap, c.speed + Math.sqrt(2 * BR() * Math.max(0, gap)));
-          if (gap < ch * 1.2 && speed > c.speed + 10 && t - lastHonk > 3) { lastHonk = t; Sound.honk(); msg('בִּיפּ בִּיפּ! עברי נתיב ⬅️➡️'); }
+          if (gap < ch * 1.2 && speed > c.speed + 10 && t - lastHonk > 3) { lastHonk = t; Sound.honk(); msg('בִּיפּ בִּיפּ! עברי נתיב ⬅️➡️'); Voice.say('ביפ ביפ! יש מכונית מלפנים'); }
         }
       });
       target = Math.min(target, cap);

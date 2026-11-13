@@ -145,7 +145,10 @@ const PR = (() => {
   return { svg, DRESSES, HAIRS, HAIR_COLORS, SKINS, EYES, CROWNS, ACCS, BGS };
 })();
 
+const PR_DRESS_SAY = d => d.n.startsWith('שמלת') ? d.n : 'שמלה ' + d.n;
+const PR_WOW = ['וואו! איזו נסיכה יפה!', 'קסם!', 'נסיכה מהממת!', 'איזה יופי של שמלה!'];
 registerGame({
+  lines: () => [...PR.DRESSES.map(PR_DRESS_SAY), ...PR_WOW],
   id: 'princess', name: 'הנסיכה שלי', emoji: '👸', color: '#ff70a6', say: 'הנסיכה שלי! בואי נלביש את הנסיכה',
   mount(root, s) {
     const def = { dress: 0, hair: 0, hairColor: 0, crown: 1, acc: 2, skin: 0, eyes: 0, bg: 0 };
@@ -181,7 +184,7 @@ registerGame({
     }
     function paintOpts() {
       opts.innerHTML = '';
-      if (tab === 'dress') PR.DRESSES.forEach((d, i) => opt(PR.svg(Object.assign({}, st, { dress: i, acc: 0 }), '30 180 240 330', ''), st.dress === i, () => { st.dress = i; Voice.say('שמלה ' + d.n); }, i));
+      if (tab === 'dress') PR.DRESSES.forEach((d, i) => opt(PR.svg(Object.assign({}, st, { dress: i, acc: 0 }), '30 180 240 330', ''), st.dress === i, () => { st.dress = i; Voice.say(PR_DRESS_SAY(d)); }, i));
       if (tab === 'hair') {
         PR.HAIRS.forEach((h, i) => opt(PR.svg(Object.assign({}, st, { hair: i, crown: 0 }), '50 0 200 240', ''), st.hair === i, () => st.hair = i, i));
         opts.appendChild(el('div', 'lbl', '🎨'));
@@ -204,7 +207,7 @@ registerGame({
       Sound.init(); const p = $('svg.princess', stage);
       p.classList.remove('twirl'); void p.getBoundingClientRect(); p.classList.add('twirl');
       FX.rain(st.dress === 0 || st.bg === 0 ? ['❄️', '✨', '❄️', '💎'] : ['✨', '💖', '⭐', '🌸'], 40, 3);
-      Sound.tada(); Voice.say(pick(['וואו! איזו נסיכה יפה!', 'קסם!', 'נסיכה מהממת!', 'איזה יופי של שמלה!']));
+      Sound.tada(); Voice.say(pick(PR_WOW));
       const c = center(stage); FX.confetti(c.x, c.y * .7, 30);
       if (!s.starGiven) { s.starGiven = true; Stars.add(c.x, c.y, 1); }
     };

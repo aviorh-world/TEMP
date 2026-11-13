@@ -1,73 +1,130 @@
 'use strict';
-/* ✏️ אותיות – ינשוף מדבר, מראה אות מקווקוות, והילדה מציירת עליה עם האצבע */
+/* ✏️ אותיות ומילים – ינשוף מדבר, מראה אות או מילה מקווקוות, והילדה מציירת עליה עם האצבע */
+const LT = (() => {
+  // [אות, שם האות (בלי ניקוד – כך הוא מוקלט), שם להצגה, מילה, אימוג׳י]
+  const L = [
+    ['א', 'אלף', 'אָלֶף', 'אריה', '🦁'], ['ב', 'בית', 'בֵּית', 'בננה', '🍌'], ['ג', 'גימל', 'גִּימֶל', 'גמל', '🐫'], ['ד', 'דלת', 'דָּלֶת', 'דג', '🐟'],
+    ['ה', 'הא', 'הֵא', 'הר', '⛰️'], ['ו', 'וו', 'וָו', 'ורד', '🌹'], ['ז', 'זין', 'זַיִן', 'זברה', '🦓'], ['ח', 'חית', 'חֵית', 'חתול', '🐱'],
+    ['ט', 'טית', 'טֵית', 'טלפון', '📱'], ['י', 'יוד', 'יוּד', 'יד', '✋'], ['כ', 'כף', 'כָּף', 'כדור', '⚽'], ['ל', 'למד', 'לָמֶד', 'לב', '❤️'],
+    ['מ', 'מם', 'מֵם', 'מטריה', '☂️'], ['נ', 'נון', 'נוּן', 'נר', '🕯️'], ['ס', 'סמך', 'סָמֶךְ', 'סוס', '🐴'], ['ע', 'עין', 'עַיִן', 'עוגה', '🎂'],
+    ['פ', 'פא', 'פֵּא', 'פרפר', '🦋'], ['צ', 'צדי', 'צָדִי', 'צב', '🐢'], ['ק', 'קוף', 'קוֹף', 'קוף', '🐒'], ['ר', 'ריש', 'רֵישׁ', 'רכבת', '🚂'],
+    ['ש', 'שין', 'שִׁין', 'שמש', '☀️'], ['ת', 'תו', 'תָּו', 'תפוח', '🍎']
+  ];
+  const FINAL = { 'ך': ['כף סופית', 'כָּף סוֹפִית'], 'ם': ['מם סופית', 'מֵם סוֹפִית'], 'ן': ['נון סופית', 'נוּן סוֹפִית'], 'ף': ['פא סופית', 'פֵּא סוֹפִית'], 'ץ': ['צדי סופית', 'צָדִי סוֹפִית'] };
+  // 10 מילים נפוצות עם איור
+  const WORDS = [['בלון', '🎈'], ['אבא', '👨'], ['אמא', '👩'], ['שלום', '👋'], ['בית', '🏠'], ['כלב', '🐶'], ['חתול', '🐱'], ['שמש', '☀️'], ['פרח', '🌸'], ['אוטו', '🚗']];
+  const PRAISE = ['כל הכבוד!', 'וואו! מושלם!', 'איזה יופי!', 'מעולה!'];
+  const HALF = ['יופי! ממשיכים', 'כמעט!', 'ממש טוב!'];
+  const DEFAULT_NAME = 'אורי';
+  const nameLines = n => [`בואי נכתוב את השם ${n}!`, `ועכשיו נכתוב את כל השם ${n}, במסך אחד!`, `ועכשיו לבד! כתבי ${n}. את יכולה!`,
+    `כתבי ${n} עם האצבע`, `וואו! כתבת את השם שלך לבד! ${n}!`, `${n}, את כותבת!`, n];
+  function lines() {
+    const out = ['מה נלמד היום?', 'איזו מילה נכתוב?', 'ציירי אותה עם האצבע', 'ציירי על הקווים עם האצבע', 'עוד פעם! הפעם הקווים קצת יותר חלשים',
+      'עוד פעם! הקווים כמעט נעלמו', 'אופס, נסי לצייר רק על האות', 'אופס, ננסה שוב', 'למדת אותיות!', 'בואי נכתוב את המילה', 'כתבת', ...PRAISE, ...HALF, ...nameLines(DEFAULT_NAME)];
+    const names = L.map(x => x[1]).concat(Object.values(FINAL).map(x => x[0]));
+    L.forEach(([, n, , w]) => out.push(`זו האות ${n}`, `${n} כמו ${w}`));
+    names.forEach(n => out.push(`האות ${n}`, `עכשיו האות ${n}`));
+    WORDS.forEach(([w]) => out.push(`בואי נכתוב ${w}`, w, `כתבת ${w}!`));
+    return out;
+  }
+  return { L, FINAL, WORDS, PRAISE, HALF, DEFAULT_NAME, lines };
+})();
+
 registerGame({
-  id: 'letters', name: 'אותיות', emoji: '✏️', color: '#7b61ff', say: 'בואי נלמד אותיות!',
+  id: 'letters', name: 'אותיות ומילים', emoji: '✏️', color: '#7b61ff', say: 'בואי נלמד אותיות!',
+  lines: LT.lines,
   mount(root, s) {
-    // [אות, שם עם ניקוד, מילה, אימוג׳י]
-    const L = [
-      ['א', 'אָלֶף', 'אריה', '🦁'], ['ב', 'בֵּית', 'בננה', '🍌'], ['ג', 'גִּימֶל', 'גמל', '🐫'], ['ד', 'דָּלֶת', 'דג', '🐟'],
-      ['ה', 'הֵא', 'הר', '⛰️'], ['ו', 'וָו', 'ורד', '🌹'], ['ז', 'זַיִן', 'זברה', '🦓'], ['ח', 'חֵית', 'חתול', '🐱'],
-      ['ט', 'טֵית', 'טלפון', '📱'], ['י', 'יוּד', 'יד', '✋'], ['כ', 'כָּף', 'כדור', '⚽'], ['ל', 'לָמֶד', 'לב', '❤️'],
-      ['מ', 'מֵם', 'מטריה', '☂️'], ['נ', 'נוּן', 'נר', '🕯️'], ['ס', 'סָמֶךְ', 'סוס', '🐴'], ['ע', 'עַיִן', 'עוגה', '🎂'],
-      ['פ', 'פֵּא', 'פרפר', '🦋'], ['צ', 'צָדִי', 'צב', '🐢'], ['ק', 'קוֹף', 'קוף', '🐒'], ['ר', 'רֵישׁ', 'רכבת', '🚂'],
-      ['ש', 'שִׁין', 'שמש', '☀️'], ['ת', 'תָּו', 'תפוח', '🍎']
-    ];
-    const FINAL = { 'ך': 'כָּף סוֹפִית', 'ם': 'מֵם סוֹפִית', 'ן': 'נוּן סוֹפִית', 'ף': 'פֵּא סוֹפִית', 'ץ': 'צָדִי סוֹפִית' };
-    const info = ch => { const r = L.find(x => x[0] === ch); return r ? { ch, name: r[1], word: r[2], emo: r[3] } : { ch, name: FINAL[ch] || ch, word: '', emo: '' }; };
+    const { L, FINAL, WORDS, PRAISE, HALF } = LT;
+    const info = ch => {
+      const r = L.find(x => x[0] === ch);
+      if (r) return { ch, name: r[1], show: r[2], word: r[3], emo: r[4] };
+      const f = FINAL[ch]; return { ch, name: f ? f[0] : ch, show: f ? f[1] : ch, word: '', emo: '' };
+    };
     const FONT = '"Varela Round", "Arial Hebrew", Arial, sans-serif';
     const ROUND = 5, NEED = .7;
-
-    // השם נשמר עם ניקוד בשביל ההקראה (אוֹרִי = Ori), ומוצג בלי ניקוד
-    let nameSay = Store.get('kidname2', 'אוֹרִי');
     const plain = t => t.replace(/[֑-ׇ]/g, '');
+
+    // השם מוצג ומוקלט בלי ניקוד; לקול של המכשיר (גיבוי) שומרים גרסה עם ניקוד: אוֹרִי = Ori
+    let nameSay = Store.get('kidname2', 'אוֹרִי');
     let kidName = plain(nameSay);
-    const GUIDES = [1, .5, .22, .06];          // הקווקוו הולך ונעלם
+    Voice.fix = Object.assign(Voice.fix || {}, { [kidName]: nameSay });
+    const GUIDES = [1, .5, .22, .06];          // הקווקוו של השם הולך ונעלם
     const WORD_NEED = [.68, .64, .58, .5];
+    const PIC_GUIDES = [1, .35], PIC_NEED = [.66, .6];
 
     /* ---------- מסך בחירה ---------- */
     function chooser() {
       root.innerHTML = `<div class="picker"><h3>🦉 מה נלמד היום?</h3><div class="opts">
         <button class="opt" data-k="abc" style="--c:#7b61ff;--i:0"><span class="oe" style="color:#7b61ff;font-weight:bold">אב</span>אותיות</button>
-        <button class="opt" data-k="name" style="--c:#ff70a6;--i:1"><span class="oe">👧</span><span class="nm"></span></button></div>
+        <button class="opt" data-k="words" style="--c:#2ec27e;--i:1"><span class="oe">🎈</span>מילים</button>
+        <button class="opt" data-k="name" style="--c:#ff70a6;--i:2"><span class="oe">👧</span><span class="nm"></span></button></div>
         <button class="lt-rename">✏️ לשנות שם</button></div>`;
       $('.nm', root).textContent = kidName;
       $$('.opt', root).forEach(b => b.onclick = () => {
         Sound.pop();
-        if (b.dataset.k === 'abc') play(shuffle(L.map(x => x[0])).slice(0, ROUND).map(ch => ({ kind: 'letter', ch })), false);
+        const k = b.dataset.k;
+        if (k === 'abc') play(shuffle(L.map(x => x[0])).slice(0, ROUND).map(ch => ({ kind: 'letter', ch })), 'abc');
+        else if (k === 'words') wordPicker();
         else play([...kidName.replace(/\s/g, '')].map(ch => ({ kind: 'letter', ch }))
-          .concat(GUIDES.map((g, i) => ({ kind: 'word', ch: kidName, guide: g, need: WORD_NEED[i], pass: i }))), true);
+          .concat(GUIDES.map((g, i) => ({ kind: 'word', ch: kidName, guide: g, need: WORD_NEED[i], pass: i }))), 'name');
       });
       $('.lt-rename', root).onclick = () => {
-        const n = (prompt('מה השם? בעברית. אפשר עם ניקוד כדי שההקראה תהיה נכונה (למשל אוֹרִי)', nameSay) || '').trim();
-        if (n && /^[֑-ׇא-ת ]{1,20}$/.test(n) && plain(n).trim()) { nameSay = n; kidName = plain(n); Store.set('kidname2', n); $('.nm', root).textContent = kidName; }
+        const n = (prompt('מה השם? בעברית. אפשר עם ניקוד כדי שגם קול המכשיר יקרא נכון (למשל אוֹרִי)', nameSay) || '').trim();
+        if (n && /^[֑-ׇא-ת ]{1,20}$/.test(n) && plain(n).trim()) {
+          nameSay = n; kidName = plain(n); Store.set('kidname2', n); Voice.fix[kidName] = nameSay; $('.nm', root).textContent = kidName;
+        }
       };
-      Voice.say(`מה נלמד היום? אותיות, או לכתוב ${nameSay}?`);
+      Voice.say('מה נלמד היום?');
+    }
+
+    /* ---------- בחירת מילה ---------- */
+    function wordPicker() {
+      const doneW = Store.get('wordsDone', {});
+      root.innerHTML = `<div class="picker lt-words"><h3>🦉 איזו מילה נכתוב?</h3><div class="lt-wgrid">
+        ${WORDS.map(([w, e], i) => `<button class="lt-wc" data-i="${i}" style="--i:${i}"><span class="we">${e}</span><span class="ww">${w}</span>${doneW[w] ? '<i>⭐</i>' : ''}</button>`).join('')}
+        <button class="lt-wc mine" style="--i:10"><span class="we">✍️</span><span class="ww">מילה משלי</span></button></div></div>`;
+      $$('.lt-wc', root).forEach(b => b.onclick = () => {
+        Sound.pop();
+        if (b.classList.contains('mine')) {
+          const raw = (prompt('איזו מילה? (בעברית, עד 8 אותיות)', Store.get('lastWord', '')) || '').trim();
+          const w = plain(raw).replace(/\s+/g, ' ');
+          if (!w || !/^[א-ת ]{1,9}$/.test(w)) return;
+          Store.set('lastWord', raw);
+          if (raw !== w) Voice.fix[w] = raw;
+          return playWord(w, '✍️', true);
+        }
+        const [w, e] = WORDS[+b.dataset.i]; playWord(w, e, false);
+      });
+      Voice.say('איזו מילה נכתוב?');
+    }
+    function playWord(w, emo, custom) {
+      play(PIC_GUIDES.map((g, i) => ({ kind: 'word', ch: w, guide: g, need: PIC_NEED[i], pass: i, pic: emo, custom })), 'word');
     }
 
     /* ---------- משחק ---------- */
-    function play(seq, isName) {
-      const nLetters = seq.filter(x => x.kind === 'letter').length;
+    function play(seq, mode) {
+      const isName = mode === 'name';
       root.innerHTML = `<div class="lt">
         <div class="lt-top"><div class="lt-owl">🦉</div><div class="lt-bubble"></div></div>
-        ${isName ? `<div class="lt-name">${[...kidName.replace(/\s/g, '')].map((c, i) => `<span data-i="${i}">${c}</span>`).join('')}</div>
-          <div class="lt-pass">${GUIDES.map(() => '<i>✏️</i>').join('')}</div>`
-        : `<div class="sh-dots">${seq.map(() => '<i></i>').join('')}</div>`}
-        <div class="lt-board"><canvas class="lt-bg"></canvas><canvas class="lt-ink"></canvas><div class="lt-word"></div></div>
+        ${isName ? `<div class="lt-name">${[...kidName.replace(/\s/g, '')].map((c, i) => `<span data-i="${i}">${c}</span>`).join('')}</div>` : ''}
+        ${mode === 'abc' ? `<div class="sh-dots">${seq.map(() => '<i></i>').join('')}</div>` : `<div class="lt-pass">${seq.filter(x => x.kind === 'word').map(() => '<i>✏️</i>').join('')}</div>`}
+        <div class="lt-board"><canvas class="lt-bg"></canvas><canvas class="lt-ink"></canvas><div class="lt-pic"></div><div class="lt-word"></div></div>
         <div class="lt-ctrl"><button class="lt-say" aria-label="שוב">🔊</button><button class="lt-clear" aria-label="מחק">🧽</button><button class="lt-next" aria-label="הבא">⏭️</button></div>
       </div>`;
-      const board = $('.lt-board', root), bg = $('.lt-bg', root), ink = $('.lt-ink', root), wordEl = $('.lt-word', root);
+      const board = $('.lt-board', root), bg = $('.lt-bg', root), ink = $('.lt-ink', root), wordEl = $('.lt-word', root), picEl = $('.lt-pic', root);
       const bubble = $('.lt-bubble', root), owl = $('.lt-owl', root), lt = $('.lt', root);
       const bctx = bg.getContext('2d'), ictx = ink.getContext('2d');
       const check = document.createElement('canvas'), cctx = check.getContext('2d', { willReadFrequently: true });
       let idx = 0, step = null, cur = null, W = 0, H = 0, DPR = 1, pts = [], fs = 0, done = false, hue = 0, lastP = null, drawId = null, idleT = 0, saidHalf = false, moves = 0;
 
-      function talk(text, voice = text) {
+      // text = מה שמוצג בבועה, voice = מה שנאמר (משפט או רשימת משפטים מוקלטים)
+      function talk(text, voice) {
         bubble.textContent = text; bubble.classList.remove('bounce'); void bubble.offsetWidth; bubble.classList.add('bounce');
         owl.classList.remove('talk'); void owl.offsetWidth; owl.classList.add('talk');
-        Voice.say(voice);
+        Voice.say(voice || text);
       }
 
-      // אות בודדת: לוח ריבועי. כל השם: לוח רחב
+      // אות בודדת: לוח ריבועי. מילה: לוח רחב
       function size() {
         const r = board.getBoundingClientRect();
         if (step.kind === 'word') { W = Math.floor(Math.min(r.width - 12, 1000)); H = Math.floor(Math.min(r.height - 12, W * .6)); }
@@ -136,28 +193,37 @@ registerGame({
 
       function clearInk() { ictx.clearRect(0, 0, W, H); cctx.clearRect(0, 0, W, H); saidHalf = false; }
 
+      const wordSay = w => step.custom ? ['בואי נכתוב את המילה', w] : `בואי נכתוב ${w}`;
+
       function start() {
         done = false; step = seq[idx];
         cur = step.kind === 'word' ? { ch: step.ch } : info(step.ch);
         lt.classList.toggle('wordmode', step.kind === 'word');
+        lt.classList.toggle('picmode', !!step.pic);
+        picEl.textContent = step.pic || '';
         size(); buildMask(); drawLetter(false); clearInk();
         wordEl.className = 'lt-word'; wordEl.textContent = '';
         if (step.kind === 'word') {
           $$('.lt-name span', root).forEach(e => { e.classList.remove('cur'); e.classList.add('ok'); });
           $$('.lt-pass i', root).forEach((e, i) => { e.classList.toggle('on', i < step.pass); e.classList.toggle('cur', i === step.pass); });
-          const lines = [
-            [`עכשיו כל השם ${kidName} במסך אחד! ✍️`, `ועכשיו נכתוב את כל השם ${nameSay}, במסך אחד!`],
-            ['שוב! הקווים קצת יותר חלשים 👀', 'עוד פעם! הפעם הקווים קצת יותר חלשים'],
-            ['עוד פעם... הקווים כמעט נעלמו! 🙈', 'עוד פעם! הקווים כמעט נעלמו'],
-            [`ועכשיו לבד! כתבי ${kidName} 💪`, `ועכשיו לבד! כתבי ${nameSay}. את יכולה!`]
-          ][step.pass];
-          talk(lines[0], lines[1]);
+          if (step.pic) {
+            if (step.pass === 0) talk(`בואי נכתוב: ${step.ch} ${step.pic}`, wordSay(step.ch));
+            else talk('עוד פעם! הקווים חלשים יותר 👀', 'עוד פעם! הפעם הקווים קצת יותר חלשים');
+          } else {
+            const lines = [
+              [`עכשיו כל השם ${kidName} במסך אחד! ✍️`, `ועכשיו נכתוב את כל השם ${kidName}, במסך אחד!`],
+              ['שוב! הקווים קצת יותר חלשים 👀', 'עוד פעם! הפעם הקווים קצת יותר חלשים'],
+              ['עוד פעם... הקווים כמעט נעלמו! 🙈', 'עוד פעם! הקווים כמעט נעלמו'],
+              [`ועכשיו לבד! כתבי ${kidName} 💪`, `ועכשיו לבד! כתבי ${kidName}. את יכולה!`]
+            ][step.pass];
+            talk(lines[0], lines[1]);
+          }
         } else if (isName) {
           $$('.lt-name span', root).forEach((e, i) => e.classList.toggle('cur', i === idx));
-          const intro = idx === 0 ? `בואי נכתוב את השם ${nameSay}! האות הראשונה היא ${cur.name}` : `עכשיו האות ${cur.name}`;
-          talk(intro.replace(nameSay, kidName), intro);
+          if (idx === 0) talk(`בואי נכתוב את השם ${kidName}! האות הראשונה: ${cur.show}`, [`בואי נכתוב את השם ${kidName}!`, `האות ${cur.name}`]);
+          else talk(`עכשיו האות ${cur.show}`, `עכשיו האות ${cur.name}`);
         } else {
-          talk(`${cur.ch} – ${cur.name}, כמו ${cur.word} ${cur.emo}`, `זו האות ${cur.name}. ${cur.name} כמו ${cur.word}! ציירי אותה עם האצבע`);
+          talk(`${cur.ch} – ${cur.show}, כמו ${cur.word} ${cur.emo}`, [`זו האות ${cur.name}`, `${cur.name} כמו ${cur.word}`, 'ציירי אותה עם האצבע']);
         }
         resetIdle();
       }
@@ -166,7 +232,7 @@ registerGame({
         clearTimeout(idleT);
         idleT = s.later(() => {
           if (done) return;
-          if (step.kind === 'word' && step.guide < .3) talk(`כתבי ${kidName} עם האצבע ☝️`, `כתבי ${nameSay} עם האצבע`);
+          if (isName && step.kind === 'word' && step.guide < .3) talk(`כתבי ${kidName} עם האצבע ☝️`, `כתבי ${kidName} עם האצבע`);
           else talk('ציירי על הקווים עם האצבע ☝️', 'ציירי על הקווים עם האצבע');
           owl.classList.add('wiggle');
         }, 9000);
@@ -178,16 +244,18 @@ registerGame({
         Sound.tada();
         const r = board.getBoundingClientRect(); FX.confetti(r.left + r.width / 2, r.top + r.height / 2, 50);
         FX.burst(r.left + r.width / 2, r.top + r.height / 2, ['⭐', '✨', '💖'], 12, 40);
-        const praise = pick(['כל הכבוד!', 'וואו! מושלם!', 'איזה יופי!', 'מעולה!']);
+        const praise = pick(PRAISE);
+        const last = idx === seq.length - 1;
         if (step.kind === 'word') {
           $$('.lt-pass i', root)[step.pass].classList.add('on');
-          if (step.pass < GUIDES.length - 1) talk(`${praise} ${kidName}! ✔️`, `${praise} ${nameSay}!`);
+          if (step.pic && last) { wordEl.innerHTML = `<span>${step.pic}</span>${step.ch}`; wordEl.classList.add('on'); talk(`${praise} ${step.ch} ${step.pic}`, [praise, step.ch]); }
+          else if (!last) talk(`${praise} ✔️`, praise);
         } else if (isName) {
           const sp = $$('.lt-name span', root)[idx]; sp.classList.remove('cur'); sp.classList.add('ok');
-          talk(`${praise} ${cur.name} ✔️`, `${praise} ${cur.name}`);
+          talk(`${praise} ${cur.show} ✔️`, [praise, `האות ${cur.name}`]);
         } else {
           wordEl.innerHTML = `<span>${cur.emo}</span>${cur.word}`; wordEl.classList.add('on');
-          talk(`${praise} ${cur.ch} כמו ${cur.word} ${cur.emo}`, `${praise} ${cur.name}, כמו ${cur.word}`);
+          talk(`${praise} ${cur.ch} כמו ${cur.word} ${cur.emo}`, [praise, `${cur.name} כמו ${cur.word}`]);
           $$('.sh-dots i', root)[idx].classList.add('on');
         }
         Stars.add(r.left + r.width / 2, r.top + r.height / 3, 1);
@@ -198,9 +266,12 @@ registerGame({
         idx++;
         if (idx < seq.length) { start(); return; }
         if (isName) {
-          talk(`${kidName}! כתבת את השם שלך לבד! 🎉`, `וואו! כתבת את השם שלך לבד! ${nameSay}!`);
+          talk(`${kidName}! כתבת את השם שלך לבד! 🎉`, `וואו! כתבת את השם שלך לבד! ${kidName}!`);
           lt.classList.remove('wordmode'); $('.lt-name', root).classList.add('win');
           s.later(() => celebrate({ emoji: '👧', title: `${kidName}, את כותבת!`, stars: 3, again: chooser }), 3200);
+        } else if (mode === 'word') {
+          const w = seq[0].ch, dw = Store.get('wordsDone', {}); dw[w] = 1; Store.set('wordsDone', dw);
+          s.later(() => celebrate({ emoji: seq[0].pic, title: `כתבת ${w}!`, say: seq[0].custom ? ['כתבת', w] : `כתבת ${w}!`, stars: 2, again: wordPicker }), 1800);
         } else celebrate({ emoji: '🦉', title: 'למדת אותיות!', stars: 3, again: chooser });
       }
 
@@ -225,7 +296,7 @@ registerGame({
         if (++moves % 12 === 0) {
           Sound.tone(500 + Math.random() * 500, .06, { type: 'triangle', vol: .05 });
           const { cov } = coverage();
-          if (cov > need() * .6 && !saidHalf) { saidHalf = true; talk('יופי! ממשיכים... ✨', pick(['יופי! ממשיכים', 'כמעט!', 'ממש טוב!'])); }
+          if (cov > need() * .6 && !saidHalf) { saidHalf = true; const h = pick(HALF); talk(h + ' ✨', h); }
           if (cov >= need()) finishStroke();
         }
       });
@@ -234,13 +305,17 @@ registerGame({
       function finishStroke() {
         if (done) return;
         const { cov, out } = coverage();
-        if (out > .45 && cov > .3) { Sound.wrong(); talk(step.kind === 'word' ? 'אופס, ננסה שוב 🙂' : 'אופס, נסי לצייר רק על האות 🙂', step.kind === 'word' ? 'אופס, ננסה שוב' : 'אופס, נסי לצייר רק על האות'); clearInk(); return; }
+        if (out > .45 && cov > .3) {
+          Sound.wrong();
+          if (step.kind === 'word') talk('אופס, ננסה שוב 🙂', 'אופס, ננסה שוב'); else talk('אופס, נסי לצייר רק על האות 🙂', 'אופס, נסי לצייר רק על האות');
+          clearInk(); return;
+        }
         if (cov >= need()) { drawId = null; success(); }
       }
 
       $('.lt-say', root).onclick = () => {
         Sound.tap(); if (!cur) return;
-        Voice.say(step.kind === 'word' ? nameSay : isName ? `האות ${cur.name}` : `${cur.name}, כמו ${cur.word}`);
+        Voice.say(step.kind === 'word' ? step.ch : isName ? `האות ${cur.name}` : `${cur.name} כמו ${cur.word}`);
       };
       $('.lt-clear', root).onclick = () => { Sound.whoosh(); if (!done) clearInk(); };
       $('.lt-next', root).onclick = () => { Sound.tap(); if (!done) { clearTimeout(idleT); next(); } };
