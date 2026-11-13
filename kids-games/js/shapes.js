@@ -24,6 +24,7 @@ function shapeSVG(k, fill, face = true) {
 }
 
 registerGame({
+  lines: () => [...Object.values(SHAPES).map(x => x.n), ...COLORS.map(c => c.n), 'כל הכבוד!', 'מעולה!', 'יופי!', 'איזה יופי!', 'את אלופה של צורות וצבעים!', 'עכשיו גררי כל כדור לדלי בצבע שלו'],
   id: 'shapes', name: 'צורות וצבעים', emoji: '🔷', color: '#4cc9f0', say: 'צורות וצבעים! גררי כל צורה למקום שלה',
   mount(root, s) {
     const ROUNDS = [['shape', 3], ['color', 3], ['shape', 4], ['color', 3], ['shape', 5], ['color', 4]];

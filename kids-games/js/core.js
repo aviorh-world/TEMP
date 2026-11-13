@@ -24,6 +24,7 @@ const COLORS = [
 const Sound = {
   ctx: null, master: null, on: Store.get('sound', true),
   init() {
+    try { Voice.unlock(); } catch (e) {}
     try {
       if (!this.ctx) {
         const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
@@ -79,23 +80,57 @@ const Sound = {
 
 /* ===== קריינות בעברית (אם יש קול עברי במכשיר) ===== */
 const Voice = {
-  he: null,
+  /* קודם מנגנים קטע קול מוקלט מראש (audio/manifest.js), ורק אם אין – קול המכשיר */
+  el: null, token: 0, fix: {}, he: null, loaded: false, missing: new Set(),
+  key(t) { return String(t).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{2190}-\u{21FF}]/gu, '').replace(/\s+/g, ' ').trim(); },
+  clip(t) { const m = window.VOICE_MANIFEST; return m ? m[this.key(t)] : null; },
+  unlock() {
+    // בטאבלטים צריך "לפתוח" נגן אחד בלחיצה הראשונה, ואז אפשר לנגן בו כל הזמן
+    if (this.el) return;
+    this.el = new Audio(); this.el.preload = 'auto';
+    try {
+      const n = 800, buf = new Uint8Array(44 + n), v = new DataView(buf.buffer), w = (o, str) => [...str].forEach((c, i) => buf[o + i] = c.charCodeAt(0));
+      w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true); buf.fill(128, 44);
+      let bin = ''; buf.forEach(x => bin += String.fromCharCode(x));
+      this.el.src = 'data:audio/wav;base64,' + btoa(bin); this.el.play().catch(() => {});
+    } catch (e) {}
+  },
   find() {
     if (!('speechSynthesis' in window)) return null;
-    const vs = speechSynthesis.getVoices();
-    this.he = vs.find(v => /^(he|iw)/i.test(v.lang)) || null;
-    this.loaded = vs.length > 0;
+    const vs = speechSynthesis.getVoices().filter(v => /^(he|iw)/i.test(v.lang));
+    this.loaded = speechSynthesis.getVoices().length > 0;
+    // מעדיפים קולות "טבעיים" אם יש במכשיר
+    this.he = vs.find(v => /natural|neural|online|premium|enhanced/i.test(v.name)) || vs.find(v => /google|carmit/i.test(v.name)) || vs[0] || null;
     return this.he;
   },
-  say(t) {
-    if (!Sound.on || !('speechSynthesis' in window)) return;
+  stop() { this.token++; if (this.el) { try { this.el.pause(); } catch (e) {} } try { speechSynthesis.cancel(); } catch (e) {} },
+  // say('טקסט') או say(['חלק 1', 'חלק 2']) – החלקים מנוגנים ברצף
+  say(parts) {
+    if (!Sound.on) return;
+    parts = [].concat(parts).filter(Boolean);
+    this.stop(); const tok = this.token;
+    const next = i => {
+      if (tok !== this.token || i >= parts.length) return;
+      const f = this.clip(parts[i]), go = () => next(i + 1);
+      if (f && this.el) {
+        this.el.onended = () => setTimeout(go, 120); this.el.onerror = () => this.tts(parts[i], go, tok);
+        this.el.src = 'audio/' + f; this.el.play().catch(() => this.tts(parts[i], go, tok));
+      } else { this.missing.add(this.key(parts[i])); this.tts(parts[i], go, tok); }
+    };
+    next(0);
+  },
+  tts(t, done, tok) {
+    if (tok !== this.token) return;
+    if (!('speechSynthesis' in window)) return done && done();
     if (!this.he) this.find();
-    if (this.loaded && !this.he) return; // אין קול עברי - לא מקריאים בקול זר
+    if (this.loaded && !this.he) return done && done(); // אין קול עברי – לא מקריאים בקול זר
     try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(t); u.lang = 'he-IL'; if (this.he) u.voice = this.he;
-      u.rate = .95; u.pitch = 1.2; speechSynthesis.speak(u);
-    } catch (e) {}
+      let txt = this.key(t); Object.entries(this.fix || {}).forEach(([a, b]) => { txt = txt.split(a).join(b); });
+      const u = new SpeechSynthesisUtterance(txt); u.lang = 'he-IL'; if (this.he) u.voice = this.he;
+      u.rate = .92; u.pitch = 1.05; u.onend = () => done && done();
+      speechSynthesis.speak(u);
+    } catch (e) { done && done(); }
   }
 };
 if ('speechSynthesis' in window) { Voice.find(); speechSynthesis.onvoiceschanged = () => Voice.find(); }
@@ -201,14 +236,14 @@ function makeScope() {
 }
 
 /* ===== מסך "כל הכבוד" ===== */
-function celebrate({ emoji = '🏆', title = 'כל הכבוד!', stars = 3, again, color = '#ffd23f' } = {}) {
+function celebrate({ emoji = '🏆', title = 'כל הכבוד!', say, stars = 3, again, color = '#ffd23f' } = {}) {
   const o = el('div', 'celebrate');
   o.style.setProperty('--c', color);
   o.innerHTML = `<div class="ce">${emoji}</div><h2>${title}</h2>
     <div class="cstars">${Array.from({ length: stars }, (_, i) => `<span style="--i:${i}">⭐</span>`).join('')}</div>
     <div class="cbtns"><button class="again" aria-label="עוד פעם">🔁</button><button class="tohome" aria-label="לתפריט">🏠</button></div>`;
   document.body.appendChild(o);
-  Sound.tada(); Voice.say(title);
+  Sound.tada(); Voice.say(say || title);
   FX.confetti(innerWidth / 2, innerHeight * .35, 90);
   setTimeout(() => FX.confetti(innerWidth * .2, innerHeight * .3, 40), 400);
   setTimeout(() => FX.confetti(innerWidth * .8, innerHeight * .3, 40), 700);
@@ -222,3 +257,11 @@ function celebrate({ emoji = '🏆', title = 'כל הכבוד!', stars = 3, agai
 /* ===== רישום משחקים ===== */
 const GAMES = [];
 function registerGame(g) { GAMES.push(g); }
+/* כל המשפטים שהמשחקים אומרים – מהרשימה הזו מקליטים את קטעי הקול (tools/make-voice.mjs) */
+const CORE_LINES = ['בואי נשחק!'];
+function allLines() {
+  const out = new Set();
+  CORE_LINES.concat(...GAMES.map(g => [g.say || g.name].concat(typeof g.lines === 'function' ? g.lines() : (g.lines || []))))
+    .forEach(t => { const k = Voice.key(t); if (k) out.add(k); });
+  return [...out];
+}

@@ -1,6 +1,9 @@
 'use strict';
 /* 🐶 הכלב שלי – מאכילים, מלטפים וזורקים כדור */
+const DOG_YUM = ['יאמי!', 'הב הב! טעים!', 'אממ, טעים!', 'עוד!'];
+const DOG_YUCK = ['איכס! אני לא אוהב את זה', 'פו! לא רוצה'];
 registerGame({
+  lines: [...DOG_YUM, ...DOG_YUCK, 'הכלב שבע! תודה!', 'הוא רוצה לשחק! תזרקי לו את הכדור', 'הב הב! הבאתי את הכדור!', 'הכלב שוב רעב!', 'הכלב מאושר!'],
   id: 'dog', name: 'הכלב שלי', emoji: '🐶', color: '#f4a259', say: 'הכלב שלי רעב! בואי נביא לו אוכל',
   mount(root, s) {
     const FOODS = [['🦴', 1, 'עצם'], ['🍖', 1, 'בשר'], ['🥩', 1, 'סטייק'], ['🍗', 1, 'עוף'], ['🥕', 1, 'גזר'], ['🍎', 1, 'תפוח'], ['🧀', 1, 'גבינה'], ['🥦', 0, 'ברוקולי'], ['🍋', 0, 'לימון']];
@@ -56,13 +59,13 @@ registerGame({
             dog.classList.remove('open'); dog.classList.add('happy', 'wag');
             setFull(full + 1); Sound.ding(full * 2);
             const c = center(head()); FX.burst(c.x, c.y, ['💖', '✨'], 7, 30);
-            Voice.say(pick(['יאמי!', 'הַב הַב! טעים!', 'אממ, ' + name + '!', 'עוד!']));
+            Voice.say(pick(DOG_YUM));
             s.later(() => { dog.classList.remove('happy', 'wag'); busy = false; if (full >= FULL) fullDog(); }, 550);
           }, 450);
         } else {
           dog.classList.remove('open'); dog.classList.add('yuck'); Sound.wrong();
           const c = center(head()); FX.text(c.x, c.y - 80, 'איכס! 😝', '#2ec27e');
-          Voice.say(pick(['איכס! אני לא אוהב ' + name, 'פוּ! לא רוצה ' + name]));
+          Voice.say(pick(DOG_YUCK));
           s.later(() => { dog.classList.remove('yuck'); busy = false; }, 900);
         }
       }, 650);
@@ -116,7 +119,7 @@ registerGame({
       s.later(() => {
         Sound.bark(); dog.classList.add('happy', 'wag');
         const c = center(dog); FX.burst(c.x, c.y, ['💖', '⭐', '🎾'], 12, 36);
-        Voice.say('הַב הַב! הבאתי את הכדור!');
+        Voice.say('הב הב! הבאתי את הכדור!');
       }, 2500);
       s.later(() => celebrate({ emoji: '🐶', title: 'הכלב מאושר!', stars: 2, again: () => {
         $$('.mouthball', dog).forEach(e => e.remove()); dog.style.transform = ''; dog.classList.remove('happy', 'wag');
