@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#fff7ec">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>פיצי TV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#fff7ec; --ink:#3b2f4a; --card:#fff; --sub:#7a6f86; --pri:#7b5cff; --yel:#ffb703; --shadow:0 6px 0 rgba(59,47,74,.10);
+         --font:'Varela Round',system-ui,sans-serif }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font)}
+  body{min-height:100vh;-webkit-user-select:none;user-select:none;
+       background-image:radial-gradient(circle at 8% 6%,#ffe3f1 0 80px,transparent 81px),radial-gradient(circle at 94% 18%,#dff4ff 0 110px,transparent 111px),
+                        radial-gradient(circle at 85% 96%,#e8ffe0 0 130px,transparent 131px);background-attachment:fixed}
+  button,input,textarea,select{font:inherit;color:inherit}
+  [hidden]{display:none!important}
+
+  /* ======================== kid view ======================== */
+  header.kid{display:flex;align-items:center;gap:10px;padding:calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 4px calc(16px + env(safe-area-inset-left))}
+  .logo{display:flex;align-items:center;gap:10px;font-size:clamp(22px,5.5vw,34px);flex:1;min-width:0}
+  .logo b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .logo .bub{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#ffb703,#fb6f92);display:grid;place-items:center;font-size:28px;box-shadow:var(--shadow);flex:0 0 auto;animation:bob 2.8s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-4px) rotate(-5deg)}}
+  .rbtn{width:50px;height:50px;border-radius:50%;border:0;background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;font-size:22px;cursor:pointer;flex:0 0 auto}
+  .rbtn:active{transform:scale(.92)}
+  #tabs{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding:12px calc(16px + env(safe-area-inset-right)) 16px calc(16px + env(safe-area-inset-left))}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;border:0;border-radius:24px;padding:10px 14px;min-width:88px;max-width:140px;display:flex;flex-direction:column;align-items:center;gap:4px;
+       background:#fff;box-shadow:var(--shadow);cursor:pointer;font-size:14px;line-height:1.2;text-align:center;transition:transform .12s}
+  .tab .e{font-size:32px;line-height:1}
+  .tab.on{transform:translateY(-3px);outline:4px solid var(--c,#ffb703)}
+  main{padding:0 calc(16px + env(safe-area-inset-right)) 40px calc(16px + env(safe-area-inset-left));max-width:1300px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+  @media (max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{border:0;padding:0;background:var(--card);border-radius:22px;overflow:hidden;cursor:pointer;text-align:right;box-shadow:0 6px 0 var(--c,#ffb703);transition:transform .12s;display:block;width:100%}
+  .card:active{transform:scale(.97)}
+  .thumb{position:relative;aspect-ratio:16/9;background:#eee}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .play{position:absolute;inset:auto auto 10px 10px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;font-size:18px;color:var(--ink)}
+  .thumb .dur{position:absolute;top:10px;left:10px;background:rgba(59,47,74,.78);color:#fff;border-radius:10px;padding:3px 8px;font-size:13px;direction:ltr}
+  .thumb .prog{position:absolute;left:0;right:0;bottom:0;height:6px;background:rgba(0,0,0,.15)}
+  .thumb .prog i{position:absolute;right:0;top:0;bottom:0;background:#fb6f92}
+  .card .t{padding:10px 14px 14px;font-size:16px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .empty{text-align:center;padding:50px 20px;font-size:19px;line-height:1.6;color:var(--sub)}
+  .empty .big{font-size:60px}
+  .more{display:block;margin:20px auto;border:0;border-radius:24px;padding:12px 26px;background:#fff;box-shadow:var(--shadow);cursor:pointer;font-size:16px}
+
+  /* ======================== player ======================== */
+  #player{position:fixed;inset:0;z-index:50;display:none;background:#1d1630;overflow:hidden;--rowh:min(26vh,25vw);color:#fff}
+  #player.open{display:block}
+  #vid{position:absolute;left:0;right:0;top:0;bottom:0;background:#000;overflow:hidden;transition:bottom .28s cubic-bezier(.2,.8,.2,1)}
+  #yt-box,#yt-box iframe,#yt{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #yt-box iframe{pointer-events:none}
+  #cover{position:absolute;inset:0;background:#000 center/contain no-repeat;opacity:0;transition:opacity .2s;pointer-events:none}
+  #player:not(.playing) #cover{opacity:1}
+  #tap{position:absolute;inset:0;z-index:2;cursor:pointer}
+  #ctl{position:absolute;inset:0;z-index:3;opacity:0;pointer-events:none;transition:opacity .2s;background:rgba(29,22,48,.45)}
+  #player.ui #ctl{opacity:1}
+  #player.ui #ctl .c{pointer-events:auto}
+  .pb{border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:#fff;color:var(--ink);box-shadow:0 5px 0 rgba(0,0,0,.3)}
+  .pb:active{transform:scale(.92)}
+  .ctop{position:absolute;top:0;right:0;left:0;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 0 calc(14px + env(safe-area-inset-left))}
+  .ctop .pb{width:52px;height:52px;font-size:24px;flex:0 0 auto}
+  #ptitle{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+  .cmid{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;justify-content:center;align-items:center;gap:clamp(26px,8vw,70px);direction:ltr}
+  #pp{width:84px;height:84px;font-size:38px;background:var(--yel);box-shadow:0 6px 0 #c98a00}
+  #pp span{display:block;transform:translateX(2px)}
+  #player.playing #pp span{transform:none}
+  .skipb{width:60px;height:60px;font-size:13px;line-height:1;flex-direction:column}
+  .skipb b{font-size:22px}
+  #next{width:60px;height:60px;font-size:24px}
+  #player.norecs #next{visibility:hidden}
+  .cbot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;direction:ltr;padding:0 calc(16px + env(safe-area-inset-right)) 10px calc(14px + env(safe-area-inset-left));font-size:15px;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .cbot .pb{width:46px;height:46px;font-size:20px;flex:0 0 auto}
+  #bar{position:relative;flex:1;height:40px;cursor:pointer;touch-action:none;margin:0 6px}
+  #bar .track{position:absolute;left:0;right:0;top:50%;height:12px;margin-top:-6px;border-radius:8px;background:rgba(255,255,255,.3);overflow:hidden}
+  #fill{height:100%;width:0;background:linear-gradient(90deg,#ffb703,#fb6f92)}
+  #knob{position:absolute;top:50%;left:0;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:#fff;border:5px solid #fb6f92;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  #loading{position:absolute;inset:0;z-index:4;display:none;place-items:center;pointer-events:none;font-size:42px}
+  #loading.show{display:grid}
+  #loading span{animation:bob 1.2s ease-in-out infinite}
+  #over{position:absolute;inset:0;z-index:4;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(29,22,48,.88);text-align:center;padding:16px;font-size:19px;line-height:1.4}
+  #over.show{display:flex}
+  #over .e{font-size:50px}
+  #toast{position:absolute;top:calc(74px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;background:#fff;color:var(--ink);border-radius:20px;padding:10px 18px;font-size:17px;box-shadow:0 6px 0 rgba(0,0,0,.25);opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+  #toast.show{opacity:1}
+  .tcard{position:relative;border:0;padding:0;border-radius:16px;overflow:hidden;cursor:pointer;background:#333;aspect-ratio:16/9;display:block;box-shadow:0 5px 0 var(--c,#ffb703)}
+  .tcard img{width:100%;height:100%;object-fit:cover;display:block}
+  .tcard .dur{position:absolute;bottom:8px;left:8px;background:rgba(29,22,48,.8);border-radius:8px;padding:2px 7px;font-size:13px;direction:ltr}
+  .tcard:active{transform:scale(.96)}
+  #more{position:absolute;left:0;right:0;bottom:0;z-index:1;display:none}
+  #more h4{display:none;margin:0;font-size:21px;font-weight:400}
+  #mlist{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:6px calc(18px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left))}
+  #mlist::-webkit-scrollbar{display:none}
+  #mlist .tcard{flex:0 0 auto;height:var(--rowh)}
+  @media (orientation:landscape){
+    #player.ui:not(.norecs) #vid{bottom:calc(var(--rowh) + 28px + env(safe-area-inset-bottom))}
+    #player.ui:not(.norecs) #more{display:block}
+  }
+  @media (orientation:portrait){
+    #player{overflow-y:auto}
+    #vid{position:sticky;bottom:auto;height:max(56.25vw,40vh);z-index:2}
+    #more{position:static;display:block;padding:22px 0 30px}
+    #player.norecs #more{display:none}
+    #more h4{display:block;margin:0 22px 16px}
+    #mlist{flex-direction:column;align-items:center;overflow:visible}
+    #mlist .tcard{height:auto;width:min(80vw,520px)}
+  }
+  @media (max-height:430px){ .ctop .pb{width:44px;height:44px} #pp{width:70px;height:70px;font-size:30px} .skipb,#next{width:50px;height:50px} .cbot .pb{width:40px;height:40px} }
+
+  /* ======================== sleep screen ======================== */
+  #sleep{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;
+         background:radial-gradient(circle at 50% 30%,#3b2f7a,#1d1630 70%);color:#fff}
+  #sleep.show{display:flex}
+  #sleep .moon{font-size:96px;animation:bob 3s ease-in-out infinite}
+  #sleep h2{margin:0;font-size:clamp(26px,6vw,40px);font-weight:400}
+  #sleep p{margin:0;font-size:19px;opacity:.85;line-height:1.5}
+  #sleep .stars{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 70%,#fff,transparent),radial-gradient(2px 2px at 85% 60%,#fff,transparent),radial-gradient(1.5px 1.5px at 10% 85%,#fff,transparent);opacity:.8}
+  #sleep button{position:relative;border:0;border-radius:22px;padding:10px 20px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer;font-size:15px}
+
+  /* ======================== parents ======================== */
+  #parent{position:fixed;inset:0;z-index:70;background:#f6f3fb;display:none;flex-direction:column;-webkit-user-select:text;user-select:text}
+  #parent.open{display:flex}
+  .phead{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 16px 10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  .phead h2{margin:0;font-size:20px;flex:1;font-weight:400}
+  .ptabs{display:flex;gap:6px;padding:10px 12px;background:#fff;border-bottom:1px solid #eee;overflow-x:auto}
+  .ptab{border:0;background:#f1edf8;border-radius:18px;padding:9px 16px;cursor:pointer;white-space:nowrap;font-size:15px}
+  .ptab.on{background:var(--pri);color:#fff}
+  .pbody{flex:1;overflow-y:auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom));max-width:820px;width:100%;margin:0 auto}
+  .box{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(59,47,74,.06)}
+  .box h3{margin:0 0 6px;font-size:18px;font-weight:400}
+  .hint{color:var(--sub);font-size:14px;line-height:1.55;margin:4px 0 10px}
+  .btn{border:0;border-radius:14px;padding:10px 16px;background:#f1edf8;cursor:pointer;font-size:15px}
+  .btn.pri{background:var(--pri);color:#fff}
+  .btn.red{background:#ffe3e6;color:#c1121f}
+  .btn:disabled{opacity:.5;cursor:default}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input.f,textarea.f,select.f{width:100%;border:2px solid #e6e0f0;border-radius:12px;padding:10px 12px;background:#fff;font-size:16px;outline:0}
+  input.f:focus,textarea.f:focus{border-color:var(--pri)}
+  textarea.f{min-height:84px;resize:vertical;line-height:1.5}
+  label.l{display:block;font-size:14px;color:var(--sub);margin:10px 0 4px}
+  .sw{display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer;line-height:1.5;font-size:15px}
+  .sw input{width:22px;height:22px;accent-color:var(--pri);flex:0 0 auto;margin-top:2px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  .chip{border:0;border-radius:16px;padding:7px 12px;background:#f1edf8;cursor:pointer;font-size:14px}
+  #aiStatus{margin-top:10px;font-size:15px;color:var(--sub);min-height:1.4em;line-height:1.5}
+  #aiStatus.err{color:#c1121f}
+  .lib-tab{border:1px solid #eee;border-radius:14px;margin-bottom:10px;overflow:hidden;background:#fff}
+  .lib-tab > summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:16px}
+  .lib-tab > summary::-webkit-details-marker{display:none}
+  .lib-tab > summary .n{color:var(--sub);font-size:14px;margin-inline-start:auto}
+  .lib-tab > summary .e{font-size:22px}
+  .ib{border:0;background:none;cursor:pointer;font-size:18px;width:36px;height:36px;border-radius:50%}
+  .ib:active{background:#f1edf8}
+  .vrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid #f3f0f7}
+  .vrow img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:0 0 auto;background:#eee}
+  .vrow .vt{flex:1;min-width:0;font-size:14px;line-height:1.35}
+  .vrow .vt small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+  .vrow .x{border:0;background:#ffe3e6;color:#c1121f;border-radius:10px;width:38px;height:38px;cursor:pointer;flex:0 0 auto;font-size:16px}
+  .vrow input[type=checkbox]{width:22px;height:22px;accent-color:var(--pri);flex:0 0 auto}
+  .stat{display:flex;gap:14px;flex-wrap:wrap;font-size:15px;color:var(--sub)}
+  .stat b{color:var(--ink)}
+  .meter{height:12px;background:#f1edf8;border-radius:8px;overflow:hidden;margin:8px 0}
+  .meter i{display:block;height:100%;background:linear-gradient(90deg,#7b5cff,#fb6f92)}
+
+  /* modal (gate + preview) */
+  .modal{position:fixed;inset:0;z-index:90;background:rgba(29,22,48,.55);display:none;align-items:center;justify-content:center;padding:14px}
+  .modal.open{display:flex}
+  .modal .in{background:#fff;border-radius:20px;width:100%;max-width:620px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:text;user-select:text}
+  .modal .mh{padding:16px 18px 6px}
+  .modal .mh h3{margin:0;font-size:20px;font-weight:400}
+  .modal .mb{overflow-y:auto;flex:1;padding:4px 6px}
+  .modal .mf{padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:flex-start;border-top:1px solid #f0edf5;flex-wrap:wrap}
+  #gq{font-size:26px;margin:14px 0}
+  #ga{font-size:24px;width:130px;text-align:center}
+  #gerr{color:#c1121f;min-height:1.5em;margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- ======================== מסך הילד ======================== -->
+<header class="kid">
+  <div class="logo"><span class="bub">🦋</span><b id="appName">פיצי TV</b></div>
+  <button class="rbtn" id="lock" aria-label="הורים">🔒</button>
+</header>
+<div id="tabs"></div>
+<main><div class="grid" id="feed"></div><button class="more" id="moreBtn" hidden>עוד סרטונים</button></main>
+
+<div id="player" role="dialog" aria-modal="true">
+  <div id="vid">
+    <div id="yt-box"><div id="yt"></div></div>
+    <div id="cover"></div>
+    <div id="tap"></div>
+    <div id="ctl">
+      <div class="ctop c"><button class="pb" id="close" aria-label="חזרה">✕</button><div id="ptitle"></div></div>
+      <div class="cmid c">
+        <button class="pb skipb" id="rew" aria-label="10 שניות אחורה"><b>↺</b>10</button>
+        <button class="pb" id="pp" aria-label="נגן / עצור"><span>▶</span></button>
+        <button class="pb skipb" id="fwd" aria-label="10 שניות קדימה"><b>↻</b>10</button>
+        <button class="pb" id="next" aria-label="הסרטון הבא">⏭</button>
+      </div>
+      <div class="cbot c">
+        <button class="pb" id="fs" aria-label="מסך מלא">⛶</button>
+        <span id="tcur">0:00</span><div id="bar"><div class="track"><div id="fill"></div></div><div id="knob"></div></div><span id="tdur">0:00</span>
+      </div>
+    </div>
+    <div id="loading"><span>🦋</span></div>
+    <div id="over"><div class="e" id="overE"></div><div id="overT"></div></div>
+    <div id="toast"></div>
+  </div>
+  <div id="more"><h4>✨ עוד סרטונים</h4><div id="mlist"></div></div>
+</div>
+
+<div id="sleep">
+  <div class="stars"></div>
+  <div class="moon" id="sleepE">😴</div>
+  <h2 id="sleepH">הטלוויזיה הלכה לישון</h2>
+  <p id="sleepP">נתראה מחר! 🌙</p>
+  <button id="sleepParent">🔒 להורים</button>
+</div>
+
+<!-- ======================== אזור הורים ======================== -->
+<div id="parent">
+  <div class="phead"><h2>👨‍👩‍👧 אזור הורים</h2><button class="btn" id="pClose">סגירה</button></div>
+  <div class="ptabs">
+    <button class="ptab on" data-p="content">✨ תוכן</button>
+    <button class="ptab" data-p="time">⏰ זמן מסך</button>
+    <button class="ptab" data-p="settings">⚙️ הגדרות</button>
+  </div>
+  <div class="pbody">
+    <!-- תוכן -->
+    <section data-sec="content">
+      <div class="box">
+        <h3>✨ לבקש מה־AI</h3>
+        <div class="hint">כתבו מה להוסיף או להוריד. ה־AI מחפש ביוטיוב, מסנן לפי פרופיל המשפחה ומראה לכם רשימה לאישור לפני שמשהו משתנה.</div>
+        <textarea class="f" id="aiText" placeholder="למשל: תוסיף 15 פרקים של פפה חזירה בעברית"></textarea>
+        <div class="chips" id="aiChips"></div>
+        <div class="row"><button class="btn pri" id="aiGo">✨ שליחה</button></div>
+        <div id="aiStatus"></div>
+      </div>
+      <div class="box">
+        <h3>🔗 הוספה לפי קישור</h3>
+        <div class="hint">מדביקים קישור לסרטון ביוטיוב (בלי AI ובלי מפתחות).</div>
+        <div class="row"><input class="f" id="linkIn" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:200px"><select class="f" id="linkTab" style="width:auto"></select><button class="btn pri" id="linkGo">הוספה</button></div>
+        <div id="linkStatus" class="hint"></div>
+      </div>
+      <div class="box">
+        <div class="row" style="justify-content:space-between"><h3>📚 כל התוכן (<span id="libCount">0</span>)</h3><button class="btn" id="newTab">➕ לשונית</button></div>
+        <input class="f" id="libSearch" placeholder="🔍 חיפוש ברשימה" style="margin:8px 0 12px">
+        <div id="lib"></div>
+      </div>
+    </section>
+    <!-- זמן מסך -->
+    <section data-sec="time" hidden>
+      <div class="box">
+        <h3>היום</h3>
+        <div class="stat"><span>נצפה: <b id="tWatched">0 דק׳</b></span><span>נשאר: <b id="tLeft">—</b></span></div>
+        <div class="meter"><i id="tMeter" style="width:0"></i></div>
+        <div class="row"><button class="btn" id="tBonus">➕ 15 דקות להיום</button><button class="btn" id="tReset">איפוס היום</button></div>
+      </div>
+      <div class="box">
+        <h3>⏳ הגבלה יומית</h3>
+        <label class="l" for="sLimit">כמה דקות ביום (0 = בלי הגבלה)</label>
+        <input class="f" id="sLimit" type="number" min="0" step="5" inputmode="numeric" style="width:140px">
+        <label class="sw"><input type="checkbox" id="sFinish"> <span>כשהזמן נגמר, לתת לסיים את הסרטון שרץ (בלי לנתק באמצע)</span></label>
+        <label class="sw"><input type="checkbox" id="sWarn"> <span>הודעה ידידותית 2 דקות לפני הסוף</span></label>
+      </div>
+      <div class="box">
+        <h3>🕗 שעות צפייה</h3>
+        <div class="hint">מחוץ לשעות האלה הטלוויזיה "ישנה". אפשר להשאיר ריק.</div>
+        <div class="row"><label>מ־ <input class="f" id="sFrom" type="time" style="width:auto"></label><label>עד <input class="f" id="sTo" type="time" style="width:auto"></label></div>
+      </div>
+    </section>
+    <!-- הגדרות -->
+    <section data-sec="settings" hidden>
+      <div class="box">
+        <h3>👧 פרופיל</h3>
+        <label class="l" for="sName">שם הילד/ה (מופיע בכותרת)</label>
+        <input class="f" id="sName" placeholder="למשל: נועה">
+        <label class="l" for="sAge">גיל</label>
+        <input class="f" id="sAge" type="number" min="1" max="14" style="width:100px">
+        <label class="l" for="sProfile">מה מתאים למשפחה שלנו? (ה־AI מסנן לפי זה)</label>
+        <textarea class="f" id="sProfile" placeholder="למשל: משפחה דתית. עדיפות לעברית. בלי מפלצות ופחדים, בלי חגים של דתות אחרות, לבוש צנוע."></textarea>
+      </div>
+      <div class="box">
+        <h3>▶️ צפייה</h3>
+        <label class="sw"><input type="checkbox" id="sRecs"> <span>סרטונים מומלצים בזמן צפייה (בנגיעה במסך ומתחת לסרטון)</span></label>
+        <label class="sw"><input type="checkbox" id="sRotate"> <span>לפתוח סרטון במסך מלא ולרוחב (אנדרואיד)</span></label>
+        <label class="l" for="sMin">אורך מינימלי לסרטון (דקות) – כדי לא לקבל קטעים קצרצרים</label>
+        <input class="f" id="sMin" type="number" min="0" max="20" style="width:100px">
+      </div>
+      <div class="box">
+        <h3>🔑 מפתחות ל־AI</h3>
+        <div class="hint">נשמרים רק במכשיר הזה. העלות לפי שימוש נגבית מהחשבונות שלכם.</div>
+        <label class="l" for="sAKey">מפתח Claude (חובה ל־AI) – מ־console.anthropic.com ← API Keys</label>
+        <input class="f" id="sAKey" type="password" autocomplete="off" placeholder="sk-ant-...">
+        <label class="l" for="sYKey">מפתח YouTube Data API (לא חובה, משפר את החיפוש) – Google Cloud ← YouTube Data API v3 ← Credentials</label>
+        <input class="f" id="sYKey" type="password" autocomplete="off" placeholder="AIza...">
+        <div class="hint">בלי מפתח YouTube, ה־AI מחפש סרטונים בחיפוש אינטרנט. עם המפתח מקבלים יותר תוצאות, אורך של כל סרטון וסימון "מיועד לילדים".</div>
+      </div>
+      <div class="box">
+        <h3>💾 גיבוי</h3>
+        <div class="hint">הכל נשמר בדפדפן של המכשיר. כדי להעביר למכשיר אחר: מייצאים קובץ כאן, ומייבאים אותו במכשיר השני.</div>
+        <div class="row"><button class="btn" id="bExport">⬇️ ייצוא</button><button class="btn" id="bImport">⬆️ ייבוא</button><input type="file" id="bFile" accept="application/json" hidden><button class="btn" id="bStarter">📦 טעינת ערכת ההתחלה</button><button class="btn red" id="bWipe">🗑 מחיקת כל התוכן</button></div>
+      </div>
+      <div class="box">
+        <h3>🔒 קוד הורים</h3>
+        <label class="sw"><input type="checkbox" id="sGatePin"> <span>להשתמש בקוד קבוע במקום שאלת חשבון</span></label>
+        <input class="f" id="sPin" inputmode="numeric" maxlength="6" placeholder="4–6 ספרות" style="width:160px">
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- שאלת הורים -->
+<div class="modal" id="gate"><div class="in" style="max-width:380px"><div class="mh"><h3>🔒 רק להורים</h3></div>
+  <div class="mb" style="padding:0 18px 10px"><div id="gq"></div><input class="f" id="ga" inputmode="numeric" autocomplete="off"><div id="gerr"></div></div>
+  <div class="mf"><button class="btn pri" id="gok">אישור</button><button class="btn" id="gx">ביטול</button></div></div></div>
+
+<!-- תצוגה מקדימה לפני שינוי -->
+<div class="modal" id="prev"><div class="in"><div class="mh"><h3 id="prevH"></h3><div class="hint" id="prevNote"></div></div>
+  <div class="mb" id="prevList"></div>
+  <div class="mf"><button class="btn pri" id="prevOk"></button><button class="btn" id="prevAll">סימון הכל</button><button class="btn" id="prevX">ביטול</button></div></div></div>
+
+<script>
+/* =====================================================================
+   פיצי TV – נגן יוטיוב סגור לילדים, עם ניהול תוכן בעזרת AI
+   הכל נשמר ב-localStorage של המכשיר. אין שרת.
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const store = {
+  get(k,d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d }catch(e){ return d } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){ alert('אין מספיק מקום בדפדפן לשמירה') } }
+};
+const DAY = 864e5, PAGE = 40;
+const COLORS = ['#ffb703','#fb6f92','#8ecae6','#90be6d','#c77dff','#f3722c','#43aa8b','#4cc9f0','#e76f51','#9b5de5','#06d6a0','#ff9f1c'];
+
+/* ---------- נתונים ----------
+   lib: {tabs:[{id,name,e,c}], videos:{ID:{t,ch,d,tab,add}}}            */
+let lib = store.get('pz-lib', null);
+let S = Object.assign({ name:'', age:4, profile:'', recs:true, rotate:false, minMin:3, aKey:'', yKey:'',
+                        limit:60, finish:true, warn:true, from:'', to:'', pinOn:false, pin:'' }, store.get('pz-set', {}));
+let hist = store.get('pz-hist', []);            // [{id, tab, t, p}]
+let usage = store.get('pz-usage', {day:'', sec:0, bonus:0});
+const saveLib = () => store.set('pz-lib', lib), saveS = () => store.set('pz-set', S), saveHist = () => store.set('pz-hist', hist);
+const today = () => new Date().toLocaleDateString('sv');   // YYYY-MM-DD
+function U(){ if(usage.day !== today()) usage = {day:today(), sec:0, bonus:0}; return usage; }
+const saveUsage = () => store.set('pz-usage', usage);
+const tabOf = id => lib.tabs.find(t=>t.id===id);
+const newId = () => 't' + Math.random().toString(36).slice(2,8);
+const fmt = s => { s = Math.max(0, Math.floor(s||0)); const h = Math.floor(s/3600), m = Math.floor(s/60)%60, ss = String(s%60).padStart(2,'0'); return h ? `${h}:${String(m).padStart(2,'0')}:${ss}` : `${m}:${ss}`; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function ensureTab(name, e){
+  name = (name||'').trim() || 'חדש';
+  let t = lib.tabs.find(t => t.name === name);
+  if(!t){ t = {id:newId(), name, e: e || '⭐', c: COLORS[lib.tabs.length % COLORS.length]}; lib.tabs.push(t); }
+  return t;
+}
+
+/* ---------- ערבוב לפי צפיות ---------- */
+function tabWeights(){
+  const w = {}; for(const t of lib.tabs) w[t.id] = 1;
+  const now = Date.now();
+  for(const h of hist) if(h.tab in w) w[h.tab] += 4 * Math.pow(.5, (now-h.t)/DAY/4) * (h.p >= .6 ? 2 : 1);
+  return w;
+}
+function lastSeen(){ const m = new Map(); for(const h of hist) if(!m.has(h.id)) m.set(h.id, h); return m; }
+function vidW(id, seen){ const s = seen.get(id); if(!s) return 1; return (Date.now()-s.t)/DAY < 3 ? .25 : .7; }
+const wshuffle = (a, wf) => a.map(x => [Math.pow(Math.random(), 1/Math.max(wf(x),1e-6)), x]).sort((p,q)=>q[0]-p[0]).map(p=>p[1]);
+let cache = {};
+function feedFor(tabId){
+  if(cache[tabId]) return cache[tabId].filter(id => lib.videos[id]);
+  const seen = lastSeen(), tw = tabWeights(), cnt = {};
+  for(const v of Object.values(lib.videos)) cnt[v.tab] = (cnt[v.tab]||0) + 1;
+  let ids = Object.keys(lib.videos);
+  if(tabId !== 'all') ids = ids.filter(id => lib.videos[id].tab === tabId);
+  const out = tabId === 'all'
+    ? [...[...seen.values()].filter(h => lib.videos[h.id]).slice(0,2).map(h=>h.id)]
+    : [];
+  const used = new Set(out);
+  for(const id of wshuffle(ids, id => (tabId==='all' ? (tw[lib.videos[id].tab]||1)/Math.sqrt(cnt[lib.videos[id].tab]||1) : 1) * vidW(id, seen))) if(!used.has(id)){ used.add(id); out.push(id); }
+  return (cache[tabId] = out);
+}
+function recommendFor(id, n){
+  const cur = lib.videos[id], tw = tabWeights(), seen = lastSeen(), cnt = {};
+  for(const v of Object.values(lib.videos)) cnt[v.tab] = (cnt[v.tab]||0) + 1;
+  const ids = Object.keys(lib.videos).filter(x => x !== id);
+  return wshuffle(ids, x => { const v = lib.videos[x]; const w = v.tab === cur?.tab ? Math.max(tw[v.tab]||1, 3) * 3 : (tw[v.tab]||1); return w / Math.sqrt(cnt[v.tab]||1) * vidW(x, seen); }).slice(0, n);
+}
+
+/* ---------- מסך הילד ---------- */
+let current = store.get('pz-cur', 'all'), shown = PAGE;
+function renderKid(){
+  $('appName').textContent = S.name ? `הטלוויזיה של ${S.name}` : 'פיצי TV';
+  if(current !== 'all' && !tabOf(current)) current = 'all';
+  const tw = tabWeights(), tabs = $('tabs'); tabs.innerHTML = '';
+  for(const t of [{id:'all', name:'הכל', e:'🌈', c:'#ffb703'}, ...[...lib.tabs].sort((a,b)=>tw[b.id]-tw[a.id])]){
+    if(t.id !== 'all' && !Object.values(lib.videos).some(v => v.tab === t.id)) continue;
+    const b = document.createElement('button'); b.className = 'tab' + (current===t.id ? ' on' : ''); b.style.setProperty('--c', t.c);
+    b.innerHTML = `<span class="e">${esc(t.e)}</span><span>${esc(t.name)}</span>`;
+    b.onclick = () => { current = t.id; store.set('pz-cur', current); shown = PAGE; renderKid(); window.scrollTo({top:0}); };
+    tabs.appendChild(b);
+  }
+  const ids = feedFor(current), feed = $('feed'), seen = lastSeen(); feed.innerHTML = '';
+  if(!ids.length){
+    feed.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">📺</div>עוד אין כאן סרטונים.<br>הורים: לחצו על 🔒 כדי להוסיף.</div>`;
+  }
+  for(const id of ids.slice(0, shown)){
+    const v = lib.videos[id], t = tabOf(v.tab) || {c:'#ffb703'}, s = seen.get(id);
+    const b = document.createElement('button'); b.className = 'card'; b.style.setProperty('--c', t.c);
+    b.innerHTML = `<div class="thumb"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg"><span class="play">▶</span>` +
+      (v.d ? `<span class="dur">${fmt(v.d)}</span>` : '') + (s && s.p ? `<span class="prog"><i style="width:${Math.round(Math.min(1,s.p)*100)}%"></i></span>` : '') +
+      `</div><div class="t"></div>`;
+    b.querySelector('.t').textContent = v.t;
+    b.onclick = () => openVideo(id);
+    feed.appendChild(b);
+  }
+  $('moreBtn').hidden = ids.length <= shown;
+}
+$('moreBtn').onclick = () => { shown += PAGE; renderKid(); };
+new IntersectionObserver(es => { if(es[0].isIntersecting && !$('moreBtn').hidden){ shown += PAGE; renderKid(); } }, {rootMargin:'600px'}).observe($('moreBtn'));
+function refresh(){ cache = {}; renderKid(); }
+
+/* =====================================================================
+   זמן מסך
+   ===================================================================== */
+const toMin = hm => { if(!hm) return null; const [h,m] = hm.split(':').map(Number); return h*60+m; };
+function outsideHours(){
+  const f = toMin(S.from), t = toMin(S.to); if(f===null || t===null || f===t) return false;
+  const d = new Date(), n = d.getHours()*60 + d.getMinutes();
+  return f < t ? (n < f || n >= t) : (n < f && n >= t);
+}
+const leftSec = () => S.limit > 0 ? S.limit*60 + U().bonus*60 - U().sec : Infinity;
+let stopAfterThis = false, warned = false;
+function blockedReason(){ if(outsideHours()) return 'hours'; if(leftSec() <= 0) return 'limit'; return null; }
+function showSleep(reason){
+  if(P.classList.contains('open')) closePlayer(true);
+  $('sleepE').textContent = reason === 'hours' ? '🌙' : '😴';
+  $('sleepH').textContent = reason === 'hours' ? 'הטלוויזיה עוד ישנה' : 'הטלוויזיה הלכה לישון';
+  $('sleepP').textContent = reason === 'hours' ? (S.from ? `היא תתעורר ב־${S.from} ☀️` : 'נתראה אחר כך!') : `איזה כיף היה היום${S.name ? ', '+S.name : ''}! נתראה מחר 🌙`;
+  $('sleep').classList.add('show');
+}
+function checkBlocked(){ const r = blockedReason(); if(r){ showSleep(r); return true; } $('sleep').classList.remove('show'); return false; }
+function countPlay(sec){
+  U().sec += sec; saveUsage();
+  const left = leftSec();
+  if(S.warn && left <= 120 && left > 0 && !warned){ warned = true; toast('⏰ עוד 2 דקות נגמר הזמן להיום'); }
+  if(left <= 0 && !stopAfterThis){
+    if(S.finish){ stopAfterThis = true; toast('🌙 זה הסרטון האחרון להיום'); }
+    else { try{ player.pauseVideo() }catch(_){} showSleep('limit'); }
+  }
+}
+setInterval(() => { if(outsideHours() && !$('parent').classList.contains('open')) showSleep('hours'); }, 30000);
+let toastT = null;
+function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>el.classList.remove('show'), 4500); }
+
+/* =====================================================================
+   נגן
+   ===================================================================== */
+let player = null, apiReady = false, pending = null, checked = false, tick = null, curId = null, ended = false, dirty = false;
+let uiTimer = null, dragging = false, recs = [], lastT = 0;
+const P = $('player'), loading = $('loading'), cover = $('cover'), over = $('over'), pp = $('pp');
+window.onYouTubeIframeAPIReady = () => { apiReady = true; if(pending){ const p = pending; pending = null; openVideo(p); } };
+(function(){ const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
+function drawProgress(t, d){ const f = d ? Math.min(1, Math.max(0, t/d)) : 0; $('fill').style.width = (f*100)+'%'; $('knob').style.left = (f*100)+'%'; $('tcur').textContent = fmt(t); $('tdur').textContent = fmt(d); }
+function setPP(){ pp.innerHTML = `<span>${ended ? '↺' : (P.classList.contains('playing') ? '❚❚' : '▶')}</span>`; }
+function showUI(){ P.classList.add('ui'); clearTimeout(uiTimer); if(P.classList.contains('playing')) uiTimer = setTimeout(()=>{ if(!dragging && P.classList.contains('playing')) P.classList.remove('ui'); }, 4000); }
+function hideUI(){ clearTimeout(uiTimer); P.classList.remove('ui'); }
+function setPlaying(on){ P.classList.toggle('playing', on); setPP(); if(on){ if(P.classList.contains('ui')) showUI(); } else showUI(); }
+function showOver(e, t){ $('overE').textContent = e; $('overT').textContent = t; over.classList.add('show'); showUI(); }
+function enterFull(){ const f = document.documentElement; if(document.fullscreenElement || !f.requestFullscreen) return; f.requestFullscreen({navigationUI:'hide'}).then(()=>{ try{ screen.orientation.lock('landscape').catch(()=>{}) }catch(_){} }).catch(()=>{}); }
+function exitFull(){ try{ screen.orientation.unlock() }catch(_){} if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+
+function openVideo(id){
+  if(checkBlocked()) return;
+  const v = lib.videos[id]; if(!v) return;
+  const first = !P.classList.contains('open');
+  P.classList.add('open'); P.classList.remove('playing','ui'); P.classList.toggle('norecs', !S.recs);
+  document.documentElement.style.overflow = 'hidden';
+  if(first && S.rotate) enterFull();
+  ended = false; setPP(); over.classList.remove('show'); loading.classList.add('show');
+  $('ptitle').textContent = v.t;
+  cover.style.backgroundImage = `url(https://i.ytimg.com/vi/${id}/hqdefault.jpg)`;
+  drawProgress(0, v.d || 0);
+  curId = id; checked = false;
+  recs = S.recs ? recommendFor(id, 20) : [];
+  const ml = $('mlist'); ml.innerHTML = '';
+  for(const r of recs){
+    const rv = lib.videos[r], t = tabOf(rv.tab) || {c:'#ffb703'};
+    const b = document.createElement('button'); b.className = 'tcard'; b.style.setProperty('--c', t.c); b.setAttribute('aria-label', rv.t);
+    b.innerHTML = `<img loading="lazy" alt="" src="https://i.ytimg.com/vi/${r}/hqdefault.jpg">` + (rv.d ? `<span class="dur">${fmt(rv.d)}</span>` : '');
+    b.onclick = e => { e.stopPropagation(); openVideo(r); };
+    ml.appendChild(b);
+  }
+  ml.scrollLeft = 0; P.scrollTop = 0;
+  if(!apiReady){ pending = id; return; }
+  if(player && player.loadVideoById){ player.loadVideoById(id); return; }
+  player = new YT.Player('yt', {
+    host: 'https://www.youtube-nocookie.com', videoId: id,
+    playerVars: { autoplay:1, controls:0, disablekb:1, fs:0, rel:0, iv_load_policy:3, playsinline:1, modestbranding:1, cc_load_policy:0, hl:'iw', origin: location.origin },
+    events: {
+      onReady: e => { try{ e.target.playVideo() }catch(_){} setTimeout(()=>{ if(!P.classList.contains('playing')){ loading.classList.remove('show'); showUI(); } }, 2500); },
+      onStateChange: onState, onError: onErr
+    }
+  });
+}
+function onState(e){
+  const St = YT.PlayerState;
+  if(e.data === St.PLAYING){
+    loading.classList.remove('show'); over.classList.remove('show'); ended = false;
+    if(!checked){
+      checked = true;
+      const d = player.getDuration(), v = lib.videos[curId];
+      if(v && d && !v.d){ v.d = Math.round(d); saveLib(); }
+      if(d > 0 && d < (v?.min ?? S.minMin*60)){ player.stopVideo(); removeVideo(curId, 'short'); showOver('⏱️','הסרטון הזה קצר מדי. בואו נבחר אחר!'); return; }
+      hist = hist.filter(h => !(h.id === curId && Date.now()-h.t < 6*36e5));
+      hist.unshift({id:curId, tab:v?.tab, t:Date.now(), p:0}); hist = hist.slice(0,300); saveHist(); dirty = true;
+    }
+    setPlaying(true);
+    clearInterval(tick); lastT = Date.now();
+    tick = setInterval(()=>{
+      const now = Date.now(); countPlay((now - lastT)/1000); lastT = now;
+      if(dragging) return;
+      try{ const d = player.getDuration(), t = player.getCurrentTime(); drawProgress(t, d); const h = hist.find(h=>h.id===curId); if(h && d && t/d > (h.p||0)+.01){ h.p = Math.round(t/d*100)/100; saveHist(); } }catch(_){}
+    }, 500);
+  } else if(e.data === St.ENDED){
+    clearInterval(tick); ended = true;
+    const h = hist.find(h=>h.id===curId); if(h){ h.p = 1; saveHist(); }
+    setPlaying(false);
+    if(stopAfterThis || blockedReason()) showSleep(blockedReason() || 'limit');
+  } else if(e.data === St.BUFFERING){
+    if(!P.classList.contains('playing')) loading.classList.add('show');
+  } else if(e.data === St.PAUSED || e.data === St.CUED){
+    clearInterval(tick); loading.classList.remove('show'); setPlaying(false);
+  }
+}
+function onErr(){ loading.classList.remove('show'); removeVideo(curId, 'error'); showOver('🙈','את הסרטון הזה אי אפשר לראות כאן. בואו נבחר אחר!'); }
+/* סרטון שלא עובד יוצא מהרשימה ונרשם בצד, כדי שההורים יראו */
+function removeVideo(id, why){ const v = lib.videos[id]; if(!v) return; const gone = store.get('pz-gone', {}); gone[id] = {...v, why, at:Date.now()}; store.set('pz-gone', gone); delete lib.videos[id]; saveLib(); dirty = true; }
+function togglePlay(){ if(!player || !player.getPlayerState) return; if(ended){ if(checkBlocked()) return; ended = false; player.seekTo(0, true); player.playVideo(); return; } if(player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo(); else { if(checkBlocked()) return; player.playVideo(); } }
+$('tap').onclick = () => { if(over.classList.contains('show')) return; if(P.classList.contains('ui') && P.classList.contains('playing')) hideUI(); else showUI(); };
+pp.onclick = e => { e.stopPropagation(); togglePlay(); };
+$('next').onclick = e => { e.stopPropagation(); if(recs[0]) openVideo(recs[0]); };
+function skip(sec){ if(!player || !player.getCurrentTime) return; const d = player.getDuration(), t = Math.min(Math.max(0, player.getCurrentTime()+sec), Math.max(0, d-1)); ended = false; player.seekTo(t, true); drawProgress(t, d); setPP(); showUI(); }
+$('rew').onclick = e => { e.stopPropagation(); skip(-10); };
+$('fwd').onclick = e => { e.stopPropagation(); skip(10); };
+const bar = $('bar'), barFrac = ev => { const r = bar.getBoundingClientRect(); return Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)); };
+bar.addEventListener('pointerdown', ev => { if(!player || !player.getDuration || !player.getDuration()) return; dragging = true; bar.setPointerCapture(ev.pointerId); clearTimeout(uiTimer); const d = player.getDuration(); drawProgress(barFrac(ev)*d, d); });
+bar.addEventListener('pointermove', ev => { if(!dragging) return; const d = player.getDuration(); drawProgress(barFrac(ev)*d, d); });
+const endDrag = ev => { if(!dragging) return; dragging = false; const d = player.getDuration(); ended = false; player.seekTo(barFrac(ev)*d, true); setPP(); showUI(); };
+bar.addEventListener('pointerup', endDrag); bar.addEventListener('pointercancel', endDrag);
+function closePlayer(keepSleep){
+  clearInterval(tick); clearTimeout(uiTimer);
+  try{ player && player.stopVideo && player.stopVideo() }catch(_){}
+  exitFull(); P.classList.remove('open','playing','ui'); loading.classList.remove('show'); document.documentElement.style.overflow = '';
+  stopAfterThis = false;
+  if(dirty){ dirty = false; refresh(); }
+}
+$('close').onclick = e => { e.stopPropagation(); closePlayer(); };
+$('fs').onclick = e => { e.stopPropagation(); if(document.fullscreenElement) exitFull(); else enterFull(); showUI(); };
+document.addEventListener('keydown', e => {
+  if(!P.classList.contains('open')) return;
+  if(e.key === 'Escape') closePlayer(); else if(e.key === ' '){ e.preventDefault(); togglePlay(); }
+  else if(e.key === 'ArrowLeft') skip(-10); else if(e.key === 'ArrowRight') skip(10);
+});
+
+/* =====================================================================
+   שאלת הורים
+   ===================================================================== */
+let gateAns = '', gateThen = null;
+function askParent(then){
+  gateThen = then;
+  if(S.pinOn && S.pin){ gateAns = S.pin; $('gq').textContent = 'הקוד של ההורים:'; }
+  else { const a = 4 + Math.floor(Math.random()*6), b = 4 + Math.floor(Math.random()*6); gateAns = String(a*b); $('gq').textContent = `כמה זה ${a} × ${b}?`; }
+  $('ga').value = ''; $('gerr').textContent = ''; $('gate').classList.add('open'); setTimeout(()=>$('ga').focus(), 60);
+}
+function gateCheck(){ if($('ga').value.trim() === gateAns){ $('gate').classList.remove('open'); const f = gateThen; gateThen = null; f && f(); } else { $('gerr').textContent = 'לא נכון, נסו שוב'; $('ga').value = ''; } }
+$('gok').onclick = gateCheck; $('ga').addEventListener('keydown', e => { if(e.key === 'Enter') gateCheck(); });
+$('gx').onclick = () => $('gate').classList.remove('open');
+$('lock').onclick = $('sleepParent').onclick = () => askParent(openParent);
+
+/* =====================================================================
+   אזור הורים
+   ===================================================================== */
+function openParent(){ $('sleep').classList.remove('show'); fillSettings(); renderLib(); renderTime(); $('parent').classList.add('open'); }
+$('pClose').onclick = () => { $('parent').classList.remove('open'); refresh(); checkBlocked(); };
+document.querySelectorAll('.ptab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.ptab').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('[data-sec]').forEach(s => s.hidden = s.dataset.sec !== b.dataset.p);
+  if(b.dataset.p === 'time') renderTime();
+});
+
+/* ---- הגדרות: כל שדה נשמר מיד ---- */
+const BIND = {sName:['name','v'], sAge:['age','n'], sProfile:['profile','v'], sRecs:['recs','c'], sRotate:['rotate','c'], sMin:['minMin','n'],
+              sAKey:['aKey','v'], sYKey:['yKey','v'], sLimit:['limit','n'], sFinish:['finish','c'], sWarn:['warn','c'], sFrom:['from','v'], sTo:['to','v'],
+              sGatePin:['pinOn','c'], sPin:['pin','v']};
+function fillSettings(){ for(const [el,[k,t]] of Object.entries(BIND)){ const x = $(el); if(t==='c') x.checked = !!S[k]; else x.value = S[k] ?? ''; } }
+for(const [el,[k,t]] of Object.entries(BIND)){
+  $(el).addEventListener(t==='c' ? 'change' : 'input', e => { const x = e.target; S[k] = t==='c' ? x.checked : t==='n' ? Math.max(0, +x.value || 0) : x.value.trim(); saveS(); if(k==='limit'||k==='from'||k==='to') renderTime(); });
+}
+
+/* ---- זמן מסך ---- */
+function renderTime(){
+  const u = U(), lim = S.limit > 0 ? S.limit + u.bonus : 0;
+  $('tWatched').textContent = Math.round(u.sec/60) + ' דק׳';
+  $('tLeft').textContent = lim ? Math.max(0, Math.round(leftSec()/60)) + ' דק׳' : 'בלי הגבלה';
+  $('tMeter').style.width = lim ? Math.min(100, u.sec/60/lim*100) + '%' : '0';
+}
+$('tBonus').onclick = () => { U().bonus += 15; saveUsage(); warned = false; renderTime(); };
+$('tReset').onclick = () => { usage = {day:today(), sec:0, bonus:0}; saveUsage(); warned = false; renderTime(); };
+
+/* ---- רשימת התוכן ---- */
+function renderLib(){
+  const q = $('libSearch').value.trim().toLowerCase(), box = $('lib'); box.innerHTML = '';
+  const all = Object.entries(lib.videos);
+  $('libCount').textContent = all.length;
+  const open = new Set([...document.querySelectorAll('.lib-tab[open]')].map(d => d.dataset.id));
+  for(const t of lib.tabs){
+    const vids = all.filter(([id,v]) => v.tab === t.id && (!q || v.t.toLowerCase().includes(q) || (v.ch||'').toLowerCase().includes(q)));
+    if(q && !vids.length) continue;
+    const d = document.createElement('details'); d.className = 'lib-tab'; d.dataset.id = t.id; if(q || open.has(t.id)) d.open = true;
+    d.innerHTML = `<summary><span class="e">${esc(t.e)}</span><span>${esc(t.name)}</span><span class="n">${vids.length}</span><button class="ib" data-a="ren" title="שינוי שם">✏️</button><button class="ib" data-a="del" title="מחיקת הלשונית">🗑</button></summary>`;
+    d.querySelector('[data-a=ren]').onclick = e => { e.preventDefault(); const n = prompt('שם הלשונית:', t.name); if(n && n.trim()){ t.name = n.trim(); const em = prompt('אימוג׳י:', t.e); if(em) t.e = em.trim(); saveLib(); renderLib(); fillTabSelect(); } };
+    d.querySelector('[data-a=del]').onclick = e => { e.preventDefault(); if(!confirm(`למחוק את "${t.name}" ואת ${vids.length} הסרטונים שבה?`)) return; for(const [id,v] of all) if(v.tab === t.id) delete lib.videos[id]; lib.tabs = lib.tabs.filter(x => x !== t); saveLib(); renderLib(); fillTabSelect(); };
+    const add = (from) => { for(const [id,v] of vids.slice(from, from+60)){
+      const r = document.createElement('div'); r.className = 'vrow';
+      r.innerHTML = `<img loading="lazy" alt="" src="https://i.ytimg.com/vi/${id}/mqdefault.jpg"><div class="vt"></div><button class="x" title="הסרה">✕</button>`;
+      r.querySelector('.vt').innerHTML = esc(v.t) + `<small>${esc([v.ch, v.d ? fmt(v.d) : '', v.src==='ai' ? '✨ AI' : ''].filter(Boolean).join(' · '))}</small>`;
+      r.querySelector('img').onclick = () => window.open('https://www.youtube.com/watch?v=' + id, '_blank');
+      r.querySelector('.x').onclick = () => { delete lib.videos[id]; saveLib(); r.remove(); $('libCount').textContent = Object.keys(lib.videos).length; d.querySelector('.n').textContent = +d.querySelector('.n').textContent - 1; };
+      d.appendChild(r);
+    } if(vids.length > from + 60){ const m = document.createElement('button'); m.className = 'btn'; m.style.margin = '8px 12px 12px'; m.textContent = `עוד ${vids.length - from - 60}`; m.onclick = () => { m.remove(); add(from + 60); }; d.appendChild(m); } };
+    let filled = false; const fill = () => { if(!filled){ filled = true; add(0); } };
+    if(d.open) fill(); d.addEventListener('toggle', () => d.open && fill());
+    box.appendChild(d);
+  }
+  const gone = Object.entries(store.get('pz-gone', {}));
+  if(gone.length && !q){
+    const d = document.createElement('details'); d.className = 'lib-tab';
+    d.innerHTML = `<summary><span class="e">🙈</span><span>הוסרו אוטומטית (לא עבדו / קצרים מדי)</span><span class="n">${gone.length}</span></summary>`;
+    for(const [id,v] of gone.slice(-40).reverse()){ const r = document.createElement('div'); r.className = 'vrow'; r.innerHTML = `<img loading="lazy" alt="" src="https://i.ytimg.com/vi/${id}/mqdefault.jpg"><div class="vt">${esc(v.t)}<small>${v.why==='short' ? 'קצר מדי' : 'חסום להטמעה'}</small></div>`; d.appendChild(r); }
+    const c = document.createElement('button'); c.className = 'btn'; c.style.margin = '8px 12px 12px'; c.textContent = 'ניקוי הרשימה'; c.onclick = () => { store.set('pz-gone', {}); renderLib(); }; d.appendChild(c);
+    box.appendChild(d);
+  }
+  if(!lib.tabs.length) box.innerHTML = '<div class="hint">אין עדיין תוכן. בקשו מה־AI, הוסיפו קישור, או טענו את ערכת ההתחלה בהגדרות.</div>';
+}
+$('libSearch').addEventListener('input', renderLib);
+$('newTab').onclick = () => { const n = prompt('שם הלשונית החדשה:'); if(!n || !n.trim()) return; const e = prompt('אימוג׳י ללשונית:', '⭐') || '⭐'; ensureTab(n, e.trim()); saveLib(); renderLib(); fillTabSelect(); };
+function fillTabSelect(){ const s = $('linkTab'); s.innerHTML = lib.tabs.map(t => `<option value="${t.id}">${esc(t.e)} ${esc(t.name)}</option>`).join('') + '<option value="__new">➕ לשונית חדשה…</option>'; }
+
+/* ---- הוספה לפי קישור (oEmbed של יוטיוב – בלי מפתח) ---- */
+function ytId(s){ const m = String(s).match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/) || String(s).match(/^([\w-]{11})$/); return m && m[1]; }
+async function oembed(id){
+  const r = await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id));
+  if(!r.ok) return null; const j = await r.json(); return {t: j.title, ch: j.author_name};
+}
+$('linkGo').onclick = async () => {
+  const id = ytId($('linkIn').value.trim()), st = $('linkStatus');
+  if(!id){ st.textContent = 'זה לא נראה כמו קישור לסרטון ביוטיוב'; return; }
+  let tab = $('linkTab').value;
+  if(tab === '__new'){ const n = prompt('שם הלשונית החדשה:'); if(!n) return; tab = ensureTab(n, '⭐').id; }
+  st.textContent = 'בודק…';
+  const info = await oembed(id).catch(()=>null);
+  if(!info){ st.textContent = 'הסרטון לא נמצא, או שהיוצר שלו לא מאפשר לנגן אותו באתרים אחרים'; return; }
+  lib.videos[id] = {t:info.t, ch:info.ch, d:0, tab, add:Date.now(), src:'link'}; saveLib();
+  st.textContent = `✅ נוסף: ${info.t}`; $('linkIn').value = ''; fillTabSelect(); $('linkTab').value = tab; renderLib();
+};
+
+/* ---- גיבוי ---- */
+$('bExport').onclick = () => {
+  const data = {app:'pitzi-tv', v:1, lib, settings:{...S, aKey:'', yKey:''}, hist};
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data)], {type:'application/json'}));
+  a.download = `pitzi-tv-${today()}.json`; a.click();
+};
+$('bImport').onclick = () => $('bFile').click();
+$('bFile').onchange = async e => {
+  try{ const d = JSON.parse(await e.target.files[0].text()); if(!d.lib || !d.lib.videos) throw 0;
+       if(!confirm(`לייבא ${Object.keys(d.lib.videos).length} סרטונים? התוכן הנוכחי יוחלף.`)) return;
+       lib = d.lib; saveLib(); if(d.settings) { S = Object.assign(S, d.settings, {aKey:S.aKey, yKey:S.yKey}); saveS(); } if(d.hist){ hist = d.hist; saveHist(); }
+       fillSettings(); renderLib(); fillTabSelect(); alert('יובא בהצלחה'); }
+  catch(_){ alert('הקובץ לא תקין'); }
+  e.target.value = '';
+};
+async function loadStarter(merge){
+  const d = await (await fetch('starter.json')).json();
+  if(!merge) lib = {tabs:[], videos:{}};
+  for(const t of d.tabs) if(!lib.tabs.some(x => x.id === t.id)) lib.tabs.push(t);
+  for(const [id,v] of Object.entries(d.videos)) if(!lib.videos[id]) lib.videos[id] = {...v, add:Date.now(), src:'starter'};
+  saveLib();
+}
+$('bStarter').onclick = async () => { if(!confirm('להוסיף את ערכת ההתחלה (775 סרטונים לגיל 3–5, ברובם בעברית)?')) return; await loadStarter(true); renderLib(); fillTabSelect(); };
+$('bWipe').onclick = () => { if(!confirm('למחוק את כל הסרטונים והלשוניות?')) return; lib = {tabs:[], videos:{}}; saveLib(); renderLib(); fillTabSelect(); };
+
+/* =====================================================================
+   AI: Claude מתכנן ומסנן; יוטיוב מספק את הסרטונים
+   ===================================================================== */
+const MODEL = 'claude-opus-5-5';
+async function claude({system, user, schema, tools, effort = 'medium', maxTokens = 8000}){
+  if(!S.aKey) throw new Error('צריך להזין מפתח Claude בהגדרות ⚙️');
+  const body = { model: MODEL, max_tokens: maxTokens, system, messages: [{role:'user', content: user}],
+                 output_config: { effort, format: { type: 'json_schema', schema } }, fallbacks: 'default' };
+  if(tools) body.tools = tools;
+  for(let turn = 0; turn < 4; turn++){
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: {
+      'content-type': 'application/json', 'x-api-key': S.aKey, 'anthropic-version': '2023-06-01',
+      'anthropic-beta': 'server-side-fallback-2026-07-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok && r.status === 400 && body.output_config.format && tools){
+      /* אם השרת לא מקבל חיפוש יחד עם פורמט JSON קבוע – מבקשים JSON בטקסט */
+      delete body.output_config.format;
+      body.messages = [{role:'user', content: user + '\n\nReply with ONLY a JSON object (no prose) matching this JSON schema:\n' + JSON.stringify(schema)}];
+      turn--; continue;
+    }
+    if(!r.ok){
+      if(r.status === 401) throw new Error('מפתח Claude לא תקין');
+      if(r.status === 429) throw new Error('יותר מדי בקשות ל־AI, נסו שוב בעוד דקה');
+      throw new Error('שגיאה מה־AI: ' + (j.error?.message || r.status));
+    }
+    if(j.stop_reason === 'refusal') throw new Error('ה־AI סירב לבקשה הזאת');
+    if(j.stop_reason === 'pause_turn'){ body.messages = [...body.messages, {role:'assistant', content: j.content}]; continue; }   // חיפוש ארוך – ממשיכים
+    if(j.stop_reason === 'max_tokens') throw new Error('התשובה של ה־AI נקטעה, נסו בקשה קטנה יותר');
+    const txt = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    try{ return JSON.parse(txt); }catch(_){}
+    const m = txt.match(/\{[\s\S]*\}/);
+    try{ if(m) return JSON.parse(m[0]); }catch(_){}
+    throw new Error('ה־AI החזיר תשובה לא תקינה, נסו שוב');
+  }
+  throw new Error('ה־AI לא סיים, נסו שוב');
+}
+const familyText = () => `Child: ${S.name || 'a child'}, age ${S.age || 4}. Family guidelines (written by the parent, may be in Hebrew): ${S.profile || '(none given – use common sense for a young child; prefer Hebrew content)'}`;
+const SYS = `You curate a closed, parent-approved video library for a young child's YouTube player app. The parent writes requests in Hebrew.
+Be strict about suitability for the child's age and the family guidelines: no scary, violent, crude or adult content, no clickbait/pranks/"challenge" junk unless the parent explicitly asks, no misleading "kids" channels, prefer official channels and Hebrew when the family prefers it. Reply-to-parent text must be short, friendly Hebrew.`;
+
+/* YouTube Data API (אם יש מפתח) */
+async function yt(path, params){
+  const u = new URL('https://www.googleapis.com/youtube/v3/' + path); for(const [k,v] of Object.entries({...params, key:S.yKey})) u.searchParams.set(k, v);
+  const r = await fetch(u); const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error('שגיאה מיוטיוב: ' + (j.error?.message || r.status));
+  return j;
+}
+const isoSec = s => { const m = /P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(s||''); return m ? (+m[1]||0)*86400 + (+m[2]||0)*3600 + (+m[3]||0)*60 + (+m[4]||0) : 0; };
+async function ytCandidates(searches){
+  const ids = new Set();
+  for(const s of searches.slice(0, 5)){
+    if(s.type === 'channel'){
+      const c = await yt('search', {part:'snippet', type:'channel', q:s.query, maxResults:1});
+      const ch = c.items?.[0]?.id?.channelId; if(!ch) continue;
+      const p = await yt('playlistItems', {part:'contentDetails', playlistId:'UU' + ch.slice(2), maxResults:50});
+      for(const it of p.items || []) ids.add(it.contentDetails.videoId);
+    } else {
+      const r = await yt('search', {part:'snippet', type:'video', q:s.query, maxResults:25, safeSearch:'strict', videoEmbeddable:'true', relevanceLanguage: s.lang || 'he', regionCode:'IL'});
+      for(const it of r.items || []) ids.add(it.id.videoId);
+    }
+  }
+  const out = [], list = [...ids];
+  for(let i = 0; i < list.length; i += 50){
+    const r = await yt('videos', {part:'snippet,contentDetails,status', id: list.slice(i, i+50).join(',')});
+    for(const v of r.items || []){
+      if(v.status?.embeddable === false || v.status?.privacyStatus !== 'public') continue;
+      out.push({id:v.id, title:v.snippet.title, channel:v.snippet.channelTitle, sec:isoSec(v.contentDetails.duration), kids:!!v.status.madeForKids, desc:(v.snippet.description||'').slice(0,160)});
+    }
+  }
+  return out;
+}
+
+const PLAN_SCHEMA = { type:'object', additionalProperties:false, required:['action','reply','tab_name','tab_emoji','searches','max_videos'], properties:{
+  action:{type:'string', enum:['add','remove','other']},
+  reply:{type:'string', description:'Short Hebrew message to the parent'},
+  tab_name:{type:'string', description:'Hebrew tab name for added videos; reuse an existing tab name when it fits'},
+  tab_emoji:{type:'string'},
+  searches:{type:'array', items:{type:'object', additionalProperties:false, required:['query','type'], properties:{query:{type:'string'}, type:{type:'string', enum:['videos','channel']}}}},
+  max_videos:{type:'integer'} } };
+const PICK_SCHEMA = { type:'object', additionalProperties:false, required:['selected','note'], properties:{
+  selected:{type:'array', items:{type:'object', additionalProperties:false, required:['id','title'], properties:{id:{type:'string'}, title:{type:'string', description:'Short clean title for a child-facing card, same language as the video, no hashtags/emoji spam'}}}},
+  note:{type:'string', description:'Short Hebrew note to the parent: what was chosen and what was filtered out and why'} } };
+const WEB_SCHEMA = { type:'object', additionalProperties:false, required:['videos','note'], properties:{
+  videos:{type:'array', items:{type:'object', additionalProperties:false, required:['url','title'], properties:{url:{type:'string'}, title:{type:'string'}}}},
+  note:{type:'string'} } };
+const REMOVE_SCHEMA = { type:'object', additionalProperties:false, required:['remove','note'], properties:{ remove:{type:'array', items:{type:'string'}}, note:{type:'string'} } };
+
+function aiStatus(t, err){ const el = $('aiStatus'); el.textContent = t; el.classList.toggle('err', !!err); }
+let aiBusy = false;
+async function aiRun(){
+  const text = $('aiText').value.trim(); if(!text || aiBusy) return;
+  aiBusy = true; $('aiGo').disabled = true;
+  try{
+    aiStatus('✨ מבין מה ביקשתם…');
+    const tabs = lib.tabs.map(t => `${t.e} ${t.name} (${Object.values(lib.videos).filter(v=>v.tab===t.id).length})`).join(', ') || '(none yet)';
+    const plan = await claude({ system: SYS, effort:'low', maxTokens: 4000, schema: PLAN_SCHEMA,
+      user: `${familyText()}\nExisting tabs: ${tabs}\n\nParent request: """${text}"""\n\nDecide the action. For "add": write 1-4 YouTube search queries that will surface good candidates (use "channel" type when the parent names a show/channel and its official channel is the best source; write queries in the language the content should be in), choose the tab (existing name if it fits), and max_videos (what the parent asked for, default 12, max 40). For "remove": searches = []. For anything else use "other" and explain in reply what you can do (add or remove videos).` });
+    if(plan.action === 'other'){ aiStatus(plan.reply); return; }
+    if(plan.action === 'remove') return await aiRemove(text, plan);
+    await aiAdd(text, plan);
+  } catch(e){ aiStatus('⚠️ ' + e.message, true); }
+  finally{ aiBusy = false; $('aiGo').disabled = false; }
+}
+async function aiAdd(text, plan){
+  const max = Math.min(40, Math.max(1, plan.max_videos || 12)), minSec = S.minMin*60;
+  let picks = [], note = '', info = {};
+  if(S.yKey){
+    aiStatus('🔍 מחפש ביוטיוב…');
+    let cands = (await ytCandidates(plan.searches)).filter(c => !lib.videos[c.id] && c.sec >= minSec && c.sec <= 3*3600);
+    if(!cands.length){ aiStatus('לא נמצאו סרטונים חדשים מתאימים. נסו לנסח אחרת.', true); return; }
+    cands = cands.slice(0, 120);
+    aiStatus(`🧐 בודק ${cands.length} סרטונים לפי הפרופיל שלכם…`);
+    const r = await claude({ system: SYS, schema: PICK_SCHEMA,
+      user: `${familyText()}\nParent request: """${text}"""\nPick up to ${max} videos that best fit the request AND are clearly suitable. Prefer madeForKids=true and official channels; skip duplicates/re-uploads of the same episode, compilations of unknown origin, and anything doubtful.\n\nCandidates (JSON):\n${JSON.stringify(cands.map(c => ({id:c.id, title:c.title, channel:c.channel, minutes:Math.round(c.sec/60), madeForKids:c.kids, desc:c.desc})))}` });
+    const byId = Object.fromEntries(cands.map(c => [c.id, c]));
+    picks = r.selected.filter(s => byId[s.id]).map(s => ({id:s.id, t:s.title || byId[s.id].title, ch:byId[s.id].channel, d:byId[s.id].sec}));
+    note = r.note;
+  } else {
+    aiStatus('🔍 מחפש באינטרנט (בלי מפתח יוטיוב זה לוקח קצת יותר)…');
+    const r = await claude({ system: SYS, schema: WEB_SCHEMA, maxTokens: 16000,
+      tools: [{type:'web_search_20260209', name:'web_search', max_uses:6, allowed_domains:['youtube.com']}],
+      user: `${familyText()}\nParent request: """${text}"""\nSearch ideas: ${plan.searches.map(s=>s.query).join(' | ')}\nUse web search to find up to ${max} specific YouTube videos (watch URLs, not playlists or channels, not Shorts) that fit the request and are clearly suitable, each at least ${S.minMin} minutes long if you can tell. Return their URLs and a short clean title for a child-facing card.` });
+    note = r.note;
+    const ids = [...new Set(r.videos.map(v => ytId(v.url)).filter(Boolean))].filter(id => !lib.videos[id]).slice(0, max);
+    aiStatus('✅ בודק שהסרטונים זמינים…');
+    const checks = await Promise.all(ids.map(id => oembed(id).catch(()=>null)));
+    const titles = Object.fromEntries(r.videos.map(v => [ytId(v.url), v.title]));
+    picks = ids.map((id,i) => checks[i] && {id, t: titles[id] || checks[i].t, ch: checks[i].ch, d:0}).filter(Boolean);
+  }
+  if(!picks.length){ aiStatus(note || 'לא נמצא משהו שמתאים. נסו לנסח אחרת.', true); return; }
+  aiStatus('');
+  preview({ title: `להוסיף ל־${plan.tab_emoji} ${plan.tab_name}?`, note, items: picks, okLabel: n => `➕ הוספת ${n} סרטונים`,
+    onOk: chosen => { const t = ensureTab(plan.tab_name, plan.tab_emoji); for(const p of chosen) lib.videos[p.id] = {t:p.t, ch:p.ch, d:p.d, tab:t.id, add:Date.now(), src:'ai'}; saveLib(); renderLib(); fillTabSelect(); aiStatus(`✅ נוספו ${chosen.length} סרטונים ל־${t.e} ${t.name}`); $('aiText').value = ''; } });
+}
+async function aiRemove(text, plan){
+  const all = Object.entries(lib.videos);
+  if(!all.length){ aiStatus('אין עדיין סרטונים ברשימה.', true); return; }
+  aiStatus(`🧐 עובר על ${all.length} סרטונים…`);
+  const lines = all.map(([id,v]) => `${id}\t${v.t}\t${v.ch||''}\t${tabOf(v.tab)?.name||''}`).join('\n');
+  const r = await claude({ system: SYS, schema: REMOVE_SCHEMA, maxTokens: 16000,
+    user: `${familyText()}\nParent request: """${text}"""\nFrom the library below (id<TAB>title<TAB>channel<TAB>tab), list the ids that should be removed to satisfy the request. Only ids that clearly match.\n\n${lines}` });
+  const ids = r.remove.filter(id => lib.videos[id]);
+  if(!ids.length){ aiStatus(r.note || 'לא מצאתי סרטונים שמתאימים להסרה.'); return; }
+  aiStatus('');
+  preview({ title: 'להוריד את הסרטונים האלה?', note: r.note, items: ids.map(id => ({id, t:lib.videos[id].t, ch:lib.videos[id].ch, d:lib.videos[id].d})), okLabel: n => `🗑 הסרת ${n} סרטונים`, danger:true,
+    onOk: chosen => { for(const p of chosen) delete lib.videos[p.id]; saveLib(); renderLib(); aiStatus(`✅ הוסרו ${chosen.length} סרטונים`); $('aiText').value = ''; } });
+}
+$('aiGo').onclick = aiRun;
+$('aiText').addEventListener('keydown', e => { if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)) aiRun(); });
+for(const c of ['תוסיף 15 פרקים של פפה חזירה בעברית','משהו לחנוכה לגיל 4','שירי ילדים חסידיים שמחים','תוריד את כל מה שיש בו מפלצות','בלי סרטונים באנגלית']){
+  const b = document.createElement('button'); b.className = 'chip'; b.textContent = c; b.onclick = () => { $('aiText').value = c; $('aiText').focus(); }; $('aiChips').appendChild(b);
+}
+
+/* ---- חלון אישור: כל סרטון עם תיבת סימון, אפשר לפתוח אותו ביוטיוב לבדיקה ---- */
+function preview({title, note, items, okLabel, onOk, danger}){
+  $('prevH').textContent = title; $('prevNote').textContent = note || '';
+  const list = $('prevList'); list.innerHTML = '';
+  const upd = () => { const n = list.querySelectorAll('input:checked').length; $('prevOk').textContent = okLabel(n); $('prevOk').disabled = !n; };
+  for(const it of items){
+    const r = document.createElement('label'); r.className = 'vrow';
+    r.innerHTML = `<input type="checkbox" checked><img loading="lazy" alt="" src="https://i.ytimg.com/vi/${it.id}/mqdefault.jpg"><div class="vt"></div>`;
+    r.querySelector('.vt').innerHTML = esc(it.t) + `<small>${esc([it.ch, it.d ? fmt(it.d) : ''].filter(Boolean).join(' · '))} · <a href="https://www.youtube.com/watch?v=${it.id}" target="_blank" rel="noopener">לצפייה</a></small>`;
+    r.querySelector('input').onchange = upd; r.dataset.id = it.id; list.appendChild(r);
+  }
+  $('prevOk').className = 'btn ' + (danger ? 'red' : 'pri'); upd();
+  $('prevOk').onclick = () => { const ids = new Set([...list.querySelectorAll('.vrow')].filter(r => r.querySelector('input').checked).map(r => r.dataset.id)); $('prev').classList.remove('open'); onOk(items.filter(i => ids.has(i.id))); };
+  $('prevAll').onclick = () => { const boxes = [...list.querySelectorAll('input')], on = boxes.some(b => !b.checked); boxes.forEach(b => b.checked = on); upd(); };
+  $('prevX').onclick = () => $('prev').classList.remove('open');
+  $('prev').classList.add('open');
+}
+
+/* =====================================================================
+   הפעלה ראשונה
+   ===================================================================== */
+(async function init(){
+  if(!lib){
+    lib = {tabs:[], videos:{}};
+    try{ await loadStarter(false); }catch(_){ saveLib(); }
+  }
+  fillTabSelect(); renderKid(); checkBlocked();
+})();
+</script>
+</body>
+</html>
