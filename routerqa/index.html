@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>RouterQA · מייל</title>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#ffffff; --ink:#1b2430; --muted:#64707f; --line:#dde2e9;
+  --accent:#2563eb; --accent-ink:#ffffff; --accent-soft:#e6eefc;
+  --ok:#15803d; --ok-soft:#e3f4e8; --warn:#a16207; --warn-soft:#fbf1d9;
+  --bad:#b91c1c; --bad-soft:#fbe5e5; --info:#475569; --info-soft:#eceff3;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f141b; --card:#18202a; --ink:#e6ebf1; --muted:#97a3b2; --line:#2a3542;
+    --accent:#5b8def; --accent-ink:#0b1220; --accent-soft:#1d2a40;
+    --ok:#5fc27e; --ok-soft:#173022; --warn:#e0b252; --warn-soft:#33290f;
+    --bad:#f07171; --bad-soft:#3a1717; --info:#a9b4c2; --info-soft:#222c38;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.link{border:0;background:none;color:var(--accent);padding:4px 6px}
+button:disabled{opacity:.5;cursor:default}
+input,select,textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px}
+textarea{min-height:96px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0}
+.bar{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{font-weight:700}
+.stat{flex:1;display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:4px;background:var(--bad)}
+.dot.on{background:var(--ok)}
+main{max-width:760px;margin:0 auto;padding:12px 16px 80px;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h2{font-size:16px;margin:0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.to b{direction:ltr;unicode-bidi:isolate}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chip{border-radius:999px;padding:5px 12px;font-size:13.5px}
+.chip.sel{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:600}
+.actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.act{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:start;padding:10px 12px}
+.badge{display:inline-block;font-size:11.5px;border-radius:999px;padding:1px 8px;white-space:nowrap;background:var(--info-soft);color:var(--info)}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-bad{background:var(--bad-soft);color:var(--bad)}
+.b-acc{background:var(--accent-soft);color:var(--accent)}
+.filters{display:grid;grid-template-columns:1fr 150px;gap:8px;margin:10px 0}
+.list{display:grid;gap:6px}
+.item{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:start;text-align:start;padding:10px;border-radius:10px;width:100%}
+.item .ic{font-size:16px;line-height:22px;text-align:center}
+.item .sub{font-weight:600;overflow-wrap:anywhere}
+.item .meta{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.item.out{background:var(--bg)}
+.item .side{display:grid;gap:4px;justify-items:end}
+.drafts{display:grid;gap:6px;margin-top:10px}
+.draft{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px dashed var(--warn);border-radius:10px;padding:8px 10px;background:var(--warn-soft)}
+.empty{color:var(--muted);text-align:center;padding:18px 0}
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--card);color:var(--ink);width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg{padding:16px;display:grid;gap:12px}
+.dlg h3{margin:0;font-size:17px}
+.field{display:grid;gap:4px}
+.field label{font-size:13px;font-weight:600}
+.field .err{color:var(--bad);font-size:12.5px}
+.field.bad input,.field.bad select,.field.bad textarea{border-color:var(--bad)}
+.check{display:flex;gap:8px;align-items:flex-start}
+.check input{width:auto;margin-top:4px}
+.btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.preview{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:6px;background:var(--bg)}
+.preview .k{font-size:12px;color:var(--muted)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;text-align:left;unicode-bidi:isolate;overflow-wrap:anywhere}
+pre.body{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font:inherit;max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
+.note{border-radius:10px;padding:8px 10px;font-size:13.5px}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.bad{background:var(--bad-soft);color:var(--bad)}
+.note.info{background:var(--info-soft);color:var(--info)}
+#banner{position:fixed;inset-inline:12px;bottom:12px;z-index:20;display:grid;gap:8px;justify-items:center;pointer-events:none}
+.toast{pointer-events:auto;max-width:560px;width:100%;display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--ink);color:var(--card);border-radius:10px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.toast button{background:transparent;color:var(--card);border-color:var(--card)}
+#lock{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;padding:16px}
+#lock[hidden]{display:none}
+.lockbox{max-width:360px;text-align:center;display:grid;gap:12px}
+.steps{margin:0;padding-inline-start:20px}
+.ids{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">RouterQA</div>
+  <div class="stat" id="stat"></div>
+  <button id="btnSettings" aria-label="הגדרות">הגדרות</button>
+</header>
+
+<main>
+  <section class="card" id="setup" hidden>
+    <h2>הגדרה ראשונית</h2>
+    <p class="muted">כדי לשלוח מה-Gmail שלך צריך שני דברים בהגדרות: Client ID של Google וכתובת תיבת ה-SH. הוראות ליצירת Client ID נמצאות בקובץ README שליד הדף.</p>
+    <button class="primary" id="btnSetup">פתח הגדרות</button>
+  </section>
+
+  <section class="card to row between">
+    <div><span class="muted">אל:</span> <b id="toAddr">—</b> <span class="badge">נעול</span></div>
+    <div class="row"><span id="acct" class="small muted"></span><button class="primary" id="btnConnect">התחבר ל-Gmail</button></div>
+  </section>
+
+  <section class="card">
+    <h2>פעולות</h2>
+    <div class="chips" id="cats"></div>
+    <div class="actions" id="actions"></div>
+  </section>
+
+  <section class="card">
+    <div class="row between">
+      <h2>תיבה</h2>
+      <button id="btnRefresh">רענן</button>
+    </div>
+    <div class="drafts" id="drafts"></div>
+    <div class="filters">
+      <input id="q" type="search" placeholder="חיפוש: מילה, מזהה ריצה, סוויטה">
+      <input id="qFrom" type="date" aria-label="מתאריך">
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+</main>
+
+<div id="banner" aria-live="polite"></div>
+<dialog id="dlg"></dialog>
+<div id="lock" hidden>
+  <div class="lockbox">
+    <h2>הדף ננעל</h2>
+    <p class="muted">עברו 30 דקות בלי פעילות. התחבר מחדש כדי להמשיך.</p>
+    <button class="primary" id="btnUnlock">התחבר מחדש</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============ helpers ============ */
+const $ = s => document.querySelector(s);
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})){
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'value') el.value = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()){
+    if (c == null || c === false) continue;
+    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+const put = (el, ...kids) => el.replaceChildren(...kids.flat().filter(k => k != null && k !== false));
+const LS = {
+  get(k, d){ try { const v = localStorage.getItem('rqa.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem('rqa.' + k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem('rqa.' + k); } catch {} }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const fmtTime = t => new Date(t).toLocaleString('he-IL', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+const fmtClock = t => new Date(t).toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'});
+function fmtElapsed(ms){ const m = Math.floor(ms / 60000); return m < 60 ? `${m} דק'` : `${Math.floor(m/60)} ש' ${m%60} דק'`; }
+const utf8 = s => new TextEncoder().encode(s);
+function b64(bytes){ let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
+const b64url = bytes => b64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+function fromB64url(s){ s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; const bin = atob(s); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+function decodeEntities(s){ const t = document.createElement('textarea'); t.innerHTML = s; return t.value; }
+function addrOf(header){ const m = /<([^>]+)>/.exec(header || ''); return (m ? m[1] : (header || '')).trim().toLowerCase(); }
+const isEmail = s => /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(s || '');
+const splitList = s => (s || '').split(/[,\n]+/).map(x => x.trim()).filter(Boolean);
+
+/* ============ state ============ */
+const DEFAULTS = {clientId:'', sh:'', replyMatch:'RQA', pin:'', pinMode:'save', defaultEnv:'', envs:'', suites:'',
+  days:14, autoRefresh:true, interval:90, autoTrack:true, notify:true};
+let S = Object.assign({}, DEFAULTS, LS.get('settings', {}));
+let prefs = Object.assign({env:{}, caseId:'', cat:'run'}, LS.get('prefs', {}));
+let cache = LS.get('cache', []);
+let drafts = LS.get('drafts', []);
+let trackers = LS.get('trackers', []);
+let seenAt = LS.get('seenAt', 0);
+let token = null, tokenExp = 0, tokenClient = null, account = '';
+let lastRefresh = 0, refreshing = false, initialLoaded = false, expiredShown = false, refreshFails = 0;
+let lastActivity = Date.now(), nextRefreshAt = 0;
+const SCOPES = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly';
+const PIN = '⟨PIN⟩'; // placeholder, replaced at send time
+
+/* ============ actions (section 3) ============ */
+const CATS = [['run','הרצה ובדיקות'],['ask','שאלות ל-Router'],['bug','דפקטים ובאגים'],['inv','חקירה וסיכום'],['info','מידע ועזרה']];
+const ST = {ok:['קיים','b-ok'], partial:['קיים בחלקו','b-warn'], approve:['דורש אישור','b-warn'], needs:['דורש תוספת','b-bad']};
+const F = {
+  env:{label:'סביבה', req:true, one:true, kind:'env'},
+  suite:{label:'סוויטה', req:true, one:true, kind:'suite'},
+  testId:{label:'מזהה טסט', req:true, one:true},
+  ids:{label:'מזהי טסטים (מופרדים בפסיק)', req:true},
+  code:{label:'קוד ריצה', req:true, one:true},
+  caseId:{label:'מזהה תיק (רשות)', one:true},
+  question:{label:'השאלה', req:true, area:true},
+  times:{label:'מספר חזרות (רשות)', type:'number'},
+  request:{label:'הבקשה', req:true, area:true},
+  resultId:{label:'מזהה תוצאה', req:true, one:true},
+  details:{label:'פרטים (רשות)', area:true},
+  bugId:{label:'מזהה דפקט', req:true, one:true},
+  scope:{label:'מה לסכם (רשות)', area:true}
+};
+const ACTIONS = [
+  {id:'run', cat:'run', label:'הרץ סוויטה', st:'ok', f:['env','suite'], b:v => ({s:`RQA RUN ${v.suite} ${v.env} ${PIN}`}), track:true},
+  {id:'runall', cat:'run', label:'הרץ את כל הסוויטות', st:'ok', f:['env'], b:v => ({s:`RQA RUN all ${v.env} ${PIN}`}), track:true},
+  {id:'test', cat:'run', label:'הרץ טסט בודד', st:'ok', f:['env','testId'], b:v => ({s:`RQA TEST ${v.testId} ${v.env} ${PIN}`}), track:true},
+  {id:'manual', cat:'run', label:'הרץ בדיקות ידניות (רשימה)', st:'ok', note:'רישום תוצאה ידנית נעשה באתר בלבד.', f:['env','ids'],
+    b:v => ({s:`RQA TEST ${splitIds(v.ids).join(',')} ${v.env} ${PIN}`}), track:true},
+  {id:'runfailed', cat:'run', label:'הרץ שוב כשלים', st:'needs', f:['env'], b:v => ({s:`RQA RUN failed ${v.env} ${PIN}`}), track:true},
+  {id:'stop', cat:'run', label:'עצור ריצה', st:'ok', f:['code'], b:v => ({s:`RQA STOP ${v.code}`})},
+  {id:'status', cat:'run', label:'מצב ריצה', st:'ok', f:['code'], b:v => ({s:`RQA STATUS ${v.code}`})},
+  {id:'ask', cat:'ask', label:'שאלה ל-Router', st:'ok', f:['env','caseId','question'],
+    b:v => ({s:`RQA ASK ${v.env}${v.caseId ? ' ' + v.caseId : ''} ${PIN}`, body:v.question})},
+  {id:'askmulti', cat:'ask', label:'שאלה מרובה (חזרתיות)', st:'ok', note:'קיים בתוך הרצה (סשן).', f:['env','caseId','question','times'],
+    b:v => ({s:`RQA ASK ${v.env}${v.caseId ? ' ' + v.caseId : ''} ${PIN}`, body:v.question + (v.times ? `\ntimes: ${v.times}` : '')})},
+  {id:'ai', cat:'ask', label:'בקשה ליועץ (חופשי)', st:'ok', f:['request'], b:v => ({s:`RQA AI ${PIN}`, body:v.request})},
+  {id:'bug', cat:'bug', label:'פתח באג על תשובה', st:'approve', note:'היועץ פותח דפקט דרך הכלים שלו. לא נבדק לכל הסוגים.', f:['resultId','details'],
+    b:v => ({s:`RQA AI ${PIN}`, body:`פתח באג על תוצאה ${v.resultId}` + (v.details ? `\n${v.details}` : '')})},
+  {id:'bugs', cat:'bug', label:'הורד באגים (רשימה מ-TFS)', st:'approve', note:'דורש הרשאות TFS.', f:[],
+    b:() => ({s:`RQA AI ${PIN}`, body:'הורד את הבאגים הפתוחים'})},
+  {id:'defect', cat:'bug', label:'סטטוס דפקט', st:'partial', f:['bugId'], b:v => ({s:`RQA AI ${PIN}`, body:`סטטוס דפקט ${v.bugId}`})},
+  {id:'investigate', cat:'inv', label:'חקירת תוצאה', st:'approve', note:'חבילת חקירה.', f:['resultId'],
+    b:v => ({s:`RQA AI ${PIN}`, body:`חקור תוצאה ${v.resultId}`})},
+  {id:'summarize', cat:'inv', label:'סיכום מיילים', st:'needs', f:['scope'],
+    b:v => ({s:`RQA AI ${PIN}`, body:'סכם את המיילים' + (v.scope ? `\n${v.scope}` : '')})},
+  {id:'help', cat:'info', label:'עזרה', st:'ok', f:[], b:() => ({s:`RQA HELP ${PIN}`})},
+  {id:'lists', cat:'info', label:'רשימת סוויטות וסביבות', st:'partial', note:'חלק מתשובת HELP.', f:[], b:() => ({s:`RQA HELP ${PIN}`})}
+];
+const splitIds = s => (s || '').split(/[,\s]+/).map(x => x.trim()).filter(Boolean);
+
+/* ============ PIN masking ============ */
+function maskSubject(s){
+  s = s || '';
+  if (S.pin) s = s.split(S.pin).join('••••');
+  if (/^\s*RQA\s+(RUN|TEST|ASK|AI|HELP)\b/i.test(s) && !/••••\s*$/.test(s)) s = s.replace(/\S+\s*$/, '••••');
+  return s;
+}
+
+/* ============ Google auth ============ */
+function initGis(){
+  if (!S.clientId || !(window.google && google.accounts && google.accounts.oauth2)) return false;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: S.clientId, scope: SCOPES, callback: onToken,
+    error_callback: e => toast('החיבור נכשל: ' + (e && (e.message || e.type) || 'שגיאה'))
+  });
+  return true;
+}
+function connect(){
+  if (!S.clientId || !isEmail(S.sh)){ openSettings(); return; }
+  if (!tokenClient && !initGis()){ toast('ספריית Google עדיין נטענת. נסה שוב בעוד רגע.'); return; }
+  if (S.notify && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+  tokenClient.requestAccessToken({prompt: LS.get('consented', false) ? '' : 'consent'});
+}
+async function onToken(r){
+  if (!r || r.error){ toast('החיבור נכשל: ' + (r && r.error || '')); return; }
+  const granted = r.scope || '';
+  if (!granted.includes('gmail.send') || !granted.includes('gmail.readonly')){
+    toast('לא אושרו כל ההרשאות (שליחה וקריאה). התחבר שוב ואשר את שתיהן.');
+  }
+  token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
+  expiredShown = false; lastActivity = Date.now(); LS.set('consented', true);
+  $('#lock').hidden = true;
+  try { const p = await api('profile'); account = p.emailAddress || ''; } catch {}
+  render(); await refresh(); flushDrafts();
+}
+function disconnect(){
+  if (token && window.google && google.accounts) google.accounts.oauth2.revoke(token, () => {});
+  token = null; tokenExp = 0; account = ''; LS.del('consented'); render();
+  toast('החשבון נותק.');
+}
+function onExpired(){
+  token = null;
+  if (!expiredShown){ expiredShown = true; toast('החיבור ל-Gmail פג. התחבר מחדש כדי להמשיך.', 'התחבר', connect, true); }
+  render();
+}
+function lockPage(){ token = null; $('#lock').hidden = false; render(); }
+
+/* ============ Gmail API ============ */
+class NoToken extends Error {}
+async function api(path, opts = {}){
+  if (!token || Date.now() > tokenExp - 30000){ if (token) onExpired(); throw new NoToken('not connected'); }
+  const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/' + path, {
+    method: opts.method || 'GET', body: opts.body,
+    headers: Object.assign({Authorization: 'Bearer ' + token}, opts.body ? {'Content-Type': 'application/json'} : {})
+  });
+  if (r.status === 401){ onExpired(); throw new NoToken('401'); }
+  if (!r.ok){ const t = await r.text().catch(() => ''); throw new Error(`Gmail ${r.status}: ${t.slice(0, 160)}`); }
+  return r.json();
+}
+const isNetErr = e => e instanceof TypeError || !navigator.onLine;
+function encHeader(s){ return /^[\x20-\x7e]*$/.test(s) ? s : '=?UTF-8?B?' + b64(utf8(s)) + '?='; }
+function buildRaw(subject, body){
+  const lines = [
+    `To: ${S.sh}`, `Subject: ${encHeader(subject)}`, 'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
+    b64(utf8(body || '')).replace(/.{76}/g, '$&\r\n')
+  ];
+  return b64url(utf8(lines.join('\r\n')));
+}
+async function listIds(q){ const r = await api('messages?maxResults=50&q=' + encodeURIComponent(q)); return r.messages || []; }
+async function mapLimit(arr, n, fn){
+  const out = new Array(arr.length); let i = 0;
+  await Promise.all(Array.from({length: Math.min(n, arr.length)}, async () => { while (i < arr.length){ const k = i++; out[k] = await fn(arr[k]); } }));
+  return out;
+}
+const hdrs = p => Object.fromEntries(((p && p.headers) || []).map(x => [x.name.toLowerCase(), x.value]));
+
+/* ============ classification & association ============ */
+function classify(t){
+  t = (t || '').toLowerCase();
+  if (/error|fail|invalid|denied|שגיאה|נכשל|שגוי/.test(t)) return 'error';
+  if (/defect|bug|באג|דפקט/.test(t)) return 'defect';
+  if (/report|finished|completed|done|דוח|הסתיים|הושלם/.test(t)) return 'report';
+  if (/start|queued|running|accepted|התחיל|בתהליך|התקבלה/.test(t)) return 'started';
+  if (/\bask\b|answer|תשובה/.test(t)) return 'answer';
+  return 'reply';
+}
+const KIND = {error:['שגיאה','b-bad','⚠'], defect:['דפקט','b-warn','🐞'], report:['דוח מוכן','b-ok','📄'],
+  started:['ריצה התחילה','b-acc','▶'], answer:['תשובה','b-ok','💬'], reply:['תשובה','b-ok','💬']};
+const STOP = new Set(['rqa','re','fw','fwd','run','test','stop','status','ask','ai','help','all','failed','••••']);
+function tokens(s){
+  const envs = new Set(splitList(S.envs).map(x => x.toLowerCase()));
+  const rm = (S.replyMatch || '').toLowerCase();
+  return (s || '').toLowerCase().split(/[\s,;:()\[\]{}<>"'|]+/)
+    .filter(t => t.length >= 3 && !STOP.has(t) && !envs.has(t) && t !== rm);
+}
+const verb = s => { const m = /\b(RUN|TEST|STOP|STATUS|ASK|AI|HELP)\b/i.exec(s || ''); return m ? m[1].toUpperCase() : ''; };
+function extractCode(t){
+  const re = /(?:run\s*(?:id|code)?|code|קוד(?:\s*ריצה)?|ריצה)\s*[:#=]?\s*([A-Za-z0-9][A-Za-z0-9_-]{3,})/gi;
+  for (const m of (t || '').matchAll(re)) if (/\d/.test(m[1])) return m[1];
+  return '';
+}
+function associate(){
+  const outs = cache.filter(x => x.dir === 'out').sort((a, b) => a.date - b.date);
+  const ins = cache.filter(x => x.dir === 'in').sort((a, b) => a.date - b.date);
+  outs.forEach(o => { o._replies = []; o._tok = tokens(o.subject); });
+  for (const i of ins){
+    const it = tokens(i.subject + ' ' + (i.snippet || ''));
+    let best = null;
+    for (const o of outs){
+      if (o.date > i.date + 60000) continue;
+      let score = 0;
+      if (o.threadId && o.threadId === i.threadId) score = 3;
+      else if (o.code && (i.subject + ' ' + i.snippet).includes(o.code)) score = 3;
+      else if (o._tok.some(t => it.includes(t))) score = 2;
+      if (score && (!best || score > best.s || (score === best.s && o.date > best.o.date))) best = {o, s: score};
+    }
+    if (!best){
+      const v = verb(i.subject);
+      const cand = v && outs.filter(o => o.date <= i.date + 60000 && verb(o.subject) === v && !o._replies.length).pop();
+      if (cand) best = {o: cand};
+    }
+    i._out = best ? best.o : null;
+    if (best) best.o._replies.push(i);
+  }
+}
+function outStatus(o){
+  if (!o._replies || !o._replies.length) return ['ממתין לתשובה · ' + fmtElapsed(Date.now() - o.date), 'b-acc'];
+  const k = o._replies[o._replies.length - 1].kind;
+  if (k === 'error') return ['נכשל', 'b-bad'];
+  if (k === 'report') return ['הסתיים', 'b-ok'];
+  if (k === 'started') return ['בתהליך', 'b-acc'];
+  return ['התקבל', 'b-ok'];
+}
+
+/* ============ refresh ============ */
+async function refresh(manual){
+  if (!token || refreshing) return;
+  if (manual){ seenAt = Date.now(); LS.set('seenAt', seenAt); }
+  refreshing = true; renderStat();
+  try {
+    const days = clamp(+S.days || 14, 1, 365);
+    const rm = (S.replyMatch || 'RQA').replace(/"/g, '');
+    const [a, b] = await Promise.all([
+      listIds(`from:(${S.sh}) subject:("${rm}") newer_than:${days}d`),
+      listIds(`in:sent to:(${S.sh}) newer_than:${days}d`)
+    ]);
+    const known = new Set(cache.map(x => x.id)); const fresh = [];
+    for (const [ids, dir] of [[a, 'in'], [b, 'out']]) for (const m of ids) if (!known.has(m.id)){ known.add(m.id); fresh.push([m.id, dir]); }
+    const metas = await mapLimit(fresh, 5, ([id, dir]) =>
+      api(`messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date`)
+        .then(m => [m, dir]).catch(() => null));
+    const newIn = [];
+    for (const x of metas){
+      if (!x) continue;
+      const [m, dir] = x; const hd = hdrs(m.payload); const subj = hd.subject || '';
+      if (dir === 'in'){
+        if (addrOf(hd.from) !== S.sh.toLowerCase()) continue;
+        if (!subj.toLowerCase().includes((S.replyMatch || 'RQA').toLowerCase())) continue;
+      } else {
+        if (!(hd.to || '').toLowerCase().includes(S.sh.toLowerCase()) || !/^\s*RQA\b/i.test(subj)) continue;
+      }
+      const it = {id: m.id, threadId: m.threadId, dir, subject: dir === 'out' ? maskSubject(subj) : subj, date: +m.internalDate,
+        track: dir === 'out' && /^\s*RQA\s+(RUN|TEST)\b/i.test(subj)};
+      if (dir === 'in'){ it.snippet = decodeEntities(m.snippet || ''); it.kind = classify(subj + ' ' + it.snippet); newIn.push(it); }
+      cache.push(it);
+    }
+    purge(); LS.set('cache', cache);
+    lastRefresh = Date.now(); refreshFails = 0;
+    if (initialLoaded && newIn.length) notifyNew(newIn);
+    initialLoaded = true;
+    associate(); updateTrackers(newIn);
+  } catch (e){
+    if (!(e instanceof NoToken)){
+      refreshFails++;
+      if (refreshFails === 1){ setTimeout(() => refresh(), 30000); }
+      else toast('הרענון נכשל: ' + (isNetErr(e) ? 'אין חיבור לרשת' : e.message));
+    }
+  } finally { refreshing = false; scheduleRefresh(); render(); }
+}
+function scheduleRefresh(){ nextRefreshAt = S.autoRefresh ? Date.now() + clamp(+S.interval || 90, 30, 300) * 1000 : 0; }
+function purge(){
+  const min = Date.now() - clamp(+S.days || 14, 1, 365) * 864e5;
+  cache = cache.filter(x => x.date >= min).sort((a, b) => b.date - a.date).slice(0, 1500);
+}
+function notifyNew(items){
+  if (!S.notify || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const n = new Notification('RouterQA · ' + (items.length > 1 ? `${items.length} תשובות חדשות` : 'תשובה חדשה'), {body: items[0].subject, tag: 'rqa'});
+  n.onclick = () => { window.focus(); n.close(); };
+}
+
+/* ============ run tracking (section 6) ============ */
+function updateTrackers(newIn){
+  const now = Date.now();
+  for (const i of newIn){
+    const txt = i.subject + ' ' + (i.snippet || '');
+    for (const t of trackers) if (txt.includes(t.code) && (i.kind === 'report' || i.kind === 'error')) t.done = true;
+    if (!S.autoTrack || i.kind !== 'started' || !i._out || !i._out.track) continue;
+    const code = extractCode(txt);
+    if (code && !trackers.some(t => t.code === code)){
+      trackers.push({code, next: now + 180000, until: now + 3 * 3600e3});
+      i._out.code = code;
+    }
+  }
+  trackers = trackers.filter(t => !t.done && t.until > now);
+  LS.set('trackers', trackers); LS.set('cache', cache);
+}
+async function runTrackers(){
+  if (!token) return;
+  const now = Date.now();
+  for (const t of trackers){
+    if (t.next > now) continue;
+    t.next = now + 180000;
+    await submit({subject: `RQA STATUS ${t.code}`, body: '', action: 'status', auto: true});
+  }
+  trackers = trackers.filter(t => t.until > now); LS.set('trackers', trackers);
+}
+
+/* ============ sending ============ */
+function needsPin(c){ return c.subject.includes(PIN); }
+async function submit(cmd, pinOverride){
+  const pin = pinOverride || S.pin;
+  if (needsPin(cmd) && !pin){ toast('חסר PIN. הגדר אותו בהגדרות.'); return false; }
+  const subject = cmd.subject.split(PIN).join(pin);
+  let err = null;
+  for (let i = 0; i < 3; i++){
+    try {
+      const res = await api('messages/send', {method: 'POST', body: JSON.stringify({raw: buildRaw(subject, cmd.body)})});
+      cache.unshift({id: res.id, threadId: res.threadId, dir: 'out', subject: cmd.subject.split(PIN).join('••••'),
+        date: Date.now(), track: !!cmd.track, auto: !!cmd.auto});
+      LS.set('cache', cache); associate(); render();
+      if (!cmd.auto) toast('נשלח.');
+      return true;
+    } catch (e){ err = e; if (!isNetErr(e)) break; if (i < 2) await sleep(2000 * (i + 1)); }
+  }
+  if (err instanceof NoToken || isNetErr(err)){
+    if (!cmd.auto){
+      drafts.push({subject: cmd.subject, body: cmd.body || '', track: !!cmd.track, created: Date.now()});
+      LS.set('drafts', drafts); render();
+      toast(err instanceof NoToken ? 'לא מחובר ל-Gmail. הפקודה נשמרה בטיוטות.' : 'אין רשת. הפקודה נשמרה בטיוטות ותישלח כשהרשת תחזור.');
+    }
+  } else toast('השליחה נכשלה: ' + (err && err.message));
+  return false;
+}
+async function flushDrafts(){
+  if (!token || !drafts.length || !navigator.onLine) return;
+  for (const d of drafts.slice()){
+    if (needsPin(d) && !S.pin) continue;
+    drafts = drafts.filter(x => x !== d); LS.set('drafts', drafts);
+    const before = drafts.length;
+    const ok = await submit(d);
+    if (!ok && drafts.length === before){ drafts.push(d); LS.set('drafts', drafts); }
+    if (!ok) break;
+  }
+  render();
+}
+
+/* ============ forms ============ */
+function openAction(a, preset){
+  preset = preset || {};
+  const d = $('#dlg'); const vals = {};
+  const form = h('form', {class: 'dlg', novalidate: true});
+  form.append(h('div', {class: 'row between'}, h('h3', {text: a.label}), h('span', {class: 'badge ' + ST[a.st][1], text: ST[a.st][0]})));
+  if (a.note) form.append(h('div', {class: 'note info', text: a.note}));
+  if (a.st === 'needs') form.append(h('div', {class: 'note bad', text: 'פעולה זו דורשת תוספת בצד RouterQA ועדיין לא תעבוד. אפשר לשלוח, אבל צפויה תשובת שגיאה.'}));
+  const envs = splitList(S.envs), suites = splitList(S.suites);
+  const inputs = {};
+  for (const k of a.f){
+    const def = F[k];
+    let v = preset[k];
+    if (v == null && k === 'env') v = prefs.env[a.id] || prefs.env._last || S.defaultEnv || '';
+    if (v == null && k === 'caseId') v = prefs.caseId || '';
+    let el;
+    if (def.area) el = h('textarea', {id: 'f_' + k, value: v || ''});
+    else if (def.kind === 'env' && envs.length){
+      el = h('select', {id: 'f_' + k}, h('option', {value: '', text: 'בחר סביבה'}), envs.map(e => h('option', {value: e, text: e})));
+      el.value = envs.includes(v) ? v : '';
+    } else {
+      el = h('input', {id: 'f_' + k, type: def.type || 'text', value: v || '', autocomplete: 'off',
+        list: def.kind === 'suite' && suites.length ? 'dl_suites' : null, min: def.type === 'number' ? 1 : null, dir: 'auto'});
+    }
+    inputs[k] = el;
+    form.append(h('div', {class: 'field', 'data-k': k}, h('label', {for: 'f_' + k, text: def.label + (def.req ? ' *' : '')}), el, h('div', {class: 'err'})));
+  }
+  if (suites.length) form.append(h('datalist', {id: 'dl_suites'}, suites.map(s => h('option', {value: s}))));
+  let ack = null;
+  if (a.st === 'approve'){
+    ack = h('input', {type: 'checkbox', id: 'f_ack'});
+    form.append(h('div', {class: 'field', 'data-k': '_ack'}, h('label', {class: 'check', for: 'f_ack'}, ack, 'אני מאשר לשלוח פעולה זו ל-RouterQA.'), h('div', {class: 'err'})));
+  }
+  form.append(h('div', {class: 'btns'},
+    h('button', {type: 'button', text: 'ביטול', onclick: () => d.close()}),
+    h('button', {type: 'submit', class: 'primary', text: 'תצוגה מקדימה'})));
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    let bad = false;
+    form.querySelectorAll('.field').forEach(f => { f.classList.remove('bad'); f.querySelector('.err').textContent = ''; });
+    const fail = (k, msg) => { bad = true; const f = form.querySelector(`.field[data-k="${k}"]`); f.classList.add('bad'); f.querySelector('.err').textContent = msg; };
+    for (const k of a.f){
+      const def = F[k]; const v = inputs[k].value.trim(); vals[k] = v;
+      if (def.req && !v){ fail(k, 'שדה חובה'); continue; }
+      if (!v) continue;
+      if (def.one && /\s/.test(v)) fail(k, 'בלי רווחים');
+      else if (def.kind === 'env' && envs.length && !envs.includes(v)) fail(k, 'סביבה לא מוכרת');
+      else if (def.kind === 'suite' && suites.length && !suites.includes(v)) fail(k, 'הסוויטה לא ברשימה');
+      else if (def.type === 'number' && !(+v >= 1 && Number.isInteger(+v))) fail(k, 'מספר שלם חיובי');
+      else if (k === 'ids' && !splitIds(v).length) fail(k, 'לפחות מזהה אחד');
+    }
+    if (ack && !ack.checked) fail('_ack', 'נדרש אישור');
+    if (bad) return;
+    const built = a.b(vals);
+    showPreview(a, vals, {subject: built.s, body: built.body || '', action: a.id, track: !!a.track});
+  });
+  put(d, form); if (!d.open) d.showModal();
+  const first = form.querySelector('input:not([type=checkbox]),select,textarea'); if (first && !first.value) first.focus();
+}
+function showPreview(a, vals, cmd){
+  const d = $('#dlg');
+  const ask = needsPin(cmd) && S.pinMode === 'ask';
+  const pinIn = ask ? h('input', {type: 'password', id: 'f_pin', autocomplete: 'off'}) : null;
+  const box = h('div', {class: 'dlg'},
+    h('h3', {text: 'תצוגה מקדימה · ' + a.label}),
+    h('div', {class: 'preview'},
+      h('div', {class: 'k', text: 'אל'}), h('div', {class: 'mono', text: S.sh}),
+      h('div', {class: 'k', text: 'נושא'}), h('div', {class: 'mono', text: cmd.subject.split(PIN).join('••••')}),
+      cmd.body ? h('div', {class: 'k', text: 'גוף'}) : null, cmd.body ? h('pre', {class: 'body', text: cmd.body}) : null),
+    !token ? h('div', {class: 'note warn', text: 'לא מחובר ל-Gmail. אם תשלח עכשיו, הפקודה תישמר בטיוטות.'}) : null,
+    needsPin(cmd) && !ask && !S.pin ? h('div', {class: 'note bad', text: 'לא הוגדר PIN. הגדר אותו בהגדרות לפני השליחה.'}) : null,
+    ask ? h('div', {class: 'field'}, h('label', {for: 'f_pin', text: 'PIN'}), pinIn) : null,
+    h('div', {class: 'btns'},
+      h('button', {type: 'button', text: 'חזור', onclick: () => openAction(a, vals)}),
+      h('button', {type: 'button', class: 'primary', text: 'שלח', onclick: async ev => {
+        const pin = ask ? pinIn.value.trim() : S.pin;
+        if (needsPin(cmd) && !pin){ toast('חסר PIN.'); return; }
+        if (vals.env){ prefs.env[a.id] = vals.env; prefs.env._last = vals.env; }
+        if (vals.caseId != null && a.f.includes('caseId')) prefs.caseId = vals.caseId;
+        LS.set('prefs', prefs);
+        ev.target.disabled = true; d.close();
+        if (ask && !token){ toast('במצב "שאלה בכל שליחה" צריך להתחבר לפני השליחה.'); return; }
+        await submit(cmd, pin);
+      }})));
+  put(d, box); if (pinIn) pinIn.focus();
+}
+
+/* ============ message view ============ */
+function partText(p){
+  const out = {plain: '', html: '', files: []};
+  (function walk(x){
+    if (!x) return;
+    const mt = (x.mimeType || '').toLowerCase();
+    if (x.filename && x.body && x.body.attachmentId){ out.files.push({name: x.filename, id: x.body.attachmentId, size: x.body.size, type: mt}); }
+    else if (x.body && x.body.data && (mt === 'text/plain' || mt === 'text/html')){
+      const ct = (hdrs(x)['content-type'] || ''); const cs = (/charset="?([^";]+)/i.exec(ct) || [])[1] || 'utf-8';
+      let txt; try { txt = new TextDecoder(cs).decode(fromB64url(x.body.data)); } catch { txt = new TextDecoder().decode(fromB64url(x.body.data)); }
+      if (mt === 'text/plain') out.plain += txt; else out.html += txt;
+    }
+    (x.parts || []).forEach(walk);
+  })(p);
+  let text = out.plain;
+  if (!text && out.html){
+    const doc = new DOMParser().parseFromString(out.html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|tr|li|h\d)>/gi, '\n$&'), 'text/html');
+    text = (doc.body ? doc.body.textContent : '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  return {text, files: out.files};
+}
+function linkify(text){
+  const pre = h('pre', {class: 'body'});
+  for (const part of (text || '').split(/(https?:\/\/[^\s<>"']+)/g)){
+    if (/^https?:\/\//.test(part)){
+      pre.append(h('a', {href: '#', text: part, onclick: e => {
+        e.preventDefault();
+        if (confirm('לפתוח קישור חיצוני?\n\n' + part)) window.open(part, '_blank', 'noopener,noreferrer');
+      }}));
+    } else pre.append(part);
+  }
+  return pre;
+}
+function findIds(text){
+  const set = new Set();
+  for (const m of (text || '').matchAll(/\b(?:[A-Za-z]{2,8}-\d{2,}|\d{5,})\b/g)){ set.add(m[0]); if (set.size >= 12) break; }
+  return [...set];
+}
+async function openMessage(it){
+  const d = $('#dlg');
+  const box = h('div', {class: 'dlg'}, h('h3', {text: it.subject || '(ללא נושא)'}), h('div', {class: 'muted small', text: 'טוען…'}));
+  put(d, box); if (!d.open) d.showModal();
+  if (it.date > seenAt){ seenAt = it.date; LS.set('seenAt', seenAt); renderStat(); }
+  let m;
+  try { m = await api(`messages/${it.id}?format=full`); }
+  catch (e){ box.lastChild.textContent = e instanceof NoToken ? 'צריך להתחבר ל-Gmail כדי לפתוח את ההודעה.' : 'טעינה נכשלה: ' + e.message; return; }
+  const hd = hdrs(m.payload); const {text, files} = partText(m.payload);
+  const body = it.dir === 'out' ? maskSubject(text) : text;
+  const ids = it.dir === 'in' ? findIds(it.subject + '\n' + text) : [];
+  const code = it.dir === 'in' ? extractCode(it.subject + ' ' + text) : '';
+  const act = id => ACTIONS.find(x => x.id === id);
+  put(box, 
+    h('h3', {text: it.dir === 'out' ? maskSubject(hd.subject || it.subject) : (hd.subject || it.subject)}),
+    h('div', {class: 'muted small'}, (it.dir === 'out' ? 'אל: ' + (hd.to || '') : 'מאת: ' + (hd.from || '')), ' · ', fmtTime(it.date)),
+    it._out ? h('div', {class: 'small muted'}, 'שויך לפקודה: ', h('span', {class: 'mono', text: it._out.subject})) : (it.dir === 'in' ? h('span', {class: 'badge', text: 'לא משויכת'}) : null),
+    linkify(body || '(אין תוכן טקסט)'),
+    files.length ? h('div', {class: 'field'}, h('label', {text: 'קבצים מצורפים'}),
+      h('div', {class: 'ids'}, files.map(f => h('button', {type: 'button', text: `${f.name} (${Math.ceil((f.size || 0) / 1024)}KB)`, onclick: ev => downloadAtt(it.id, f, ev.target)})))) : null,
+    ids.length ? h('div', {class: 'field'}, h('label', {text: 'מזהים בהודעה (לחץ לפעולה)'}),
+      h('div', {class: 'ids'}, ids.map(x => h('button', {type: 'button', class: 'chip', text: x, onclick: () => idMenu(x)})))) : null,
+    h('div', {class: 'btns'},
+      code ? h('button', {type: 'button', text: 'מצב ריצה ' + code, onclick: () => openAction(act('status'), {code})}) : null,
+      h('button', {type: 'button', class: 'primary', text: 'סגור', onclick: () => d.close()})));
+  function idMenu(x){
+    put(box, h('h3', {text: 'מה לעשות עם ' + x + '?'}),
+      h('div', {class: 'btns'},
+        h('button', {type: 'button', text: 'חקור תוצאה', onclick: () => openAction(act('investigate'), {resultId: x})}),
+        h('button', {type: 'button', text: 'פתח באג', onclick: () => openAction(act('bug'), {resultId: x})}),
+        h('button', {type: 'button', text: 'מצב ריצה', onclick: () => openAction(act('status'), {code: x})}),
+        h('button', {type: 'button', text: 'סטטוס דפקט', onclick: () => openAction(act('defect'), {bugId: x})}),
+        h('button', {type: 'button', text: 'חזור', onclick: () => openMessage(it)})));
+  }
+}
+async function downloadAtt(msgId, f, btn){
+  btn.disabled = true;
+  try {
+    const r = await api(`messages/${msgId}/attachments/${f.id}`);
+    const url = URL.createObjectURL(new Blob([fromB64url(r.data)], {type: f.type || 'application/octet-stream'}));
+    const a = h('a', {href: url, download: f.name}); document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (e){ toast('ההורדה נכשלה: ' + e.message); }
+  btn.disabled = false;
+}
+
+/* ============ settings ============ */
+function openSettings(){
+  const d = $('#dlg');
+  const fld = (k, label, el, hint) => h('div', {class: 'field'}, h('label', {for: 's_' + k, text: label}), el, hint ? h('div', {class: 'small muted', text: hint}) : null);
+  const inp = (k, attrs) => h('input', Object.assign({id: 's_' + k, value: S[k] == null ? '' : S[k], autocomplete: 'off'}, attrs || {}));
+  const pinEl = inp('pin', {type: 'password'});
+  const box = h('form', {class: 'dlg', novalidate: true},
+    h('h3', {text: 'הגדרות'}),
+    fld('clientId', 'Client ID של Google', inp('clientId', {dir: 'ltr', placeholder: '….apps.googleusercontent.com'}), 'לא סוד. ההוראות ליצירה ב-README.'),
+    fld('sh', 'כתובת תיבת ה-SH (הנמען הקבוע)', inp('sh', {type: 'email', dir: 'ltr'})),
+    fld('replyMatch', 'סימון תשובה בנושא (replyMatch)', inp('replyMatch', {dir: 'ltr'})),
+    h('div', {class: 'field'}, h('label', {for: 's_pin', text: 'PIN'}),
+      h('div', {class: 'row'}, pinEl, h('button', {type: 'button', text: 'הצג', onclick: ev => { pinEl.type = pinEl.type === 'password' ? 'text' : 'password'; ev.target.textContent = pinEl.type === 'password' ? 'הצג' : 'הסתר'; }}))),
+    fld('pinMode', 'שמירת PIN', (() => { const s = h('select', {id: 's_pinMode'},
+      h('option', {value: 'save', text: 'לשמור במכשיר הזה'}), h('option', {value: 'ask', text: 'לשאול בכל שליחה (לא נשמר)'})); s.value = S.pinMode; return s; })(),
+      'נקודה 13.2: הצפנה בסיסמה עדיין לא ממומשת.'),
+    fld('envs', 'סביבות מוכרות (מופרדות בפסיק)', inp('envs', {dir: 'ltr'}), 'אם ריק, כל סביבה מתקבלת.'),
+    fld('defaultEnv', 'סביבה ברירת מחדל', inp('defaultEnv', {dir: 'ltr'})),
+    fld('suites', 'סוויטות מוכרות (מופרדות בפסיק)', inp('suites', {dir: 'ltr'}), 'אם ריק, כל סוויטה מתקבלת.'),
+    fld('days', 'ימי שמירה במטמון (1–365)', inp('days', {type: 'number', min: 1, max: 365})),
+    h('label', {class: 'check'}, h('input', {type: 'checkbox', id: 's_autoRefresh', checked: S.autoRefresh}), 'רענון אוטומטי'),
+    fld('interval', 'מרווח רענון בשניות (30–300)', inp('interval', {type: 'number', min: 30, max: 300})),
+    h('label', {class: 'check'}, h('input', {type: 'checkbox', id: 's_autoTrack', checked: S.autoTrack}), 'מעקב STATUS אוטומטי כל 3 דקות אחרי הרצה'),
+    h('label', {class: 'check'}, h('input', {type: 'checkbox', id: 's_notify', checked: S.notify}), 'התראה בדפדפן כשמגיעה תשובה'),
+    h('div', {class: 'btns'},
+      h('button', {type: 'button', text: 'נתק חשבון Gmail', onclick: () => { disconnect(); d.close(); }}),
+      h('button', {type: 'button', text: 'נקה מטמון מקומי', onclick: () => { if (confirm('לנקות את המטמון המקומי? המיילים בתיבה לא יימחקו.')){ cache = []; trackers = []; LS.set('cache', cache); LS.set('trackers', trackers); initialLoaded = false; render(); toast('המטמון נוקה.'); } }})),
+    h('div', {class: 'btns'},
+      h('button', {type: 'button', text: 'ביטול', onclick: () => d.close()}),
+      h('button', {type: 'submit', class: 'primary', text: 'שמור'})));
+  box.addEventListener('submit', e => {
+    e.preventDefault();
+    const g = k => box.querySelector('#s_' + k);
+    const sh = g('sh').value.trim();
+    if (sh && !isEmail(sh)){ toast('כתובת SH לא תקינה.'); return; }
+    const oldClient = S.clientId, oldSh = S.sh;
+    S = Object.assign(S, {
+      clientId: g('clientId').value.trim(), sh, replyMatch: g('replyMatch').value.trim() || 'RQA',
+      pinMode: g('pinMode').value, envs: g('envs').value.trim(), defaultEnv: g('defaultEnv').value.trim(), suites: g('suites').value.trim(),
+      days: clamp(parseInt(g('days').value, 10) || 14, 1, 365), autoRefresh: g('autoRefresh').checked,
+      interval: clamp(parseInt(g('interval').value, 10) || 90, 30, 300), autoTrack: g('autoTrack').checked, notify: g('notify').checked
+    });
+    S.pin = S.pinMode === 'save' ? pinEl.value.trim() : '';
+    LS.set('settings', S);
+    if (oldClient !== S.clientId){ tokenClient = null; token = null; }
+    if (oldSh.toLowerCase() !== S.sh.toLowerCase()){ cache = []; LS.set('cache', cache); initialLoaded = false; }
+    purge(); LS.set('cache', cache); scheduleRefresh(); d.close(); render();
+    if (token) refresh();
+  });
+  put(d, box); if (!d.open) d.showModal();
+}
+
+/* ============ rendering ============ */
+function toast(msg, btnText, btnFn, sticky){
+  const t = h('div', {class: 'toast', role: 'status'}, h('span', {text: msg}),
+    btnText ? h('button', {type: 'button', text: btnText, onclick: () => { t.remove(); btnFn(); }}) : h('button', {type: 'button', text: 'סגור', onclick: () => t.remove()}));
+  $('#banner').append(t);
+  if (!sticky) setTimeout(() => t.remove(), 6000);
+}
+function renderStat(){
+  const st = $('#stat'); const on = !!token;
+  const newCount = cache.filter(x => x.dir === 'in' && x.date > seenAt).length;
+  put(st, 
+    h('span', {}, h('span', {class: 'dot' + (on ? ' on' : '')}), on ? 'מחובר ל-Gmail' : 'לא מחובר'),
+    on ? h('span', {text: 'אסימון: ' + Math.max(0, Math.round((tokenExp - Date.now()) / 60000)) + ' דק\''}) : null,
+    lastRefresh ? h('span', {text: (refreshing ? 'מרענן… ' : 'רענון: ') + fmtClock(lastRefresh)}) : (refreshing ? h('span', {text: 'מרענן…'}) : null),
+    h('span', {text: 'חדשות: ' + newCount}),
+    trackers.length ? h('span', {text: 'במעקב: ' + trackers.map(t => t.code).join(', ')}) : null);
+  document.title = (newCount ? `(${newCount}) ` : '') + 'RouterQA · מייל';
+}
+function renderActions(){
+  put($('#cats'), ...CATS.map(([id, label]) => h('button', {type: 'button', class: 'chip' + (prefs.cat === id ? ' sel' : ''), text: label,
+    onclick: () => { prefs.cat = id; LS.set('prefs', prefs); renderActions(); }})));
+  put($('#actions'), ...ACTIONS.filter(a => a.cat === prefs.cat).map(a =>
+    h('button', {type: 'button', class: 'act', onclick: () => openAction(a)}, h('span', {text: a.label}), h('span', {class: 'badge ' + ST[a.st][1], text: ST[a.st][0]}))));
+}
+function renderDrafts(){
+  put($('#drafts'), ...drafts.map(d => h('div', {class: 'draft'},
+    h('div', {}, h('div', {class: 'mono small', text: d.subject.split(PIN).join('••••')}), h('div', {class: 'small', text: 'טיוטה · ' + fmtTime(d.created)})),
+    h('div', {class: 'row'},
+      h('button', {type: 'button', text: 'שלח עכשיו', onclick: async () => {
+        let pin = S.pin;
+        if (needsPin(d) && !pin){ pin = (prompt('PIN:') || '').trim(); if (!pin) return; }
+        drafts = drafts.filter(x => x !== d); LS.set('drafts', drafts); renderDrafts();
+        await submit(d, pin);
+      }}),
+      h('button', {type: 'button', text: 'מחק', onclick: () => { drafts = drafts.filter(x => x !== d); LS.set('drafts', drafts); renderDrafts(); }})))));
+}
+function renderList(){
+  associate();
+  const q = $('#q').value.trim().toLowerCase();
+  const from = $('#qFrom').value ? new Date($('#qFrom').value + 'T00:00').getTime() : 0;
+  const items = cache.filter(x => x.date >= from && (!q || (x.subject + ' ' + (x.snippet || '')).toLowerCase().includes(q))).sort((a, b) => b.date - a.date);
+  const list = $('#list');
+  if (!items.length){
+    put(list, h('div', {class: 'empty', text: !token && !cache.length ? 'התחבר ל-Gmail כדי לראות פקודות ותשובות.' : (q || from ? 'אין תוצאות לחיפוש.' : 'אין עדיין פקודות או תשובות.')}));
+    return;
+  }
+  put(list, ...items.slice(0, 300).map(it => {
+    let icon, badges = [], meta;
+    if (it.dir === 'out'){
+      const [t, c] = outStatus(it);
+      icon = '↗'; badges.push(h('span', {class: 'badge ' + c, text: t}));
+      if (it.auto) badges.push(h('span', {class: 'badge', text: 'אוטומטי'}));
+      meta = 'פקודה · ' + fmtTime(it.date);
+    } else {
+      const k = KIND[it.kind] || KIND.reply;
+      icon = k[2]; badges.push(h('span', {class: 'badge ' + k[1], text: k[0]}));
+      if (!it._out) badges.push(h('span', {class: 'badge', text: 'לא משויכת'}));
+      meta = (it.date > seenAt ? '● ' : '') + fmtTime(it.date) + (it.snippet ? ' · ' + it.snippet.slice(0, 120) : '');
+    }
+    return h('button', {type: 'button', class: 'item' + (it.dir === 'out' ? ' out' : ''), onclick: () => openMessage(it)},
+      h('span', {class: 'ic', text: icon, 'aria-hidden': 'true'}),
+      h('span', {}, h('div', {class: 'sub' + (it.dir === 'out' ? ' mono' : ''), text: it.subject || '(ללא נושא)'}), h('div', {class: 'meta', text: meta})),
+      h('span', {class: 'side'}, badges));
+  }));
+}
+function render(){
+  const ready = S.clientId && isEmail(S.sh);
+  $('#setup').hidden = !!ready;
+  $('#toAddr').textContent = S.sh || '—';
+  $('#acct').textContent = account;
+  $('#btnConnect').textContent = token ? 'מחובר' : (LS.get('consented', false) ? 'התחבר מחדש' : 'התחבר ל-Gmail');
+  $('#btnConnect').disabled = !!token;
+  $('#btnRefresh').disabled = !token || refreshing;
+  renderStat(); renderActions(); renderDrafts(); renderList();
+}
+
+/* ============ wiring ============ */
+$('#btnSettings').onclick = openSettings;
+$('#btnSetup').onclick = openSettings;
+$('#btnConnect').onclick = connect;
+$('#btnUnlock').onclick = connect;
+$('#btnRefresh').onclick = () => refresh(true);
+$('#q').oninput = renderList;
+$('#qFrom').onchange = renderList;
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { lastActivity = Date.now(); }, {passive: true}));
+addEventListener('online', () => { toast('הרשת חזרה.'); flushDrafts(); });
+addEventListener('storage', e => { if (e.key && e.key.startsWith('rqa.')){ S = Object.assign({}, DEFAULTS, LS.get('settings', {})); render(); } });
+
+setInterval(() => {
+  const now = Date.now();
+  if (token && now - lastActivity > 30 * 60000 && !trackers.length) lockPage();
+  if (token && now > tokenExp - 30000) onExpired();
+  if (token && nextRefreshAt && now >= nextRefreshAt) refresh();
+  runTrackers();
+  renderStat();
+  if (now % 30000 < 15000) renderList();
+}, 15000);
+
+purge(); render();
+</script>
+</body>
+</html>
