@@ -29,22 +29,33 @@ function drawCar(ctx, x, y, w, h, color, face = true) {
   ctx.restore();
 }
 
+
+/* 🏎️ מרוץ מכוניות – 6 מכוניות, בערך 2 דקות, שני רמזורים. אין תאונות: מאטים מאחורי מכונית ועוקפים מהצד. */
+const CAR_LINES = {
+  start: 'החזיקי את הטיל כדי לנסוע מהר!', go: 'יוצאים לדרך!', count: ['שלוש', 'שתיים', 'אחת'],
+  passed: 'עקפת!', first: 'את במקום הראשון!', half: 'חצי מהדרך!', near: 'עוד קצת לקו הסיום!',
+  places: ['ניצחת! מקום ראשון!', 'מקום שני! כל הכבוד!', 'מקום שלישי! כל הכבוד!', 'סיימת את המרוץ! כל הכבוד!'],
+  light: 'רמזור! צריך לעצור', green: 'ירוק! סעים!', stoppedWell: 'כל הכבוד! עצרת ברמזור האדום', wait: 'מחכים לירוק',
+  redStop: 'באדום עוצרים ומחכים', beep: 'ביפ ביפ! יש מכונית מלפנים'
+};
 registerGame({
-  lines: ['לחצי על הכפתור הירוק כדי לנסוע!', 'כל הכבוד! עצרת ברמזור האדום', 'רמזור! צריך לעצור', 'ירוק! סעים!', 'עשרה יהלומים!', 'עשרים יהלומים!', 'אספת את כל היהלומים! סעי לקו הסיום', 'הגעת לקו הסיום!', 'ביפ ביפ! יש מכונית מלפנים', 'באדום עוצרים ומחכים', 'מחכים לירוק'],
-  id: 'cars', name: 'המכונית שלי', emoji: '🚗', color: '#2ec27e', say: 'המכונית שלי! בחרי מכונית',
+  lines: () => Object.values(CAR_LINES).flat(),
+  id: 'cars', name: 'מרוץ מכוניות', emoji: '🏎️', color: '#2ec27e', say: 'מרוץ מכוניות! בחרי מכונית',
   mount(root, s) {
     const CAR_COLORS = ['#ff4d6d', '#3a86ff', '#ffc300', '#9b5de5', '#ff8c1a', '#2ec27e'];
-    const NPC_COLORS = ['#ff9f1c', '#8ecae6', '#cdb4db', '#90be6d', '#f28482', '#bdb2ff', '#ffd6a5'];
-    const GOAL = 30;
+    const RIVALS = [['🐻', '#c08552'], ['🐰', '#cdb4db'], ['🦊', '#ff9f1c'], ['🐸', '#90be6d'], ['🐼', '#bdb2ff']];
+    const L = CAR_LINES;
 
     root.innerHTML = `<div class="cr"><canvas></canvas>
-      <div class="cr-hud"><div class="cr-gems">💎 <b>0</b>/${GOAL}</div><div class="cr-light"><i></i><i></i><i></i></div></div>
-      <div class="cr-msg"></div>
+      <div class="cr-hud"><div class="cr-place"><b>6</b><span>/6</span></div><div class="cr-track"><div class="cr-bar"></div><i class="flag">🏁</i></div>
+        <div class="cr-gems">💎 <b>0</b></div><div class="cr-light"><i></i><i></i><i></i></div></div>
+      <div class="cr-msg"></div><div class="cr-count"></div>
       <button class="cr-btn cr-left" aria-label="שמאלה">⬅️</button><button class="cr-btn cr-right" aria-label="ימינה">➡️</button>
-      <div class="cr-pedals"><button class="cr-stop">✋<span>עצור</span></button><button class="cr-go">🚀<span>סע!</span></button></div>
+      <div class="cr-pedals"><button class="cr-stop">✋<span>עצור</span></button><button class="cr-go">🚀<span>מהר!</span></button></div>
     </div>`;
     const wrap = $('.cr', root), cv = $('canvas', root), ctx = cv.getContext('2d');
-    const gemsEl = $('.cr-gems', root), lightEl = $('.cr-light', root), msgEl = $('.cr-msg', root);
+    const gemsEl = $('.cr-gems', root), lightEl = $('.cr-light', root), msgEl = $('.cr-msg', root), countEl = $('.cr-count', root);
+    const placeEl = $('.cr-place', root), barEl = $('.cr-bar', root);
     const goBtn = $('.cr-go', root), stopBtn = $('.cr-stop', root);
 
     let W, H, roadW, roadX, laneW, carY, cw, ch, DPR;
@@ -54,17 +65,19 @@ registerGame({
       cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       roadW = Math.min(W * .62, 480); laneW = roadW / 3; roadX = (W - roadW) / 2;
       cw = Math.min(laneW * .56, 64, H * .13); ch = cw * 1.7;
-      carY = Math.max(H * .4, Math.min(H * .62, H - 140 - ch / 2)); // לא מתחת לכפתורים במסך נמוך
+      carY = Math.max(H * .45, Math.min(H * .66, H - 140 - ch / 2)); // לא מתחת לכפתורים במסך נמוך
     }
     resize(); s.on(window, 'resize', resize);
     const laneX = l => roadX + laneW * (l + .5);
 
-    // מצב המשחק
-    let myColor = CAR_COLORS[0], running = false;
-    let dist = 0, speed = 0, lane = 1, px = 0, stopped = true, turbo = false;
-    let lights = [], npcs = [], gems = [], parts = [], finish = null;
-    let nextLight, nextGem, nextNpc, gemCount = 0, streak = 0, lastHonk = 0, t = 0, won = false;
-    const CRUISE = () => H * .55, FAST = () => H * 1.05, ACC = () => H * 1.1, BR = () => H * 1.5;
+    // יחידות מהירות ביחס לגובה המסך, כך שהמרוץ נמשך כ־2 דקות בכל מסך
+    const CRUISE = () => H * .68, FAST = () => H * 1.0, ACC = () => H * .5, BR = () => H * 1.5, BOOST = () => H * .22;
+    const TRACK = () => H * 104;
+
+    let myColor = CAR_COLORS[0], running = false, started = false;
+    let dist = 0, speed = 0, lane = 1, px = 0, stopped = false, turbo = false, boostT = 0;
+    let lights = [], rivals = [], gems = [], parts = [], finished = 0, place = 6, lastPassMsg = 0;
+    let gemCount = 0, streak = 0, lastHonk = 0, t = 0, done = false, saidHalf = false, saidNear = false, nextGem = 0;
 
     let msgT = 0;
     function msg(text, ms = 1800) {
@@ -74,7 +87,8 @@ registerGame({
 
     // ===== בחירת מכונית =====
     function carPicker() {
-      const p = el('div', 'picker carpick', `<h3>איזו מכונית? 🚗</h3><div class="opts"></div>`);
+      running = false; started = false;
+      const p = el('div', 'picker carpick', `<h3>איזו מכונית? 🏎️</h3><div class="opts"></div>`);
       CAR_COLORS.forEach((c, i) => {
         const b = el('button', 'opt'); b.style.setProperty('--c', c); b.style.setProperty('--i', i);
         const m = document.createElement('canvas'); m.width = 220; m.height = 220; const mc = m.getContext('2d');
@@ -86,12 +100,28 @@ registerGame({
     }
 
     function begin() {
-      dist = 0; speed = 0; lane = 1; px = laneX(1); stopped = true; turbo = false;
-      lights = []; npcs = []; gems = []; parts = []; finish = null; won = false;
-      gemCount = 0; streak = 0; gemsEl.querySelector('b').textContent = 0;
-      nextLight = H * 2.6; nextGem = H * .6; nextNpc = H * 1.5;
-      running = true; goBtn.classList.add('hint');
-      msg('לחצי על 🚀 כדי לנסוע!', 2600); Voice.say('לחצי על הכפתור הירוק כדי לנסוע!');
+      dist = 0; speed = 0; lane = 1; px = laneX(1); stopped = false; turbo = false; boostT = 0;
+      lights = [.34, .68].map(f => ({ d: TRACK() * f, state: 'green', t: 0, wait: 0, triggered: false }));
+      // הקו: אורי מתחילה אחרונה, כדי שיהיה את מי לעקוף
+      const grid = [[0, 1.5], [2, 1.5], [1, 3], [0, 4.5], [2, 4.5]];
+      const bases = shuffle([.62, .7, .78, .86, .92]);
+      // לכל מתחרה מרחק והמתנה משלו, כדי שלא ייצרו "קיר" על כל הנתיבים
+      rivals = RIVALS.map(([e, c], i) => ({ e, c, lane: grid[i][0], x: laneX(grid[i][0]), d: grid[i][1] * ch * 1.2, speed: 0, base: bases[i], cool: 0, fin: 0, far: 1.8 + i * .7, slow: .5 + i * .03 }));
+      gems = []; parts = []; finished = 0; place = 6; done = false; saidHalf = saidNear = false;
+      gemCount = 0; streak = 0; gemsEl.querySelector('b').textContent = 0; nextGem = H * 1.2;
+      running = true; started = false;
+      countdown();
+    }
+
+    function countdown() {
+      const steps = ['3', '2', '1', 'סעים! 🏁'];
+      steps.forEach((txt, i) => s.later(() => {
+        countEl.textContent = txt; countEl.classList.remove('on'); void countEl.offsetWidth; countEl.classList.add('on');
+        if (i < 3) { Voice.say(L.count[i]); Sound.tone(520, .2, { type: 'square', vol: .08 }); }
+        else { Voice.say(L.go); Sound.tone(1040, .4, { type: 'square', vol: .1 }); Sound.vroom(); started = true; goBtn.classList.add('hint'); }
+      }, i * 1000));
+      s.later(() => { countEl.classList.remove('on'); msg('החזיקי 🚀 כדי לנסוע מהר!', 2600); }, 4200);
+      s.later(() => { if (running && !done) Voice.say(L.start); }, 4400);
     }
 
     // ===== שליטה =====
@@ -110,139 +140,149 @@ registerGame({
       else if (e.key === 'ArrowUp') go(); else if (e.key === 'ArrowDown' || e.key === ' ') brake();
     });
     s.on(window, 'keyup', e => { if (e.key === 'ArrowUp') turbo = false; });
-    // הקשה על הכביש: צד שמאל/ימין מחליף נתיב
     cv.addEventListener('pointerdown', e => { if (!running) return; Sound.init(); const r = cv.getBoundingClientRect(); changeLane(e.clientX - r.left < (r.width / 2) ? -1 : 1); });
 
-    function activeLight() { return lights.find(L => L.state !== 'green' && L.d - dist > -ch && L.triggered); }
-
     function go() {
-      if (!running) return;
+      if (!running || !started) return;
       goBtn.classList.remove('hint');
       if (stopped) { stopped = false; Sound.vroom(); }
       turbo = true;
-      const L = activeLight();
-      if (L && L.state === 'red') { msg('מחכים לירוק 🙂'); Voice.say('מחכים לירוק'); }
+      const AL = lights.find(L => L.triggered && L.state === 'red' && L.d > dist);
+      if (AL) { msg('מחכים לירוק 🙂'); Voice.say(L.wait); }
     }
     function brake() {
-      if (!running) return;
+      if (!running || !started) return;
       stopped = true; turbo = false; stopBtn.classList.remove('hint');
-      const L = lights.find(L => L.triggered && L.state !== 'green' && !L.rewarded && L.d - dist > 0 && L.d - dist < H * 1.3);
-      if (L) {
-        L.rewarded = true; msg('כל הכבוד! עצרת ברמזור ⭐'); Voice.say('כל הכבוד! עצרת ברמזור האדום');
+      const LL = lights.find(x => x.triggered && x.state !== 'green' && !x.rewarded && x.d - dist > 0 && x.d - dist < H * 1.3);
+      if (LL) {
+        LL.rewarded = true; msg('כל הכבוד! עצרת ברמזור ⭐'); Voice.say(L.stoppedWell);
         const c = center(lightEl); Stars.add(c.x, c.y, 1); Sound.chime();
       }
     }
     function changeLane(dir) {
-      if (!running) return;
+      if (!running || !started || done) return;
       const nl = lane + dir; if (nl < 0 || nl > 2) { Sound.boing(); return; }
-      const blocked = npcs.some(c => c.lane === nl && Math.abs(c.d - dist) < ch * 1.25);
-      if (blocked) { Sound.honk(); msg('בִּיפּ בִּיפּ! יש שם מכונית 🚙'); return; }
+      if (rivals.some(r => r.lane === nl && Math.abs(r.d - dist) < ch * 1.15)) { Sound.honk(); msg('בִּיפּ בִּיפּ! יש שם מכונית 🚙'); return; }
       lane = nl; Sound.tone(500 + dir * 80, .1, { type: 'triangle', vol: .1 });
     }
 
-    // ===== יצירת עצמים =====
-    function spawn() {
-      while (dist + H * 1.3 > nextLight) {
-        lights.push({ d: nextLight, state: 'green', t: 0, wait: 0, triggered: false });
-        nextLight += H * rand(4.2, 5.6);
-      }
-      while (dist + H * 1.2 > nextGem) {
+    // ===== עזר =====
+    const lightCap = (front) => {
+      let cap = Infinity;
+      lights.forEach(LL => { if (LL.state === 'green') return; const gap = LL.d - front - 8; if (gap > -4) cap = Math.min(cap, Math.sqrt(2 * BR() * Math.max(0, gap))); });
+      return cap;
+    };
+    const follow = (aheadSpeed, gap) => aheadSpeed + Math.sqrt(2 * BR() * Math.max(0, gap));
+
+    function spawnGems() {
+      while (dist + H * 1.3 > nextGem && nextGem < TRACK() - H) {
         const l = randi(0, 2), n = randi(3, 5);
-        const nearLight = lights.some(L => Math.abs(L.d - nextGem) < H * .5);
-        if (!nearLight) for (let i = 0; i < n; i++) gems.push({ lane: l, d: nextGem + i * ch * .9, c: pick(['#4cc9f0', '#ff70a6', '#b388ff', '#2ee8b6']) });
-        nextGem += H * rand(.9, 1.4);
+        if (!lights.some(LL => Math.abs(LL.d - nextGem) < H * .6))
+          for (let i = 0; i < n; i++) gems.push({ lane: l, d: nextGem + i * ch * .9, c: pick(['#4cc9f0', '#ff70a6', '#b388ff', '#2ee8b6']) });
+        nextGem += H * rand(1.4, 2.2);
       }
-      if (dist + H * 1.2 > nextNpc) {
-        if (npcs.length < 3) {
-          const l = randi(0, 2), d = dist + H * 1.15;
-          if (!npcs.some(c => c.lane === l && Math.abs(c.d - d) < ch * 3) && !lights.some(L => Math.abs(L.d - d) < ch * 2))
-            npcs.push({ lane: l, d, v: H * rand(.28, .38), speed: 0, c: pick(NPC_COLORS) });
-        }
-        nextNpc = dist + H * rand(1.4, 2.6);
-      }
-      if (gemCount >= GOAL && !finish) finish = { d: dist + H * 1.1 };
     }
 
     // ===== עדכון =====
     function update(dt) {
       t += dt;
-      spawn();
-      const front = dist + ch / 2;
+      if (!started) return;
+      spawnGems();
+      const front = dist + ch / 2, TR = TRACK();
 
       // רמזורים
-      lights.forEach(L => {
-        const ahead = L.d - front;
-        if (!L.triggered && ahead < H * .95) {
-          L.triggered = true; L.state = 'yellow'; L.t = 0; Sound.tone(880, .15, { type: 'square', vol: .06 });
-          msg('🚦 רמזור! צריך לעצור', 2000); Voice.say('רמזור! צריך לעצור'); stopBtn.classList.add('hint');
+      lights.forEach(LL => {
+        const ahead = LL.d - front;
+        if (!LL.triggered && ahead < H * .95 && ahead > 0) {
+          LL.triggered = true; LL.state = 'yellow'; LL.t = 0; Sound.tone(880, .15, { type: 'square', vol: .06 });
+          msg('🚦 רמזור! צריך לעצור', 2000); Voice.say(L.light); stopBtn.classList.add('hint');
         }
-        if (!L.triggered) return;
-        L.t += dt;
-        if (L.state === 'yellow' && L.t > .8) { L.state = 'red'; L.t = 0; }
-        if (L.state === 'red') {
-          if (speed < 6) L.wait += dt;
-          if (L.wait > 2.4 || L.t > 9) {
-            L.state = 'green'; stopBtn.classList.remove('hint'); Sound.chime();
-            if (stopped) { msg('🟢 ירוק! סעים!', 2000); Voice.say('ירוק! סעים!'); goBtn.classList.add('hint'); }
-            else msg('🟢 ירוק!', 1500);
+        if (!LL.triggered) return;
+        LL.t += dt;
+        if (LL.state === 'yellow' && LL.t > .8) { LL.state = 'red'; LL.t = 0; }
+        if (LL.state === 'red') {
+          if (speed < 6) LL.wait += dt;
+          if (LL.wait > 2.2 || LL.t > 8) {
+            LL.state = 'green'; stopBtn.classList.remove('hint'); Sound.chime();
+            msg('🟢 ירוק! סעים!', 2000); Voice.say(L.green);
+            if (stopped) goBtn.classList.add('hint');
           }
-          if (speed < 4 && !L.rewarded && !L.told && ahead < ch) { L.told = true; msg('🔴 באדום עוצרים ומחכים'); Voice.say('באדום עוצרים ומחכים'); }
+          if (speed < 4 && !LL.rewarded && !LL.told && ahead < ch) { LL.told = true; msg('🔴 באדום עוצרים ומחכים'); Voice.say(L.redStop); }
         }
       });
-      const AL = lights.find(L => L.triggered && L.d - dist > -ch * .5 && L.d - dist < H * 1.2);
+      const AL = lights.find(LL => LL.triggered && LL.d - dist > -ch * .5 && LL.d - dist < H * 1.2);
       if (AL) { lightEl.classList.add('on'); lightEl.dataset.s = AL.state; } else lightEl.classList.remove('on');
 
-      // מהירות היעד
-      let target = stopped ? 0 : (turbo ? FAST() : CRUISE());
-      let cap = Infinity;
-      lights.forEach(L => {
-        if (L.state === 'green') return;
-        const gap = L.d - front - 8;
-        if (gap > -4) cap = Math.min(cap, Math.sqrt(2 * BR() * Math.max(0, gap)));
-      });
-      npcs.forEach(c => {
-        if (Math.abs(laneX(c.lane) - px) > laneW * .6) return;
-        const gap = (c.d - ch / 2) - front - ch * .25;
+      // השחקנית
+      boostT = Math.max(0, boostT - dt);
+      let target = done ? CRUISE() * .5 : stopped ? 0 : (turbo ? FAST() : CRUISE()) + (boostT > 0 ? BOOST() : 0);
+      let cap = done ? Infinity : lightCap(front);
+      rivals.forEach(r => {
+        if (Math.abs(r.x - px) > laneW * .6) return;
+        const gap = (r.d - ch / 2) - front - ch * .25;
         if (gap > -ch) {
-          cap = Math.min(cap, c.speed + Math.sqrt(2 * BR() * Math.max(0, gap)));
-          if (gap < ch * 1.2 && speed > c.speed + 10 && t - lastHonk > 3) { lastHonk = t; Sound.honk(); msg('בִּיפּ בִּיפּ! עברי נתיב ⬅️➡️'); Voice.say('ביפ ביפ! יש מכונית מלפנים'); }
+          cap = Math.min(cap, follow(r.speed, gap));
+          if (gap < ch * 1.2 && speed > r.speed + 10 && t - lastHonk > 3.5) { lastHonk = t; Sound.honk(); msg('בִּיפּ בִּיפּ! עקפי מהצד ⬅️➡️'); Voice.say(L.beep); }
         }
       });
       target = Math.min(target, cap);
-      if (speed < target) speed = Math.min(target, speed + ACC() * dt);
+      if (speed < target) speed = Math.min(target, speed + ACC() * dt);   // תאוצה הדרגתית
       else speed = Math.max(target, speed - BR() * 1.6 * dt);
       speed = Math.min(speed, cap);
       dist += speed * dt;
-
-      // תזוזה בין נתיבים
       const tx = laneX(lane), step = laneW * 5 * dt;
       px = Math.abs(tx - px) < step ? tx : px + Math.sign(tx - px) * step;
 
-      // מכוניות אחרות
-      npcs.forEach(c => {
-        let cc = c.v;
-        lights.forEach(L => { if (L.state === 'green') return; const gap = L.d - (c.d + ch / 2) - 8; if (gap > -4) cc = Math.min(cc, Math.sqrt(2 * BR() * Math.max(0, gap))); });
-        npcs.forEach(o => { if (o !== c && o.lane === c.lane && o.d > c.d) { const gap = o.d - c.d - ch * 1.3; cc = Math.min(cc, o.speed + Math.max(0, gap) * 2); } });
-        c.speed += Math.max(-BR() * dt * 1.6, Math.min(ACC() * dt, cc - c.speed));
-        c.d += c.speed * dt;
+      // המתחרים
+      const near = dist > TR * .75;
+      rivals.forEach(r => {
+        const gapToMe = r.d - dist;
+        let tg = r.base * H;
+        if (gapToMe > H * r.far) tg = Math.min(tg, H * (near ? r.slow - .08 : r.slow));  // מחכים לה כשהם רחוק מלפנים
+        else if (near && gapToMe > 0) tg = Math.min(tg, H * r.slow);        // בסוף קל יותר לעקוף
+        else if (near) tg = Math.min(tg, Math.max(speed * .95, H * .3));    // ובסוף לא עוקפים אותה בחזרה
+        else if (gapToMe < 0 && gapToMe > -H * 2.5) tg = Math.min(Math.max(tg, speed * 1.04), r.base * H * 1.15);  // דו־קרב: מי שקרוב מאחור לוחץ
+        else if (gapToMe < -H * 3) tg *= 1.12;                             // מי שנשאר הרחק מאחור מתקרב
+        if (r.fin) tg = Math.max(0, H * .3 * (1 - (r.d - TR) / (H * 1.5)));
+        let rc = r.fin ? Infinity : lightCap(r.d + ch / 2);
+        const others = rivals.filter(o => o !== r).map(o => ({ x: o.x, lane: o.lane, d: o.d, speed: o.speed }))
+          .concat([{ x: px, lane, d: dist, speed }]);
+        let blocked = null;
+        others.forEach(o => {
+          if (Math.abs(o.x - r.x) > laneW * .6 || o.d <= r.d) return;
+          const gap = o.d - r.d - ch * 1.3;
+          rc = Math.min(rc, follow(o.speed, gap));
+          if (gap < ch * 1.5 && o.speed < tg - 5) blocked = o;
+        });
+        // מתחרה חסום מנסה לעקוף בנתיב פנוי
+        r.cool -= dt;
+        // מתחרה שהיא תקועה מאחוריו זז הצידה, כדי שגם מי שרק נוסעת תוכל לעקוף
+        const meBehind = Math.abs(px - r.x) < laneW * .6 && r.d - dist > 0 && r.d - dist < ch * 2.2 && speed > 5;
+        if ((blocked || meBehind) && r.cool <= 0 && !r.fin) {
+          const opts = shuffle([r.lane - 1, r.lane + 1].filter(l => l >= 0 && l <= 2));
+          for (const nl of opts) {
+            if (others.every(o => o.lane !== nl || Math.abs(o.d - r.d) > ch * 1.8) && Math.abs(laneX(nl) - px) + Math.abs(dist - r.d) > ch) { r.lane = nl; break; }
+          }
+          r.cool = 1.4;
+        }
+        tg = Math.min(tg, rc);
+        r.speed += Math.max(-BR() * 1.6 * dt, Math.min(ACC() * .9 * dt, tg - r.speed));
+        r.speed = Math.max(0, Math.min(r.speed, rc));
+        r.d += r.speed * dt;
+        const rx = laneX(r.lane), rs = laneW * 3 * dt;
+        r.x = Math.abs(rx - r.x) < rs ? rx : r.x + Math.sign(rx - r.x) * rs;
+        if (!r.fin && r.d >= TR) r.fin = ++finished;
       });
-      npcs = npcs.filter(c => c.d > dist - H * .6 && c.d < dist + H * 2);
-      lights = lights.filter(L => L.d > dist - H * .6);
 
-      // יהלומים
+      // יהלומים = דחיפה קטנה קדימה
       gems = gems.filter(g => {
         if (g.d < dist - H * .5) { streak = 0; return false; }
         if (Math.abs(g.d - dist) < ch * .55 && Math.abs(laneX(g.lane) - px) < laneW * .45) {
-          gemCount++; streak++;
+          gemCount++; streak++; boostT = 1.3;
           Sound.ding(Math.min(streak, 12));
           for (let i = 0; i < 8; i++) parts.push({ x: laneX(g.lane), y: carY - (g.d - dist), vx: rand(-160, 160), vy: rand(-220, -40), life: .6, c: g.c });
-          const b = gemsEl.querySelector('b'); b.textContent = Math.min(gemCount, GOAL);
+          gemsEl.querySelector('b').textContent = gemCount;
           gemsEl.classList.remove('bump'); void gemsEl.offsetWidth; gemsEl.classList.add('bump');
-          if (gemCount % 10 === 0 && gemCount < GOAL) {
-            msg(`💎 ${gemCount} יהלומים!`); Voice.say(gemCount === 10 ? 'עשרה יהלומים!' : 'עשרים יהלומים!');
-            const c = center(gemsEl); Stars.add(c.x, c.y, 1);
-          }
-          if (gemCount === GOAL) { msg('🏁 עוד קצת לקו הסיום!', 2500); Voice.say('אספת את כל היהלומים! סעי לקו הסיום'); }
           return false;
         }
         return true;
@@ -250,10 +290,37 @@ registerGame({
       parts = parts.filter(p => (p.life -= dt) > 0);
       parts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 600 * dt; });
 
-      if (finish && !won && dist > finish.d) {
-        won = true; running = false; stopped = true;
-        s.later(() => celebrate({ emoji: '🏁', title: 'הגעת לקו הסיום!', again: () => { carPicker(); } }), 900);
+      // מקום ומרחק
+      if (!done) {
+        const np = 1 + rivals.filter(r => r.d > dist).length;
+        if (np < place && t - lastPassMsg > 2.5) {
+          lastPassMsg = t;
+          if (np === 1) { msg('🥇 את במקום הראשון!', 2200); Voice.say(L.first); } else { msg('עקפת! 🎉', 1400); Voice.say(L.passed); }
+          Sound.sparkle();
+        }
+        if (np !== place) { place = np; placeEl.querySelector('b').textContent = place; placeEl.classList.remove('bump'); void placeEl.offsetWidth; placeEl.classList.add('bump'); }
+        if (!saidHalf && dist > TR * .5) { saidHalf = true; msg('חצי מהדרך! 💪'); Voice.say(L.half); }
+        if (!saidNear && dist > TR * .88) { saidNear = true; msg('🏁 עוד קצת לקו הסיום!'); Voice.say(L.near); }
+        if (dist >= TR) finishRace();
       }
+      renderTrack();
+    }
+
+    function renderTrack() {
+      const TR = TRACK();
+      let html = rivals.map(r => `<i style="left:${Math.min(100, r.d / TR * 100)}%">${r.e}</i>`).join('');
+      html += `<i class="me" style="left:${Math.min(100, dist / TR * 100)}%;--c:${myColor}"></i>`;
+      barEl.innerHTML = html;
+    }
+
+    function finishRace() {
+      done = true; turbo = false;
+      const myPlace = finished + 1;
+      const medal = ['🥇', '🥈', '🥉'][myPlace - 1] || '🏁';
+      const line = L.places[Math.min(myPlace, 4) - 1];
+      Sound.tada(); const c = center(wrap); FX.confetti(c.x, c.y * .6, 70);
+      msg(`${medal} ${line}`, 3000); Voice.say(line);
+      s.later(() => celebrate({ emoji: medal, title: line, stars: myPlace <= 2 ? 3 : 2, again: carPicker }), 2600);
     }
 
     // ===== ציור =====
@@ -297,12 +364,13 @@ registerGame({
       for (let l = 1; l < 3; l++) for (let i = Math.floor((dist - (H - carY)) / (dash * 2)) - 1; i < (dist + carY) / (dash * 2) + 1; i++)
         ctx.fillRect(roadX + laneW * l - 3, sy(i * dash * 2) - dash, 6, dash);
 
-      // קו סיום
-      if (finish) {
-        const y = sy(finish.d), sq = roadW / 12;
+      // קו התחלה וקו סיום
+      [0, TRACK()].forEach((fd, k) => {
+        const y = sy(fd), sq = roadW / 12;
+        if (y < -sq * 3 || y > H + sq * 3) return;
         for (let r = 0; r < 2; r++) for (let c = 0; c < 12; c++) { ctx.fillStyle = (r + c) % 2 ? '#222' : '#fff'; ctx.fillRect(roadX + c * sq, y - sq * (r + 1), sq, sq); }
-        ctx.font = `${sq * 2}px serif`; ctx.textAlign = 'center'; ctx.fillText('🏁', roadX - 30, y); ctx.fillText('🏁', roadX + roadW + 30, y);
-      }
+        if (k) { ctx.font = `${sq * 2}px serif`; ctx.textAlign = 'center'; ctx.fillText('🏁', roadX - 30, y); ctx.fillText('🏁', roadX + roadW + 30, y); }
+      });
       // רמזורים
       lights.forEach(L => {
         const y = sy(L.d);
@@ -331,7 +399,11 @@ registerGame({
         if (Math.sin(t * 4 + g.d) > .7) { ctx.fillStyle = '#fff'; ctx.font = `${r}px serif`; ctx.textAlign = 'center'; ctx.fillText('✨', r * .7, -r * .8); }
         ctx.restore();
       });
-      npcs.forEach(c => drawCar(ctx, laneX(c.lane), sy(c.d), cw, ch, c.c));
+      rivals.forEach(r => {
+        const y = sy(r.d); if (y < -ch || y > H + ch) return;
+        drawCar(ctx, r.x, y, cw, ch, r.c, false);
+        ctx.font = `${cw * .62}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(r.e, r.x, y + ch * .1); ctx.textBaseline = 'alphabetic';
+      });
       // המכונית שלי
       const tilt = (laneX(lane) - px) / laneW * -.25;
       ctx.save(); ctx.translate(px, carY); ctx.rotate(tilt);
@@ -342,6 +414,7 @@ registerGame({
       ctx.globalAlpha = 1;
     }
 
+    wrap._dbg = () => ({ dist, TR: TRACK(), H, place, done, speed, lane, finished, gaps: rivals.map(r => [r.e, +((r.d - dist) / H).toFixed(1), +(r.speed / H).toFixed(2), r.lane, r.fin]), carsAhead: rivals.filter(r => Math.abs(r.x - px) < laneW * .6 && r.d > dist && r.d - dist < ch * 2.2).length });  // לבדיקות אוטומטיות
     s.onFrame(dt => { if (running) update(dt); draw(); });
     px = laneX(1);
     carPicker();

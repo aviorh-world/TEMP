@@ -367,6 +367,19 @@ svg{display:block}
 .cr-hud{position:absolute;top:10px;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;gap:14px;pointer-events:none}
 .cr-gems{background:#fff;border-radius:24px;padding:8px 16px;font-size:clamp(20px,4vmin,30px);box-shadow:var(--shadow)}
 .cr-gems.bump{animation:bump .3s}
+.cr-place{background:#fff;border-radius:24px;padding:4px 14px;box-shadow:var(--shadow);font-size:clamp(18px,3.4vmin,26px);white-space:nowrap}
+.cr-place b{font-size:1.6em;color:#ff4d8d}
+.cr-place.bump{animation:bump .4s}
+.cr-track{position:relative;flex:0 1 min(46vw,420px);height:clamp(40px,7vmin,54px);background:#fff;border-radius:24px;box-shadow:var(--shadow)}
+.cr-track .flag{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-style:normal;font-size:clamp(18px,3.6vmin,28px)}
+.cr-bar{position:absolute;left:18px;right:42px;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:#e4dcec}
+.cr-bar i{position:absolute;top:50%;transform:translate(-50%,-50%);font-style:normal;font-size:clamp(14px,2.8vmin,20px);line-height:1}
+.cr-bar i.me{width:clamp(18px,3.6vmin,26px);height:clamp(18px,3.6vmin,26px);border-radius:50%;background:var(--c);border:3px solid #fff;box-shadow:0 0 0 2px var(--c),0 2px 6px rgba(0,0,0,.3);z-index:2}
+.cr-count{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);font-size:clamp(70px,20vmin,170px);color:#fff;white-space:nowrap;direction:rtl;pointer-events:none;
+  text-shadow:0 6px 0 #ff4d8d,0 10px 20px rgba(0,0,0,.25)}
+.cr-count.on{animation:countpop 1s ease-out forwards}
+@keyframes countpop{0%{transform:translate(-50%,-50%) scale(0)}25%{transform:translate(-50%,-50%) scale(1.15)}40%{transform:translate(-50%,-50%) scale(1)}85%{opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+@media (max-width:600px){.cr-hud{flex-wrap:wrap;gap:8px;padding:0 8px}.cr-track{flex-basis:100%;order:3}}
 .cr-light{display:none;flex-direction:column;gap:5px;padding:7px;background:#2d2d3a;border-radius:16px;box-shadow:var(--shadow)}
 .cr-light.on{display:flex;animation:popIn .4s cubic-bezier(.3,1.7,.5,1)}
 .cr-light i{width:clamp(22px,4.4vmin,34px);aspect-ratio:1;border-radius:50%;background:#555}
