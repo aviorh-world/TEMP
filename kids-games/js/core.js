@@ -258,7 +258,17 @@ function celebrate({ emoji = '🏆', title = 'כל הכבוד!', say, stars = 3,
 const GAMES = [];
 function registerGame(g) { GAMES.push(g); }
 /* כל המשפטים שהמשחקים אומרים – מהרשימה הזו מקליטים את קטעי הקול (tools/make-voice.mjs) */
-const CORE_LINES = ['בואי נשחק!'];
+/* מאגר מחמאות משותף – כדי שהעידוד יישמע מגוון */
+const PRAISE = ['כל הכבוד!', 'מעולה!', 'איזה יופי!', 'וואו!', 'את אלופה!', 'מדהים!', 'יופי של עבודה!', 'נהדר!', 'ממש טוב!', 'את גאונה!', 'איזו חכמה!', 'בדיוק ככה!'];
+const TRY_AGAIN = ['כמעט! נסי שוב', 'לא נורא, ננסה שוב', 'נסי עוד פעם, את יכולה!'];
+let lastPraise = '';
+function praise(x, y, extra) {
+  let p; do { p = pick(PRAISE); } while (p === lastPraise); lastPraise = p;
+  Voice.say(extra ? [p].concat(extra) : p);
+  if (x != null) { FX.burst(x, y, ['⭐', '✨', '💖'], 9, 32); FX.text(x, y - 40, p, pick(['#ff4d8d', '#9b5de5', '#2ec27e', '#ff8c1a'])); }
+  return p;
+}
+const CORE_LINES = ['בואי נשחק!', ...PRAISE, ...TRY_AGAIN];
 function allLines() {
   const out = new Set();
   CORE_LINES.concat(...GAMES.map(g => [g.say || g.name].concat(typeof g.lines === 'function' ? g.lines() : (g.lines || []))))
