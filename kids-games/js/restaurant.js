@@ -8,7 +8,7 @@ registerGame({
   id: 'restaurant', name: 'המסעדה', emoji: '🍔', color: '#ff8a5b', say: 'המסעדה! בואי נכין לחיות אוכל',
   mount(root, s) {
     const ANIMALS = ['🐻', '🐰', '🐼', '🦊', '🐸', '🐷', '🐨', '🐯', '🐵', '🐮', '🦁', '🐱', '🐹', '🐧'];
-    const NAMES = { cheese: 'גבינה', lettuce: 'חסה', tomato: 'עגבנייה' };
+    const NAMES = { lettuce: 'חסה', tomato: 'עגבנייה' };   // בלי גבינה – המבורגר בשרי וכשר
     const DRINKS = { drink_o: ['#ffa62b', 'מיץ תפוזים'], drink_p: ['#ff6fae', 'מיץ תות'], drink_b: ['#4cc9f0', 'מיץ כחול'] };
     const PER_ROUND = 5;
 
@@ -31,7 +31,7 @@ registerGame({
 
     // מגשי מרכיבים
     const ITEMS = [
-      ['patty', burger(['patty'])], ['cheese', burger(['cheese'])], ['lettuce', burger(['lettuce'])], ['tomato', burger(['tomato'])],
+      ['patty', burger(['patty'])], ['lettuce', burger(['lettuce'])], ['tomato', burger(['tomato'])],
       ['fries', '<span class="fries">🍟</span>'], ['drink_o', drink('drink_o')], ['drink_p', drink('drink_p')], ['drink_b', drink('drink_b')]
     ];
     ITEMS.forEach(([k, html]) => {
@@ -43,7 +43,7 @@ registerGame({
     let served = 0, order = null, built = new Set(), busy = true, lastAdded = null;
 
     function newOrder() {
-      const extras = shuffle(['cheese', 'lettuce', 'tomato']).slice(0, randi(0, Math.min(3, served + 1)));
+      const extras = shuffle(['lettuce', 'tomato']).slice(0, randi(0, Math.min(2, served + 1)));
       const mid = shuffle(['patty', ...extras]);
       return {
         mid,

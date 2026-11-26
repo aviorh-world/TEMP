@@ -56,7 +56,8 @@ let chromium; try { ({ chromium } = require('playwright')); } catch { ({ chromiu
 const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.goto(pathToFileURL(path.join(ROOT, 'index.html')).href);
-const lines = await page.evaluate(() => allLines());
+// כל משפט בלשון נקבה, ואחריו (בסוף הרשימה) הגרסאות בלשון זכר – כך המכסה מנוצלת קודם לחשובים
+const lines = await page.evaluate(() => { const f = allLines(); return [...new Set(f.concat(f.map(t => Gender.m(t))))]; });
 await browser.close();
 console.log(`${lines.length} משפטים`);
 

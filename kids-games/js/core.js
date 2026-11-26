@@ -108,7 +108,7 @@ const Voice = {
   // say('טקסט') או say(['חלק 1', 'חלק 2']) – החלקים מנוגנים ברצף
   say(parts) {
     if (!Sound.on) return;
-    parts = [].concat(parts).filter(Boolean);
+    parts = [].concat(parts).filter(Boolean).map(p => Gender.t(p));
     this.stop(); const tok = this.token;
     const next = i => {
       if (tok !== this.token || i >= parts.length) return;
@@ -134,6 +134,50 @@ const Voice = {
   }
 };
 if ('speechSynthesis' in window) { Voice.find(); speechSynthesis.onvoiceschanged = () => Voice.find(); }
+
+
+/* ===== בן או בת: כל הטקסטים והקריינות נכתבים בלשון נקבה, ובמצב "בן" מומרים ללשון זכר ===== */
+const Gender = {
+  boy: Store.get('gender', 'girl') === 'boy',
+  // צירופים שלמים קודם (כי "את" יכולה להיות גם מילת יחס), ואחר כך מילים בודדות
+  PHRASES: [
+    ['את אלופה של', 'אתה אלוף של'], ['את אלופה', 'אתה אלוף'], ['את גאונה', 'אתה גאון'], ['את יכולה', 'אתה יכול'],
+    ['את בלשית אמיתית', 'אתה בלש אמיתי'], ['את מוזיקאית אמיתית', 'אתה מוזיקאי אמיתי'], ['את רופאה מצוינת', 'אתה רופא מצוין'],
+    ['את השפית הכי טובה', 'אתה השף הכי טוב'], ['את במקום הראשון', 'אתה במקום הראשון'], ['את כותבת', 'אתה כותב'],
+    ['את מוכרת מצוינת', 'אתה מוכר מצוין'], ['את מצחצחת אלופה', 'אתה מצחצח אלוף'], ['את טבחית מעולה', 'אתה טבח מעולה'],
+    ['את חברה אמיתית', 'אתה חבר אמיתי'], ['את ילדה טובה', 'אתה ילד טוב'],
+    ['מוכנה או לא', 'מוכן או לא'], ['איזו חכמה', 'איזה חכם'], ['ברוכה הבאה', 'ברוך הבא'], ['תודה דוקטורית', 'תודה דוקטור'],
+    ['רופאה לחיות', 'רופא לחיות'], ['כל הכבוד, שפית', 'כל הכבוד, שף'], ['עשית המון מעשים טובים', 'עשית המון מעשים טובים']
+  ],
+  WORDS: {
+    'בואי': 'בוא', 'לחצי': 'לחץ', 'גררי': 'גרור', 'ציירי': 'צייר', 'כתבי': 'כתוב', 'חפשי': 'חפש', 'נסי': 'נסה', 'תסתכלי': 'תסתכל',
+    'קפצי': 'קפוץ', 'החזיקי': 'החזק', 'תני': 'תן', 'בחרי': 'בחר', 'נגעי': 'גע', 'עזרי': 'עזור', 'תזרקי': 'תזרוק', 'מצאי': 'מצא',
+    'חברי': 'חבר', 'סעי': 'סע', 'עקפי': 'עקוף', 'פוצצי': 'פוצץ', 'חתכי': 'חתוך', 'תוציאי': 'תוציא', 'תקשיבי': 'תקשיב', 'עקבי': 'עקוב',
+    'שימי': 'שים', 'שטפי': 'שטוף', 'צחצחי': 'צחצח', 'תפסי': 'תפוס', 'תעזרי': 'תעזור', 'הקשיבי': 'הקשב', 'תבחרי': 'תבחר', 'חשבי': 'חשוב',
+    'תגידי': 'תגיד', 'תחבקי': 'תחבק', 'נשמי': 'נשום', 'שפית': 'שף', 'אלופה': 'אלוף', 'גאונה': 'גאון'
+  },
+  re: null,
+  m(t) {
+    if (!t) return t;
+    for (const [a, b] of this.PHRASES) t = t.split(a).join(b);
+    // מותר ו' בתחילת המילה ("ונגעי" ← "וגע")
+    if (!this.re) this.re = new RegExp(`(^|[^א-ת])(ו?)(${Object.keys(this.WORDS).join('|')})(?=[^א-ת]|$)`, 'g');
+    return t.replace(this.re, (_, pre, vav, w) => pre + vav + this.WORDS[w]);
+  },
+  t(s) { return this.boy ? this.m(s) : s; },
+  set(boy) { this.boy = boy; Store.set('gender', boy ? 'boy' : 'girl'); this.sweep(document.body); },
+  // מעבר על הטקסט שמוצג במסך – כך גם הודעות ובועות עוברות ללשון זכר בלי לגעת בכל משחק
+  sweep(node) {
+    if (!this.boy || !node) return;
+    const w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    let n; while ((n = w.nextNode())) { const v = this.m(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+  },
+  watch() {
+    new MutationObserver(ms => { if (!this.boy) return; ms.forEach(m => { if (m.type === 'characterData') this.sweep(m.target.parentNode); m.addedNodes.forEach(a => a.nodeType === 3 ? this.sweep(a.parentNode) : this.sweep(a)); }); })
+      .observe(document.body, { childList: true, subtree: true, characterData: true });
+    this.sweep(document.body);
+  }
+};
 
 /* ===== אפקטים ===== */
 const FX = {

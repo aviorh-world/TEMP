@@ -32,10 +32,10 @@ function drawCar(ctx, x, y, w, h, color, face = true) {
 
 /* 🏎️ מרוץ מכוניות – 6 מכוניות, בערך 2 דקות, שני רמזורים. אין תאונות: מאטים מאחורי מכונית ועוקפים מהצד. */
 const CAR_LINES = {
-  start: 'החזיקי את הטיל כדי לנסוע מהר!', go: 'יוצאים לדרך!', count: ['שלוש', 'שתיים', 'אחת'],
+  start: 'החזיקי את הטיל כדי לנסוע מהר!', go: 'צאו לדרך!', count: ['שלוש', 'שתיים', 'אחת'],
   passed: 'עקפת!', first: 'את במקום הראשון!', half: 'חצי מהדרך!', near: 'עוד קצת לקו הסיום!',
   places: ['ניצחת! מקום ראשון!', 'מקום שני! כל הכבוד!', 'מקום שלישי! כל הכבוד!', 'סיימת את המרוץ! כל הכבוד!'],
-  light: 'רמזור! צריך לעצור', green: 'ירוק! סעים!', stoppedWell: 'כל הכבוד! עצרת ברמזור האדום', wait: 'מחכים לירוק',
+  light: 'רמזור! צריך לעצור', green: 'ירוק! ממשיכים לנסוע!', stoppedWell: 'כל הכבוד! עצרת ברמזור האדום', wait: 'מחכים לירוק',
   redStop: 'באדום עוצרים ומחכים', beep: 'ביפ ביפ! יש מכונית מלפנים'
 };
 registerGame({
@@ -114,7 +114,7 @@ registerGame({
     }
 
     function countdown() {
-      const steps = ['3', '2', '1', 'סעים! 🏁'];
+      const steps = ['3', '2', '1', 'צאו לדרך! 🏁'];
       steps.forEach((txt, i) => s.later(() => {
         countEl.textContent = txt; countEl.classList.remove('on'); void countEl.offsetWidth; countEl.classList.add('on');
         if (i < 3) { Voice.say(L.count[i]); Sound.tone(520, .2, { type: 'square', vol: .08 }); }
@@ -140,7 +140,23 @@ registerGame({
       else if (e.key === 'ArrowUp') go(); else if (e.key === 'ArrowDown' || e.key === ' ') brake();
     });
     s.on(window, 'keyup', e => { if (e.key === 'ArrowUp') turbo = false; });
-    cv.addEventListener('pointerdown', e => { if (!running) return; Sound.init(); const r = cv.getBoundingClientRect(); changeLane(e.clientX - r.left < (r.width / 2) ? -1 : 1); });
+    // משחק מהמסך עצמו: החלקה ימינה/שמאלה מחליפה נתיב, החזקה על הכביש נוסעת מהר, נגיעה קצרה בצד מחליפה נתיב
+    let cvp = null;
+    cv.addEventListener('pointerdown', e => {
+      if (!running) return; e.preventDefault(); Sound.init(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+      const q = cvp = { id: e.pointerId, sx: e.clientX, x: e.clientX, t: performance.now(), swiped: false, held: false };
+      s.later(() => { if (cvp === q && !q.swiped && Math.abs(q.x - q.sx) < 25) { q.held = true; go(); } }, 260);
+    });
+    cv.addEventListener('pointermove', e => {
+      const q = cvp; if (!q || q.id !== e.pointerId) return; q.x = e.clientX;
+      const dx = e.clientX - q.sx;
+      if (Math.abs(dx) > 40) { changeLane(Math.sign(dx)); q.swiped = true; q.sx = e.clientX; }
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, e => {
+      const q = cvp; if (!q || q.id !== e.pointerId) return; cvp = null;
+      if (q.held) turbo = false;
+      else if (!q.swiped && performance.now() - q.t < 260) { const r = cv.getBoundingClientRect(); changeLane(e.clientX - r.left < r.width / 2 ? -1 : 1); }
+    }));
 
     function go() {
       if (!running || !started) return;
@@ -204,7 +220,7 @@ registerGame({
           if (speed < 6) LL.wait += dt;
           if (LL.wait > 2.2 || LL.t > 8) {
             LL.state = 'green'; stopBtn.classList.remove('hint'); Sound.chime();
-            msg('🟢 ירוק! סעים!', 2000); Voice.say(L.green);
+            msg('🟢 ירוק! נוסעים!', 2000); Voice.say(L.green);
             if (stopped) goBtn.classList.add('hint');
           }
           if (speed < 4 && !LL.rewarded && !LL.told && ahead < ch) { LL.told = true; msg('🔴 באדום עוצרים ומחכים'); Voice.say(L.redStop); }

@@ -54,6 +54,8 @@ const App = {
   snd.onclick = () => { Sound.on = !Sound.on; Store.set('sound', Sound.on); paint(); Sound.init(); Sound.tap(); };
   // מעבר לטלוויזיה רק אחרי תרגיל חשבון להורים
   $('#tv').onclick = () => { Sound.init(); Sound.tap(); parentGate(() => { location.href = '../kids-tv/'; }); };
+  // הגדרות להורים: בן או בת (הקריינות והטקסטים מותאמים)
+  $('#settings').onclick = () => { Sound.init(); Sound.tap(); openSettings(); };
   $('#fs').onclick = () => {
     const d = document, de = d.documentElement;
     try {
@@ -66,6 +68,7 @@ const App = {
   document.addEventListener('gesturestart', e => e.preventDefault());
   document.addEventListener('contextmenu', e => e.preventDefault());
   Stars.render();
+  Gender.watch();
 })();
 
 /* ===== שער הורים: תרגיל כפל שילדה בת 4 לא תפתור ===== */
@@ -96,4 +99,24 @@ function parentGate(onPass) {
   o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
   document.addEventListener('keydown', key);
   fresh();
+}
+
+/* ===== הגדרות ===== */
+function openSettings() {
+  const o = el('div', 'gate');
+  o.innerHTML = `<div class="gate-box set-box"><button class="gate-x" aria-label="סגור">✕</button>
+    <h3>⚙️ הגדרות</h3><p>מי משחק?</p>
+    <div class="set-opts"><button data-g="girl"><span>👧</span>בת</button><button data-g="boy"><span>👦</span>בן</button></div>
+    <p class="set-note">הקריינות והטקסטים יפנו בלשון המתאימה</p></div>`;
+  document.body.appendChild(o);
+  const paint = () => $$('.set-opts button', o).forEach(b => b.classList.toggle('on', (b.dataset.g === 'boy') === Gender.boy));
+  paint();
+  $$('.set-opts button', o).forEach(b => b.onclick = () => {
+    Sound.pop(); const boy = b.dataset.g === 'boy';
+    if (boy !== Gender.boy) { Gender.set(boy); location.reload(); return; }
+    paint();
+  });
+  const close = () => o.remove();
+  $('.gate-x', o).onclick = close;
+  o.addEventListener('pointerdown', e => { if (e.target === o) close(); });
 }
