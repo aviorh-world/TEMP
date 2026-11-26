@@ -97,8 +97,29 @@ registerGame({
       jb.addEventListener('pointerdown', e => { e.preventDefault(); Sound.init(); jumpHeld = true; jumpQueued = true; jb.classList.add('down'); try { jb.setPointerCapture(e.pointerId); } catch (_) {} });
       ['pointerup', 'pointercancel'].forEach(ev => jb.addEventListener(ev, () => { jumpHeld = false; jb.classList.remove('down'); }));
       // נגיעה בלוח: צד ימין/שמאל = הליכה, נגיעה נוספת = קפיצה
-      cv.addEventListener('pointerdown', e => { Sound.init(); const r = cv.getBoundingClientRect(); if (dir !== 0) { jumpQueued = true; jumpHeld = true; } else dir = e.clientX - r.left < r.width / 2 ? -1 : 1; });
-      ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, () => { jumpHeld = false; }));
+      // משחק מהמסך עצמו: החזקה בצד ימין/שמאל = הליכה, החלקה למעלה או נגיעה קצרה = קפיצה
+      const ptrs = new Map();
+      const sideOf = x => { const r = cv.getBoundingClientRect(); return x - r.left < r.width / 2 ? -1 : 1; };
+      const recomputeDir = () => { const held = [...ptrs.values()].filter(q => !q.tapOnly); dir = held.length ? held[held.length - 1].side : 0; };
+      const doJump = (ms) => { jumpQueued = true; jumpHeld = true; s.later(() => { if (![...ptrs.values()].some(q => q.jumped && q.holdJump)) jumpHeld = false; }, ms); };
+      cv.addEventListener('pointerdown', e => {
+        e.preventDefault(); Sound.init(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+        ptrs.set(e.pointerId, { sx: e.clientX, sy: e.clientY, t: performance.now(), side: sideOf(e.clientX), jumped: false });
+        recomputeDir();
+      });
+      cv.addEventListener('pointermove', e => {
+        const q = ptrs.get(e.pointerId); if (!q) return;
+        if (!q.jumped && q.sy - e.clientY > 36) { q.jumped = true; q.holdJump = true; jumpQueued = true; jumpHeld = true; }
+        if (Math.abs(e.clientX - q.sx) > 50) { q.side = sideOf(e.clientX); recomputeDir(); }
+      });
+      ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, e => {
+        const q = ptrs.get(e.pointerId); if (!q) return;
+        ptrs.delete(e.pointerId);
+        const quick = performance.now() - q.t < 230 && Math.hypot(e.clientX - q.sx, e.clientY - q.sy) < 20;
+        if (q.holdJump) jumpHeld = false;
+        if (quick && !q.jumped) doJump(260);
+        recomputeDir();
+      }));
       s.on(window, 'keydown', e => {
         if (e.key === 'ArrowLeft') dir = -1; else if (e.key === 'ArrowRight') dir = 1;
         else if ((e.key === 'ArrowUp' || e.key === ' ') && !e.repeat) { jumpQueued = true; jumpHeld = true; }

@@ -541,10 +541,10 @@ svg{display:block}
 .dt-fill{opacity:0;transition:opacity 1s}
 .dt-svg.filled .dt-fill{opacity:.85}
 .dt-line{fill:none;stroke:#3b2f4a;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
-.dt-dot{cursor:pointer}
-.dt-dot .hit{fill:transparent}
+.dt-svg{touch-action:none;cursor:pointer}
+.dt-rubber{stroke:#ff4d8d;stroke-width:6;stroke-dasharray:12 9;stroke-linecap:round;pointer-events:none}
 .dt-dot .d{fill:#7b61ff;stroke:#fff;stroke-width:4}
-.dt-dot text{font-size:26px;text-anchor:middle;fill:#3b2f4a;font-weight:bold;paint-order:stroke;stroke:#fff;stroke-width:6px;pointer-events:none}
+.dt-dot text{font-size:30px;text-anchor:middle;fill:#3b2f4a;font-weight:bold;paint-order:stroke;stroke:#fff;stroke-width:7px;pointer-events:none}
 .dt-dot.next .d{fill:#ff4d8d;animation:dotpulse .8s infinite;transform-box:fill-box;transform-origin:center}
 @keyframes dotpulse{50%{transform:scale(1.5)}}
 .dt-dot.done .d{fill:#2ec27e}
@@ -589,13 +589,21 @@ svg{display:block}
 .hd-ask{background:#fff;border-radius:999px;padding:6px 22px;font-size:clamp(22px,4.5vmin,34px);box-shadow:var(--shadow);display:flex;align-items:center;gap:10px}
 .hd-ask .who{font-size:1.5em;animation:wob 1.4s infinite}
 .hd-scene{position:relative;flex:1;min-height:0}
-.hd-spot{position:absolute;transform:translate(-50%,-50%);width:clamp(90px,17vmin,150px);aspect-ratio:1;display:grid;place-items:center}
+.hd-spot{position:absolute;transform:translate(-50%,-50%);width:clamp(56px,min(17vmin,24vh),150px);aspect-ratio:1;display:grid;place-items:center}
 .hd-spot .hd-an,.hd-spot .hd-cover{grid-area:1/1;line-height:1}
-.hd-an{font-size:clamp(44px,9vmin,80px);transform:translateY(10%) scale(.6);opacity:0;transition:.35s cubic-bezier(.3,1.6,.5,1)}
-.hd-cover{font-size:clamp(78px,15vmin,136px);transition:.35s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 6px 0 rgba(0,0,0,.1))}
+.hd-an{font-size:clamp(28px,min(9vmin,13vh),80px);transform:translateY(10%) scale(.6);opacity:0;transition:.35s cubic-bezier(.3,1.6,.5,1)}
+.hd-cover{font-size:clamp(48px,min(15vmin,21vh),136px);transition:.35s cubic-bezier(.3,1.6,.5,1);filter:drop-shadow(0 6px 0 rgba(0,0,0,.1))}
 .hd-spot.open .hd-cover,.hd-scene.peek .hd-cover{transform:translate(55%,-15%) rotate(18deg) scale(.8)}
 .hd-spot.open .hd-an,.hd-scene.peek .hd-an{opacity:1;transform:translateY(-40%) scale(1)}
 .hd-spot.win .hd-an{animation:hop .6s 3}
+/* החיה המוחבאת מציצה מאחורי המחבוא ומתנועעת מדי פעם */
+.hd-spot .hd-an{width:100%;height:100%;display:grid;place-items:center}   /* ההזזה נמדדת לפי גודל המחבוא כולו */
+.hd-spot.has .hd-an{opacity:1;animation:peekwig 3.2s ease-in-out infinite;animation-delay:var(--wd)}
+.hd-spot.has.pk-top .hd-an{transform:translateY(-44%) scale(.8)}
+.hd-spot.has.pk-left .hd-an{transform:translate(-40%,-12%) rotate(-24deg) scale(.8)}
+.hd-spot.has.pk-right .hd-an{transform:translate(40%,-12%) rotate(24deg) scale(.8)}
+@keyframes peekwig{0%,78%,100%{translate:0 0}84%{translate:0 -7px}90%{translate:0 2px}}
+.hd-spot.has.open .hd-an,.hd-scene.peek .hd-spot.has .hd-an{opacity:1;transform:translateY(-40%) scale(1);animation:none}
 
 /* ================= מסדרים את החדר ================= */
 .td{position:absolute;inset:0;display:flex;flex-direction:column;background:linear-gradient(#fff3d6 0 62%,#e8c39e 62%)}

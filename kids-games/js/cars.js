@@ -140,7 +140,23 @@ registerGame({
       else if (e.key === 'ArrowUp') go(); else if (e.key === 'ArrowDown' || e.key === ' ') brake();
     });
     s.on(window, 'keyup', e => { if (e.key === 'ArrowUp') turbo = false; });
-    cv.addEventListener('pointerdown', e => { if (!running) return; Sound.init(); const r = cv.getBoundingClientRect(); changeLane(e.clientX - r.left < (r.width / 2) ? -1 : 1); });
+    // משחק מהמסך עצמו: החלקה ימינה/שמאלה מחליפה נתיב, החזקה על הכביש נוסעת מהר, נגיעה קצרה בצד מחליפה נתיב
+    let cvp = null;
+    cv.addEventListener('pointerdown', e => {
+      if (!running) return; e.preventDefault(); Sound.init(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+      const q = cvp = { id: e.pointerId, sx: e.clientX, x: e.clientX, t: performance.now(), swiped: false, held: false };
+      s.later(() => { if (cvp === q && !q.swiped && Math.abs(q.x - q.sx) < 25) { q.held = true; go(); } }, 260);
+    });
+    cv.addEventListener('pointermove', e => {
+      const q = cvp; if (!q || q.id !== e.pointerId) return; q.x = e.clientX;
+      const dx = e.clientX - q.sx;
+      if (Math.abs(dx) > 40) { changeLane(Math.sign(dx)); q.swiped = true; q.sx = e.clientX; }
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, e => {
+      const q = cvp; if (!q || q.id !== e.pointerId) return; cvp = null;
+      if (q.held) turbo = false;
+      else if (!q.swiped && performance.now() - q.t < 260) { const r = cv.getBoundingClientRect(); changeLane(e.clientX - r.left < r.width / 2 ? -1 : 1); }
+    }));
 
     function go() {
       if (!running || !started) return;

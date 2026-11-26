@@ -93,9 +93,29 @@ registerGame({
         if (nbrs(pos).includes(k)) return moveTo(k);
         const two = nbrs(pos).find(m => nbrs(m).includes(k)); if (two != null) { moveTo(two); moveTo(k); }
       }
-      board.addEventListener('pointerdown', e => { Sound.init(); dragging = true; try { board.setPointerCapture(e.pointerId); } catch (_) {} follow(e); });
+      // החלקה (בלי לגרור בדיוק על השביל): הדמות נוסעת בכיוון ההחלקה עד פנייה או קיר
+      let sw = null;
+      function slide(d) {
+        if (walls[pos][d]) { step(d); return; }
+        let k = 0;
+        const go = () => {
+          if (busy || walls[pos][d] || k++ > n * n) return;
+          moveTo(pos + [-n, 1, n, -1][d]);
+          const open = [0, 1, 2, 3].filter(q => !walls[pos][q] && q !== (d + 2) % 4);
+          if (open.length === 1 && open[0] === d) s.later(go, 110);
+        };
+        go();
+      }
+      board.addEventListener('pointerdown', e => { Sound.init(); dragging = true; sw = { x: e.clientX, y: e.clientY, p: pos }; try { board.setPointerCapture(e.pointerId); } catch (_) {} follow(e); });
       board.addEventListener('pointermove', e => { if (dragging) follow(e); });
-      ['pointerup', 'pointercancel'].forEach(ev => board.addEventListener(ev, () => dragging = false));
+      ['pointerup', 'pointercancel'].forEach(ev => board.addEventListener(ev, e => {
+        dragging = false;
+        if (sw && sw.p === pos) {
+          const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+          if (Math.max(Math.abs(dx), Math.abs(dy)) > 30) slide(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+        }
+        sw = null;
+      }));
       $$('.mz-pad button', root).forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); step(+b.dataset.d); }));
       s.on(window, 'keydown', e => { const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key]; if (d != null) step(d); });
 

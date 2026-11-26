@@ -34,7 +34,7 @@ function animalSVG(type) {
 
 const TREAT_HUNGRY = ['יאמי! אני כל כך רעב!', 'וואו, זה נראה טעים!', 'תני לי ביס!'];
 registerGame({
-  lines: [...TREAT_HUNGRY, 'תות', 'שוקולד', 'וניל', 'מנטה', 'אוכמניות', 'מנגו', 'בננה', 'מסטיק', 'זיתים', 'פטריות', 'סלמי', 'תירס', 'פלפל', 'עגבניות', 'אננס', 'בזיליקום',
+  lines: [...TREAT_HUNGRY, 'תות', 'שוקולד', 'וניל', 'מנטה', 'אוכמניות', 'מנגו', 'בננה', 'מסטיק', 'זיתים', 'פטריות', 'תירס', 'פלפל', 'עגבניות', 'אננס', 'בזיליקום',
     'וואו, זה מספיק גבוה!', 'קודם כדור גלידה!', 'רוטב עגבניות', 'גבינה!', 'אופים בתנור!', 'דינג! הפיצה מוכנה!', 'מי יאכל?', 'אממממ...', 'אופס! סליחה! היה טעים מאוד!', 'היה טעים!'],
   id: 'treats', name: 'גלידה ופיצה', emoji: '🍦', color: '#ff9ec4', say: 'מה נכין היום? גלידה או פיצה?',
   mount(root, s) {
@@ -98,7 +98,6 @@ registerGame({
       const TOP = {
         olive: ['זיתים', '<circle r="10" fill="#2b2b2b"/><circle r="4" fill="#6b5040"/>'],
         mush: ['פטריות', '<path d="M-13,2 Q-13,-13 0,-13 Q13,-13 13,2 Z" fill="#eadcc8" stroke="#b39a80" stroke-width="2"/><rect x="-4.5" y="1" width="9" height="11" rx="3" fill="#f6eee2" stroke="#b39a80" stroke-width="2"/>'],
-        salami: ['סלמי', '<circle r="16" fill="#c0392b"/><circle cx="-5" cy="-4" r="2.6" fill="#f08a7e"/><circle cx="6" cy="2" r="2.2" fill="#f08a7e"/><circle cx="-2" cy="8" r="2" fill="#f08a7e"/>'],
         corn: ['תירס', '<circle cx="-6" r="5" fill="#ffd23f"/><circle cx="5" cy="-3" r="5" fill="#ffd23f"/><circle cx="2" cy="7" r="5" fill="#ffc300"/>'],
         pepper: ['פלפל', '<path d="M-11,5 A12,12 0 1,1 11,5" fill="none" stroke="#2ecc71" stroke-width="6" stroke-linecap="round"/>'],
         tomato: ['עגבניות', '<circle r="14" fill="#ff5a4f"/><circle r="9" fill="#ff8a7a"/><circle cx="-3" cy="-2" r="2" fill="#ffe9a8"/><circle cx="3" cy="3" r="2" fill="#ffe9a8"/>'],
