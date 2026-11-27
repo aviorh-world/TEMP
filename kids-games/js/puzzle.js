@@ -1,7 +1,7 @@
 'use strict';
 /* 🧩 פאזל – 4, 9 או 16 חלקים. תמונות: דפי הצביעה (בצבעים שהיא צבעה) ותמונות מוכנות */
 const PUZZLE = {
-  lines: ['פאזל! כמה חלקים?', 'בחרי תמונה', 'גררי כל חלק למקום שלו', 'מתאים!', 'כמעט! נסי מקום אחר', 'עוד חלק אחד!', 'הפאזל מוכן!', 'איזה יופי של פאזל!']
+  lines: ['פאזל! כמה חלקים?', 'בחרי תמונה', 'תמונה מהגלריה', 'איזו תמונה יפה! עכשיו נעשה ממנה פאזל', 'גררי כל חלק למקום שלו', 'מתאים!', 'כמעט! נסי מקום אחר', 'עוד חלק אחד!', 'הפאזל מוכן!', 'איזה יופי של פאזל!']
 };
 
 registerGame({
@@ -15,11 +15,14 @@ registerGame({
       { n: 'חלל', bg: ['#2b1f6b', '#1b1446', 1], items: [['🚀', 30, 56, 26], ['🪐', 72, 28, 22], ['🌙', 18, 16, 14], ['⭐', 50, 14, 10], ['👽', 74, 74, 18], ['✨', 52, 44, 10]] },
       { n: 'יום הולדת', bg: ['#ffe3f1', '#ffc8e1', 1], items: [['🎂', 50, 62, 28], ['🎈', 18, 24, 18], ['🎈', 82, 26, 18], ['🎁', 20, 78, 16], ['🎉', 50, 18, 16], ['🧁', 80, 78, 14]] }
     ];
+    // תמונות מהגלריה נשמרות במכשיר בלבד (עד 6 אחרונות), חתוכות לריבוע
+    const photos = () => Store.get('pzPhotos', []);
     const pics = () => {
+      const mine = photos().map((src, i) => ({ kind: 'photo', src, name: 'התמונה שלי', i }));
       const saved = Store.get('coloring', {});
       const pages = COLORING.PAGES.map(p => ({ kind: 'page', p, fills: saved[p.id], name: p.name, mine: (saved[p.id] || []).some(f => f && f !== '#ffffff') }));
       // ציורים שהיא צבעה קודם
-      return pages.filter(x => x.mine).concat(SCENES.map(sc => ({ kind: 'scene', sc, name: sc.n })), pages.filter(x => !x.mine));
+      return mine.concat(pages.filter(x => x.mine), SCENES.map(sc => ({ kind: 'scene', sc, name: sc.n })), pages.filter(x => !x.mine));
     };
 
     // ציור התמונה על קנבס ריבועי
@@ -32,6 +35,12 @@ registerGame({
         pic.sc.items.forEach(([e, px, py, z]) => { x.font = `${size * z / 100}px serif`; x.fillText(e, size * px / 100, size * py / 100); });
         return Promise.resolve(c);
       }
+      if (pic.kind === 'photo') return new Promise(res => {
+        const img = new Image();
+        img.onload = () => { x.drawImage(img, 0, 0, size, size); res(c); };
+        img.onerror = () => res(c);
+        img.src = pic.src;
+      });
       // דף צביעה: האזורים שלא נצבעו מקבלים צבעים שמחים
       let i = 0; const P = PALETTE.map(q => q[1]).slice(0, 11);
       const body = pic.p.svg.replace(/class="r"/g, () => { const f = (pic.fills || [])[i]; const col = f && f !== '#ffffff' ? f : P[(i * 7 + 3) % P.length]; i++; return `class="r" fill="${col}"`; });
@@ -54,6 +63,13 @@ registerGame({
     async function choosePic() {
       root.innerHTML = `<div class="picker lt-words"><h3>🖼️ בחרי תמונה</h3><div class="lt-wgrid pz-pics"></div></div>`;
       const grid = $('.pz-pics', root);
+      // כפתור: בחירת תמונה מהגלריה (או מהמצלמה) של המכשיר
+      const add = el('button', 'lt-wc pz-add'); add.style.setProperty('--i', 0);
+      add.innerHTML = '<span class="we">📷</span><span class="ww">מהגלריה</span>';
+      const inp = el('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.hidden = true; add.appendChild(inp);
+      add.onclick = e => { if (e.target === inp) return; Sound.pop(); inp.click(); };
+      inp.onchange = () => { const f = inp.files && inp.files[0]; if (f) loadPhoto(f); };
+      grid.appendChild(add);
       const list = pics();
       for (const [i, pic] of list.entries()) {
         const b = el('button', 'lt-wc'); b.style.setProperty('--i', i);
@@ -63,6 +79,27 @@ registerGame({
         if (!s.alive) return; grid.appendChild(b);
       }
       Voice.say('בחרי תמונה');
+    }
+
+    // טעינת תמונה: חיתוך מרכזי לריבוע, הקטנה ושמירה במכשיר
+    function loadPhoto(file) {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const m = Math.min(img.naturalWidth, img.naturalHeight); if (!m) return;
+        const c = document.createElement('canvas'); c.width = c.height = 720;
+        c.getContext('2d').drawImage(img, (img.naturalWidth - m) / 2, (img.naturalHeight - m) / 2, m, m, 0, 0, 720, 720);
+        const src = c.toDataURL('image/jpeg', .82);
+        let list = [src].concat(photos()).slice(0, 6);
+        Store.set('pzPhotos', list);
+        // אם אין מקום באחסון – שומרים פחות תמונות
+        while (list.length > 1 && JSON.stringify(Store.get('pzPhotos', [])) !== JSON.stringify(list)) { list = list.slice(0, -1); Store.set('pzPhotos', list); }
+        if (!s.alive) return;
+        Sound.tada(); Voice.say('איזו תמונה יפה! עכשיו נעשה ממנה פאזל');
+        play({ kind: 'photo', src, name: 'התמונה שלי' });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); Sound.wrong(); };
+      img.src = url;
     }
 
     async function play(pic) {
