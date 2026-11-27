@@ -32,13 +32,29 @@ registerGame({
     }
     const turn = d => { if (done) return; if ((d + 2) % 4 !== dir || snake.length === 1) want = d; Sound.init(); };
     // שליטה: החלקה בכל מקום על המסך, כפתורי חצים, מקלדת
+    // מגע במסך: החלקה לכיוון, או נגיעה – הנחש פונה לכיוון האצבע (מעל הראש = למעלה, מימין = ימינה...)
     let sw = null;
-    wrap.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; sw = { x: e.clientX, y: e.clientY }; });
+    const headPx = () => { const r = cv.getBoundingClientRect(), [hx, hy] = snake[0]; return [r.left + ox + (hx + .5) * C, r.top + oy + (hy + .5) * C]; };
+    const toward = (x, y) => {
+      const [hx, hy] = headPx(), dx = x - hx, dy = y - hy;
+      const horiz = dir === 1 || dir === 3;   // אם נוסעים לרוחב – הנגיעה מחליטה למעלה/למטה, ולהפך
+      if (horiz && Math.abs(dy) > C * .5) turn(dy > 0 ? 2 : 0);
+      else if (!horiz && Math.abs(dx) > C * .5) turn(dx > 0 ? 1 : 3);
+      else turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+    };
+    wrap.addEventListener('pointerdown', e => {
+      if (e.target.closest('button')) return; e.preventDefault(); Sound.init();
+      sw = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now(), swiped: false };
+      try { wrap.setPointerCapture(e.pointerId); } catch (_) {}
+    });
     wrap.addEventListener('pointermove', e => {
       if (!sw) return; const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) > 24) { turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0)); sw = { x: e.clientX, y: e.clientY }; }
+      if (Math.max(Math.abs(dx), Math.abs(dy)) > 24) { turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0)); sw.x = e.clientX; sw.y = e.clientY; sw.swiped = true; }
     });
-    ['pointerup', 'pointercancel'].forEach(ev => wrap.addEventListener(ev, () => sw = null));
+    ['pointerup', 'pointercancel'].forEach(ev => wrap.addEventListener(ev, e => {
+      if (sw && !sw.swiped && Math.hypot(e.clientX - sw.sx, e.clientY - sw.sy) < 24) toward(e.clientX, e.clientY);
+      sw = null;
+    }));
     $$('.sn-pad button', root).forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); turn(+b.dataset.d); }));
     s.on(window, 'keydown', e => { const d = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 }[e.key]; if (d != null) { e.preventDefault(); turn(d); } });
 
