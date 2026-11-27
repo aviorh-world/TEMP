@@ -671,6 +671,7 @@ svg{display:block}
 .pz-grid.g2{grid-template-columns:repeat(2,1fr)}.pz-grid.g3{grid-template-columns:repeat(3,1fr)}.pz-grid.g4{grid-template-columns:repeat(4,1fr)}
 .pz-grid i{background:var(--c,#43aa8b);border-radius:3px;opacity:.8}
 .pz-thumb{width:78%;height:auto;border-radius:14px}
+.pz-add{background:linear-gradient(160deg,#fff,#e6fbf3);box-shadow:0 7px 0 #8fdcc0,0 10px 18px rgba(0,0,0,.06);border:3px dashed #43aa8b}
 .pzl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:10px;background:linear-gradient(#eafff5,#fff6e8)}
 .pzl.land{flex-direction:row}
 .pz-board{position:relative;z-index:1;flex:0 0 auto;border-radius:16px;background:#fff;box-shadow:0 8px 0 rgba(67,170,139,.3),0 12px 26px rgba(0,0,0,.08);overflow:hidden}
