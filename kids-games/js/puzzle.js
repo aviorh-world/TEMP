@@ -81,11 +81,14 @@ registerGame({
       cells.innerHTML = Array.from({ length: N * N }, (_, i) => `<i data-i="${i}"></i>`).join('');
       let left = N * N;
       const order = shuffle(Array.from({ length: N * N }, (_, i) => i));
+      // גודל החלקים מחושב לפי המקום במגש, כך שכולם נכנסים בלי לגלוש מעל הלוח
+      const tr = tray.getBoundingClientRect(), GAP = 10;
+      let ts = Math.min(cs, land ? 120 : 100);
+      while (ts > 28) { const per = Math.max(1, Math.floor((tr.width - 12 + GAP) / (ts + GAP))); if (Math.ceil(N * N / per) * (ts + GAP) <= tr.height - 12) break; ts -= 2; }
       order.forEach((k, j) => {
         const pc = document.createElement('canvas'), q = full.width / N;
         pc.width = pc.height = cs * 2; pc.getContext('2d').drawImage(full, (k % N) * q, Math.floor(k / N) * q, q, q, 0, 0, cs * 2, cs * 2);
         const piece = el('div', 'pz-piece'); piece.appendChild(pc); piece.dataset.k = k;  // data-k לבדיקות אוטומטיות
-        const ts = Math.min(cs, land ? 110 : 90);
         piece.style.width = piece.style.height = ts + 'px'; piece.style.setProperty('--r', randi(-12, 12) + 'deg'); piece.style.setProperty('--i', j);
         tray.appendChild(piece);
         draggable(piece, {

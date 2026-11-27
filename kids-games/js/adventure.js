@@ -84,6 +84,7 @@ registerGame({
 
       const hero = { x: 2, y: GR, vx: 0, vy: 0, w: .7, h: .9, on: true, dir: 1, squash: 1, safe: 2 };
       const fails = {};
+      let bufT = 0, coyT = 0, jumping = false, fullJump = false;
       let dir = 0, jumpHeld = false, jumpQueued = false, t = 0, cam = 0, mush = 0, berry = 0, won = false, cloudT = 0, said = {}, parts = [], pops = [];
 
       // ===== שליטה =====
@@ -101,7 +102,8 @@ registerGame({
       const ptrs = new Map();
       const sideOf = x => { const r = cv.getBoundingClientRect(); return x - r.left < r.width / 2 ? -1 : 1; };
       const recomputeDir = () => { const held = [...ptrs.values()].filter(q => !q.tapOnly); dir = held.length ? held[held.length - 1].side : 0; };
-      const doJump = (ms) => { jumpQueued = true; jumpHeld = true; s.later(() => { if (![...ptrs.values()].some(q => q.jumped && q.holdJump)) jumpHeld = false; }, ms); };
+      // קפיצה מהמסך תמיד מלאה (בלי "קפיצה נמוכה" כשמרימים את האצבע מהר)
+      const doJump = () => { jumpQueued = true; fullJump = true; };
       cv.addEventListener('pointerdown', e => {
         e.preventDefault(); Sound.init(); try { cv.setPointerCapture(e.pointerId); } catch (_) {}
         ptrs.set(e.pointerId, { sx: e.clientX, sy: e.clientY, t: performance.now(), side: sideOf(e.clientX), jumped: false });
@@ -109,15 +111,14 @@ registerGame({
       });
       cv.addEventListener('pointermove', e => {
         const q = ptrs.get(e.pointerId); if (!q) return;
-        if (!q.jumped && q.sy - e.clientY > 36) { q.jumped = true; q.holdJump = true; jumpQueued = true; jumpHeld = true; }
+        if (!q.jumped && q.sy - e.clientY > 30) { q.jumped = true; doJump(); }
         if (Math.abs(e.clientX - q.sx) > 50) { q.side = sideOf(e.clientX); recomputeDir(); }
       });
       ['pointerup', 'pointercancel'].forEach(ev => cv.addEventListener(ev, e => {
         const q = ptrs.get(e.pointerId); if (!q) return;
         ptrs.delete(e.pointerId);
         const quick = performance.now() - q.t < 230 && Math.hypot(e.clientX - q.sx, e.clientY - q.sy) < 20;
-        if (q.holdJump) jumpHeld = false;
-        if (quick && !q.jumped) doJump(260);
+        if (quick && !q.jumped) doJump();
         recomputeDir();
       }));
       s.on(window, 'keydown', e => {
@@ -132,12 +133,15 @@ registerGame({
       function update(dt) {
         t += dt; cloudT = Math.max(0, cloudT - dt);
         if (won) { hero.squash += (1 - hero.squash) * .2; return; }
-        const RUN = 5.8, G = 32, JV = 13.8;
+        const RUN = 6, G = 32, JV = 15.2;
         hero.vx += (dir * RUN - hero.vx) * Math.min(1, dt * (hero.on ? 10 : 5));
         if (dir) hero.dir = dir;
-        if (jumpQueued && hero.on) { hero.vy = -JV; hero.on = false; hero.squash = 1.25; Sound.tone(330, .18, { to: 700, vol: .12 }); }
-        jumpQueued = false;
-        if (!jumpHeld && hero.vy < -4) hero.vy *= .6;     // לחיצה קצרה = קפיצה נמוכה
+        // זיכרון לחיצה (0.2 שנ׳) וזמן חסד אחרי שיורדים מהקצה (0.15 שנ׳) – פחות נפילות לבורות
+        if (jumpQueued) { bufT = .2; jumpQueued = false; }
+        bufT = Math.max(0, bufT - dt); coyT = hero.on ? .15 : Math.max(0, coyT - dt);
+        if (bufT > 0 && coyT > 0) { hero.vy = -JV; hero.on = false; coyT = 0; bufT = 0; hero.squash = 1.25; jumping = true; Sound.tone(330, .18, { to: 700, vol: .12 }); }
+        if (hero.vy >= 0) { jumping = false; fullJump = false; }
+        if (jumping && !fullJump && !jumpHeld && hero.vy < -4) hero.vy *= .6;     // לחיצה קצרה על הכפתור = קפיצה נמוכה
         hero.vy = Math.min(hero.vy + G * dt, 20);
         // ציר X
         hero.x += hero.vx * dt;

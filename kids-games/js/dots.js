@@ -13,7 +13,7 @@ const DOTS = (() => {
     { n: 'סירה', e: '⛵', c: '#3a86ff', pts: [[50, 260], [200, 260], [200, 50], [300, 225], [355, 260], [290, 350], [110, 350]] },
     { n: 'עץ', e: '🌲', c: '#2ec27e', pts: [[165, 370], [165, 310], [55, 310], [150, 215], [75, 215], [200, 55], [325, 215], [250, 215], [345, 310], [235, 310]] },
     { n: 'גלידה', e: '🍦', c: '#ff9ec4', pts: [[200, 385], [125, 205], [80, 150], [120, 78], [200, 48], [280, 78], [320, 150], [275, 205]] },
-    { n: 'יהלום', e: '💎', c: '#b388ff', pts: [[200, 370], [45, 165], [110, 70], [200, 120], [290, 70], [355, 165], [250, 165], [150, 165]] }
+    { n: 'יהלום', e: '💎', c: '#8ecdf7', pts: [[200, 375], [40, 160], [105, 75], [200, 75], [295, 75], [360, 160]], deco: 'M40,160 H360 M105,75 L145,160 L200,75 L255,160 L295,75 M145,160 L200,375 L255,160' }
   ];
   const lines = () => [...NUMS, 'חברי את הנקודות לפי המספרים!', 'מתחילים באחת', 'חפשי את המספר', 'מה יצא לנו?', 'אפשר ללחוץ או להחליק עם האצבע',
     ...PICS.map(p => `זה ${p.n}!`), 'יצא ציור יפה!', 'איזה ציורים יפים!'];
@@ -37,7 +37,7 @@ registerGame({
       const lab = ([x, y]) => { const dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy) || 1; return [dx / d * 34, dy / d * 34 + 10]; };
       stage.innerHTML = `<svg class="dt-svg" viewBox="-30 -30 460 460">
         <polygon class="dt-fill" points="${pic.pts.map(p => p.join(',')).join(' ')}" fill="${pic.c}"/>
-        <polyline class="dt-line" points="" /><line class="dt-rubber" x1="0" y1="0" x2="0" y2="0" />
+        ${pic.deco ? `<path class="dt-deco" d="${pic.deco}"/>` : ''}<polyline class="dt-line" points="" /><line class="dt-rubber" x1="0" y1="0" x2="0" y2="0" />
         ${pic.pts.map((pt, i) => { const [lx, ly] = lab(pt); return `<g class="dt-dot" data-i="${i}" transform="translate(${pt[0]} ${pt[1]})"><circle r="13" class="d"/><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}">${i + 1}</text></g>`; }).join('')}
       </svg><div class="dt-reveal"></div>`;
       const svg = $('svg', stage), line = $('.dt-line', svg), rubber = $('.dt-rubber', svg), dotsEls = $$('.dt-dot', svg);
